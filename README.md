@@ -10,7 +10,7 @@
 
 In order to use this repo, the environement and datasets need to be prepared and downloaded.
 
-The code has been run and tested on both `Windows(10,11)` and `Linux(22.04)`, not `Mac OS` Systems.
+The code has been run and tested on both `Windows(10,11)` and `Linux(22.04)`, not `Mac OS`.
 
 ### Dependencies
 
