@@ -21,14 +21,16 @@ Follow the official installation guidance of [PyTorch](https://pytorch.org/) and
 Install the rest dependencies by using conda:
 
 ```
-conda create --name rcvpose --file requirements.txt
+conda create --name rcvpose --file requirements_simplified.txt
 ```
 
 or pip:
 
 ```
-pip install requirements.txt
+pip install requirements_simplified.txt
 ```
+
+[requirements.txt](https://github.com/aaronWool/rcvpose/blob/main/requirements.txt) is the output of `conda list` command, if the simplified_requirements.txt missed anything, this list can be tried.
 
 ### LINEMOD Dataset
 
