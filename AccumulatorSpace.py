@@ -340,37 +340,36 @@ def fast_for_cuda(xyz_mm,radial_list_mm,VoteMap_3D):
     blockspergrid = (blockspergrid_w, blockspergrid_x, blockspergrid_y, blockspergrid_z)
     cuda_internal1[blockspergrid, threadsperblock](VoteMap_3D,xyz_mm,radial_list_mm)
 
-def Accumulator_3D(xyz, xyz_load, radial_list, pixel_coor):
+def Accumulator_3D(xyz, radial_list):
     acc_unit = 5
     # unit 5mm 
     xyz_mm = xyz*1000/acc_unit #point cloud is in meter
-    xyz_load_mm = xyz_load*1000/acc_unit #point cloud is in meter
+
     #print(xyz_mm.shape)
     
     #recenter the point cloud
-    x_mean_mm = np.mean(xyz_load_mm[:,0])
-    y_mean_mm = np.mean(xyz_load_mm[:,1])
-    z_mean_mm = np.mean(xyz_load_mm[:,2])
+    x_mean_mm = np.mean(xyz_mm[:,0])
+    y_mean_mm = np.mean(xyz_mm[:,1])
+    z_mean_mm = np.mean(xyz_mm[:,2])
     xyz_mm[:,0] -= x_mean_mm
     xyz_mm[:,1] -= y_mean_mm
     xyz_mm[:,2] -= z_mean_mm
-    xyz_load_mm[:,0] -= x_mean_mm
-    xyz_load_mm[:,1] -= y_mean_mm
-    xyz_load_mm[:,2] -= z_mean_mm
+    xyz_mm[:,0] -= x_mean_mm
+    xyz_mm[:,1] -= y_mean_mm
+    xyz_mm[:,2] -= z_mean_mm
     
     radial_list_mm = radial_list*100/acc_unit  #radius map is in decimetre for training purpose
     
-    xyz_mm_min = xyz_load_mm.min()
-    xyz_mm_max = xyz_load_mm.max()
+    xyz_mm_min = xyz_mm.min()
+    xyz_mm_max = xyz_mm.max()
     radius_max = radial_list_mm.max()
     
     zero_boundary = int(xyz_mm_min-radius_max)+1
     
     if(zero_boundary<0):
         xyz_mm -= zero_boundary
-        xyz_load_mm-=zero_boundary
         #length of 3D vote map 
-    length = int(xyz_load_mm.max())
+    length = int(xyz_mm.max())
     
     VoteMap_3D = np.zeros((length+int(radius_max),length+int(radius_max),length+int(radius_max)))
     tic = time.perf_counter()
