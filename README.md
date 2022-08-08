@@ -87,11 +87,12 @@ Enable the demo mode if the visualization result is required.
 
 If our work helps your work, we respectively ask for citations:
 
-    @misc{wu2022vote,
+    @inproceedings{wu2022vote,
           title = {Vote from the Center: 6 DoF Pose Estimation in RGB-D Images by Radial Keypoint Voting},
           author = {Wu, Yangzheng and Zand, Mohsen and Etemad, Ali and Greenspan, Michael},
           booktitle = {European Conference on Computer Vision (ECCV)},
-          year = {2022}
+          year = {2022},
+          organization={Springer}
 	  }
 
 ## Acknowledgement
