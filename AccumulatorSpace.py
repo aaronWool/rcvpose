@@ -89,24 +89,24 @@ def rgbd_to_point_cloud_no_depth(K, depth):
     print(pts.shape)
     return pts
     
-def FCResBackbone(model_path, input_img_path, normalized_depth):
+def FCResBackbone(model, input_img_path, normalized_depth):
     """
     This is a funciton runs through a pre-trained FCN-ResNet checkpoint
     Args:
-        model_path: the path to the checkpoint model
+        model: model obj
         input_img_path: input image to the model
     Returns:
         output_map: feature map estimated by the model
                     radial map output shape: (1,h,w)
                     vector map output shape: (2,h,w)
     """
-    model = DenseFCNResNet152(3,2)
+    #model = DenseFCNResNet152(3,2)
     #model = torch.nn.DataParallel(model)
     #checkpoint = torch.load(model_path)
     #model.load_state_dict(checkpoint)
-    optim = torch.optim.Adam(model.parameters(), lr=1e-3)
-    model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
-    model.eval()
+    #optim = torch.optim.Adam(model.parameters(), lr=1e-3)
+    #model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
+    #model.eval()
     input_image = Image.open(input_img_path).convert('RGB')
     #plt.imshow(input_image)
     #plt.show()
@@ -486,6 +486,15 @@ def estimate_6d_pose_lm(opts):
         #counters
         bf_icp = 0
         af_icp = 0
+
+        model_path = opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar"
+        model = DenseFCNResNet152(3,2)
+        model = torch.nn.DataParallel(model)
+        #checkpoint = torch.load(model_path)
+        #model.load_state_dict(checkpoint)
+        optim = torch.optim.Adam(model.parameters(), lr=1e-3)
+        model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
+        model.eval()
         
         #h5 save keypoints
         #h5f = h5py.File(class_name+'PointPairsGT.h5','a')
@@ -512,7 +521,7 @@ def estimate_6d_pose_lm(opts):
                     for keypoint in keypoints:
                         keypoint=keypoints[keypoint_count]
                         #print(keypoint)
-                        model_path = opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar"
+                        
                         #model_path = "ape_pt0_syn18.pth.tar"
                         if(os.path.exists(model_path)==False):
                             raise ValueError(opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar not found")
@@ -535,7 +544,7 @@ def estimate_6d_pose_lm(opts):
                         input_path = dataPath +filename
                         normalized_depth = []
                         tic = time.time_ns()
-                        sem_out, radial_out = FCResBackbone(model_path, input_path, normalized_depth)
+                        sem_out, radial_out = FCResBackbone(model, input_path, normalized_depth)
                         
                         toc = time.time_ns()
                         net_time += toc-tic

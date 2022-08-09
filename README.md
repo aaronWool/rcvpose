@@ -50,7 +50,7 @@ Based on our experiments, three keypoints are sufficient enough for optimal perf
 
 ##Training and Testing
 
-The [pre-trained models](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/EmSWfjRys1tJkWdsCP4zVsIBwIwY0AXoDBVK1n51LUWK0g?e=WdabvX) can be downloaded and tested directly without training. Note that the checkpoints will only work on Linux based system. It will not work on Windows.
+The [pre-trained models](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/EmSWfjRys1tJkWdsCP4zVsIBwIwY0AXoDBVK1n51LUWK0g?e=WdabvX) can be downloaded and tested directly without training. Note that the checkpoints will only work when [PyTorch data parallel](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) is enabled.
 
 ## Train & Test
 
@@ -97,4 +97,4 @@ If our work helps your work, we respectively ask for citations:
 
 ## Acknowledgement
 
-This project is supported by Bluewrist Inc. and NESERC(Natural Sciences and Engineering Research Council of Canada).
+This project is sponsored by Bluewrist Inc. and NESERC(Natural Sciences and Engineering Research Council of Canada).
