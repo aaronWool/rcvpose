@@ -486,15 +486,18 @@ def estimate_6d_pose_lm(opts):
         #counters
         bf_icp = 0
         af_icp = 0
+        model_list=[]
 
-        model_path = opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar"
-        model = DenseFCNResNet152(3,2)
-        model = torch.nn.DataParallel(model)
-        #checkpoint = torch.load(model_path)
-        #model.load_state_dict(checkpoint)
-        optim = torch.optim.Adam(model.parameters(), lr=1e-3)
-        model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
-        model.eval()
+        for i in range(1,4):
+            model_path = opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar"
+            model = DenseFCNResNet152(3,2)
+            model = torch.nn.DataParallel(model)
+            #checkpoint = torch.load(model_path)
+            #model.load_state_dict(checkpoint)
+            optim = torch.optim.Adam(model.parameters(), lr=1e-3)
+            model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
+            model.eval()
+            model_list.append(model)
         
         #h5 save keypoints
         #h5f = h5py.File(class_name+'PointPairsGT.h5','a')
@@ -544,7 +547,7 @@ def estimate_6d_pose_lm(opts):
                         input_path = dataPath +filename
                         normalized_depth = []
                         tic = time.time_ns()
-                        sem_out, radial_out = FCResBackbone(model, input_path, normalized_depth)
+                        sem_out, radial_out = FCResBackbone(model_list[keypoint_count], input_path, normalized_depth)
                         
                         toc = time.time_ns()
                         net_time += toc-tic
