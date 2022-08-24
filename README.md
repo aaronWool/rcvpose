@@ -36,7 +36,7 @@ pip install requirements_simplified.txt
 
 Download [LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/EXK2K0B-QrNPi8MYLDFHdB8BQm9cWTxRGV9dQgauczkVYQ?e=beftUz), [LINEMOD_ORIG](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/EXK2K0B-QrNPi8MYLDFHdB8BQm9cWTxRGV9dQgauczkVYQ?e=beftUz) and [Occlusion_LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/ESXrP0zskd5IvvuvG3TXD-4BMgbDrHZ_bevurBrAcKE5Dg?e=r0EgoA) from PVNet or [BOP links](https://bop.felk.cvut.cz/datasets/).
 
-Download [dispersed keypoints](https://queensuca-my.sharepoint.com/:u:/g/personal/16yw113_queensu_ca/EQdbKv9BHI5AiqmNaMWmpWUB-RqKf9HdM_tqN7msdtdjOQ?e=a9hNVP) and unzip it into LINEMOD root, there should exist a 'Outside9.npy' file once finished.
+Download [dispersed keypoints](https://queensuca-my.sharepoint.com/:u:/g/personal/16yw113_queensu_ca/EQdbKv9BHI5AiqmNaMWmpWUB-RqKf9HdM_tqN7msdtdjOQ?e=a9hNVP) and [train/test split](https://queensuca-my.sharepoint.com/:u:/g/personal/16yw113_queensu_ca/EUdgZviAX0RHo8y38PDWt-EBLjTEg6AxSWwJdjWFWhPR9w?e=bx8I62) and unzip it into LINEMOD root, there should exist a 'Outside9.npy' file once finished.
 
 ### Radial Map Generation
 
