@@ -563,7 +563,7 @@ def estimate_6d_pose_lm(opts):
                         
                         dump, xyz_load_transformed=project(xyz_load, linemod_K, RTGT)
                         tic = time.time_ns()
-                        center_mm_s = Accumulator_3D(xyz, xyz_load_transformed, radial_list, pixel_coor)
+                        center_mm_s = Accumulator_3D(xyz, radial_list)
                         #center_mm_s = Accumulator_3D_no_depth(xyz, radial_list, pixel_coor)
                         toc = time.time_ns()
                         acc_time += toc-tic
