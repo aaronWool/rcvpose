@@ -50,7 +50,7 @@ Based on our experiments, three keypoints are sufficient enough for optimal perf
 
 ##Training and Testing
 
-The [pre-trained models](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/EmSWfjRys1tJkWdsCP4zVsIBwIwY0AXoDBVK1n51LUWK0g?e=WdabvX) can be downloaded and tested directly without training. Note that the checkpoints will only work when [PyTorch data parallel](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) is enabled.
+The [pre-trained models](pending) (encounter some issue with onedrive, working on it now) can be downloaded and tested directly without training. Note that the checkpoints will only work when [PyTorch data parallel](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) is enabled.
 
 ## Train & Test
 
