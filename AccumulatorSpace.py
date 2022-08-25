@@ -515,7 +515,8 @@ def estimate_6d_pose_lm(opts):
         for filename in os.listdir(dataPath):
             if filename.endswith(".jpg"):
                 #print(os.path.splitext(filename)[0][5:].zfill(6))
-                if os.path.splitext(filename)[0][5:].zfill(6) in test_list:
+                #if os.path.splitext(filename)[0][5:].zfill(6) in test_list:
+                if filename in test_list:
                     print(filename)
                     estimated_kpts = np.zeros((3,3))
                     RTGT = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+os.path.splitext(filename)[0][5:]+'.npy')
