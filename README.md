@@ -34,7 +34,7 @@ pip install requirements_simplified.txt
 
 ### LINEMOD Dataset
 
-Download [LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/EXK2K0B-QrNPi8MYLDFHdB8BQm9cWTxRGV9dQgauczkVYQ?e=beftUz), [LINEMOD_ORIG](https://zjueducn-my.sharepoint.com/personal/pengsida_zju_edu_cn/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fpengsida%5Fzju%5Fedu%5Fcn%2FDocuments%2Fpvnet%2FLINEMOD%5FORIG%2Etar%2Egz&parent=%2Fpersonal%2Fpengsida%5Fzju%5Fedu%5Fcn%2FDocuments%2Fpvnet&ga=1) and [Occlusion_LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/ESXrP0zskd5IvvuvG3TXD-4BMgbDrHZ_bevurBrAcKE5Dg?e=r0EgoA) from PVNet or [BOP links](https://bop.felk.cvut.cz/datasets/).
+Download [LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/EXK2K0B-QrNPi8MYLDFHdB8BQm9cWTxRGV9dQgauczkVYQ?e=beftUz), [LINEMOD_ORIG](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/EaoGIPguY3FAgrFKKhi32fcB_nrMcNRm8jVCZQd7G_-Wbg?e=ig4aHk) and [Occlusion_LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/ESXrP0zskd5IvvuvG3TXD-4BMgbDrHZ_bevurBrAcKE5Dg?e=r0EgoA) from PVNet or [BOP links](https://bop.felk.cvut.cz/datasets/).
 
 Download [dispersed keypoints](https://queensuca-my.sharepoint.com/:u:/g/personal/16yw113_queensu_ca/EQdbKv9BHI5AiqmNaMWmpWUB-RqKf9HdM_tqN7msdtdjOQ?e=a9hNVP) and [train/test split](https://queensuca-my.sharepoint.com/:u:/g/personal/16yw113_queensu_ca/EUdgZviAX0RHo8y38PDWt-EBLjTEg6AxSWwJdjWFWhPR9w?e=bx8I62) and unzip it into LINEMOD root, there should exist a 'Outside9.npy' file once finished.
 
