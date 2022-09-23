@@ -36,7 +36,7 @@ pip install requirements_simplified.txt
 
 Download [LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/EXK2K0B-QrNPi8MYLDFHdB8BQm9cWTxRGV9dQgauczkVYQ?e=beftUz), [LINEMOD_ORIG](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/EaoGIPguY3FAgrFKKhi32fcB_nrMcNRm8jVCZQd7G_-Wbg?e=ig4aHk) and [Occlusion_LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/ESXrP0zskd5IvvuvG3TXD-4BMgbDrHZ_bevurBrAcKE5Dg?e=r0EgoA) from PVNet or [BOP links](https://bop.felk.cvut.cz/datasets/).
 
-Download [dispersed keypoints](https://queensuca-my.sharepoint.com/:u:/g/personal/16yw113_queensu_ca/EQdbKv9BHI5AiqmNaMWmpWUB-RqKf9HdM_tqN7msdtdjOQ?e=a9hNVP) and [train/test split](https://queensuca-my.sharepoint.com/:u:/g/personal/16yw113_queensu_ca/EUdgZviAX0RHo8y38PDWt-EBLjTEg6AxSWwJdjWFWhPR9w?e=bx8I62) and unzip it into LINEMOD root, there should exist a 'Outside9.npy' file once finished.
+Download [dispersed keypoints](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/Em2J6Ka9F4xMpKO4bko86kwBqrGu_6hINHo9KGQFmH8ihA?e=N5VN8a) and [train/test split](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/Eh4gWJtf2ndCsVK2LgdPfxcBd1vAPFpduTxq8LnfZomD_g?e=19FwYq) and unzip it into LINEMOD root, there should exist a 'Outside9.npy' file once finished.
 
 ### Radial Map Generation
 
@@ -50,7 +50,7 @@ Based on our experiments, three keypoints are sufficient enough for optimal perf
 
 ##Training and Testing
 
-The [pre-trained models](pending) (encounter some issue with onedrive, working on it now) can be downloaded and tested directly without training. Note that the checkpoints will only work when [PyTorch data parallel](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) is enabled.
+The [pre-trained models](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/EmSWfjRys1tJkWdsCP4zVsIBwIwY0AXoDBVK1n51LUWK0g?e=kUpEhn) can be downloaded and tested directly without training. The ckpts can now work on any GPU configurtaions, if not, please raise an issue(<del>Note that the checkpoints will only work when [PyTorch data parallel](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) is enabled.</del>).
 
 ## Train & Test
 

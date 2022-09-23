@@ -105,6 +105,8 @@ class Trainer():
                     self.vis.add_scalar('Val_ACC', 
                                         float(torch.sum(torch.where(torch.abs(score_rad-target)[torch.where(target!=0)]<=0.05,1,0)) / float(len(torch.nonzero(target))))
                                         , self.iter_val)
+                    if self.iter_val%50==0:
+                        self.vis.add_image('Val_sem',torch.where(score[0].cpu()>=.5,1,0),self.iter_val)
                 self.iter_val = self.iter_val + 1
         val_loss /= len(self.val_loader)
         mean_acc = val_loss

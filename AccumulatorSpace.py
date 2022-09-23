@@ -11,10 +11,36 @@ import open3d as o3d
 import time
 from numba import prange
 import math
+import h5py
+from sklearn import metrics
+import scipy
 
 
 lm_cls_names = ['ape', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp']
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
+ycb_cls_names={1:'002_master_chef_can',
+           2:'003_cracker_box',
+           3:'004_sugar_box',
+           4:'005_tomato_soup_can',
+           5:'006_mustard_bottle',
+           6:'007_tuna_fish_can',
+           7:'008_pudding_box',
+           8:'009_gelatin_box',
+           9:'010_potted_meat_can',
+           10:'011_banana',
+           11:'019_pitcher_base',
+           12:'021_bleach_cleanser',
+           13:'024_bowl',
+           14:'025_mug',
+           15:'035_power_drill',
+           16:'036_wood_block',
+           17:'037_scissors',
+           18:'040_large_marker',
+           19:'051_large_clamp',
+           20:'052_extra_large_clamp',
+           21:'061_foam_brick'}
+lm_syms = ['eggbox', 'glue']
+ycb_syms = ['024_bowl','036_wood_block','051_large_clamp','052_extra_large_clamp','061_foam_brick']
 add_threshold = {
                   'eggbox': 0.019735770122546523,
                   'ape': 0.01421240983190395,
@@ -631,9 +657,14 @@ def estimate_6d_pose_lm(opts):
                     if opts.demo_mode:
                         o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est before icp')
                     distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+                    min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
                     #print('ADD(s) point distance before ICP: ', distance)
-                    if distance <= add_threshold[class_name]*1000:
-                        bf_icp+=1
+                    if class_name in lm_syms:
+                        if min_distance <= add_threshold[class_name]*1000:
+                            bf_icp+=1
+                    else:
+                        if distance <= add_threshold[class_name]*1000:
+                            bf_icp+=1
                     
                     trans_init = np.asarray([[1, 0, 0, 0],
                                             [0, 1, 0, 0],
@@ -649,9 +680,14 @@ def estimate_6d_pose_lm(opts):
                     if opts.demo_mode:
                         o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
                     distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+                    min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
                     #print('ADD(s) point distance after ICP: ', distance)
-                    if distance <= add_threshold[class_name]*1000:
-                        af_icp+=1                    
+                    if class_name in lm_syms:
+                        if min_distance <= add_threshold[class_name]*1000:
+                            af_icp+=1
+                    else:
+                        if distance <= add_threshold[class_name]*1000:
+                            af_icp+=1                   
                     general_counter += 1
             
         
@@ -795,9 +831,14 @@ def estimate_6d_pose_lmo(opts):
             if opts.demo_mode:
                 o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est before icp')
             distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
-            print('ADD(s) point distance before ICP: ', distance)
-            if distance <= add_threshold[class_name]*1000:
-                bf_icp+=1
+            #print('ADD(s) point distance before ICP: ', distance)
+            min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+            if class_name in lm_syms:
+                if min_distance <= add_threshold[class_name]*1000:
+                    bf_icp+=1
+            else:
+                if distance <= add_threshold[class_name]*1000:
+                    bf_icp+=1   
             trans_init = np.asarray([[1, 0, 0, 0],
                                     [0, 1, 0, 0],
                                     [0, 0, 1, 0], 
@@ -812,13 +853,231 @@ def estimate_6d_pose_lmo(opts):
             if opts.demo_mode:
                 o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
             distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
-            print('ADD(s) point distance after ICP: ', distance)
-            if distance <= add_threshold[class_name]*1000:
-                af_icp+=1                    
+            #print('ADD(s) point distance after ICP: ', distance)
+            min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+            if class_name in lm_syms:
+                if min_distance <= add_threshold[class_name]*1000:
+                   af_icp+=1
+            else:
+                if distance <= add_threshold[class_name]*1000:
+                    af_icp+=1                    
             general_counter += 1
         
     print('ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
     print('ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter) 
+
+def estimate_6d_pose_ycb(opts):
+    horn = HornPoseFitting()
+    auc_threshold = [0, 0.02, 0.04, 0.06, 0.08, 0.1]
+    auc_adds_count = np.zeros((2,6))
+    
+    for class_id in ycb_cls_names:
+        class_name = ycb_cls_names[class_id]
+        print(class_name)
+        rootPath = opts.root_dataset
+        
+        test_list = open(opts.root_dataset+"Split/"+class_name+"/" +"val.txt","r").readlines()
+        test_list = [ s.replace('\n', '') for s in test_list]
+        
+        pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "models/"+class_name+"/points.xyz")
+        keypoints=np.load(opts.root_dataset + "models/"+class_name+"/"+"Outside9.npy")
+        xyz_load = np.asarray(pcd_load.points)
+        
+        #time consumption
+        net_time = 0
+        acc_time = 0
+        general_counter = 0
+        
+        #counters
+        bf_icp = 0
+        af_icp = 0
+        model_list=[]
+        for i in range(1,4):
+            model_path = opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar"
+            model = DenseFCNResNet152(3,2)
+            model = torch.nn.DataParallel(model)
+            #checkpoint = torch.load(model_path)
+            #model.load_state_dict(checkpoint)
+            optim = torch.optim.Adam(model.parameters(), lr=1e-3)
+            model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
+            model.eval()
+            model_list.append(model)
+        h5f = h5py.File(opts.root_dataset+"/"+class_name+'.hdf5')
+        for filename in h5f['JPEGImages/'].keys():
+            if filename in test_list:
+                print(filename)
+                estimated_kpts = np.zeros((3,3))
+                cycle, idx = filename.split('_')
+                sceneInfo = scipy.io.loadmat(opts.root_dataset+'data/'+cycle+"/"+idx)
+                RT = sceneInfo['poses'][:,:,np.where(sceneInfo['cls_indexes']==class_id)]
+                
+                #print(RTGT.shape)
+                keypoint_count = 1
+                for keypoint in keypoints:
+                    keypoint=keypoints[keypoint_count]
+                    #print(keypoint)
+                    
+                    #model_path = "ape_pt0_syn18.pth.tar"
+                    if(os.path.exists(model_path)==False):
+                        raise ValueError(opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar not found")
+                    
+                    iter_count = 0
+                    
+                    kpts_list = []
+                    #print(filename)
+                    #get the transformed gt center 
+                    
+                    #print(RT)
+                    transformed_gt_center_mm = (np.dot(keypoint, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
+                    
+                    input_path = opts.root_dataset+'data/'+cycle+"/"+idx+'-color.png'
+                    normalized_depth = []
+                    tic = time.time_ns()
+                    sem_out, radial_out = FCResBackbone(model_list[keypoint_count], input_path, normalized_depth)
+                    
+                    toc = time.time_ns()
+                    net_time += toc-tic
+                    #print("Network time consumption: ", network_time_single)
+                    depth_map1 = np.array(Image.open(opts.root_dataset+'data/'+cycle+"/"+idx+'-depth.png'))
+                    sem_out = np.where(sem_out>0.8,1,0)
+                    depthFactor=sceneInfo['factor_depth']
+                    depth_map = depth_map1*sem_out/depthFactor
+                    pixel_coor = np.where(sem_out==1)
+                    
+                    
+                    radial_list = radial_out[pixel_coor]
+                    xyz = rgbd_to_point_cloud(sceneInfo['intrinsic_matrix'],depth_map)
+                    
+                    dump, xyz_load_transformed=project(xyz_load, linemod_K, RTGT)
+                    tic = time.time_ns()
+                    center_mm_s = Accumulator_3D(xyz, radial_list)
+                    #center_mm_s = Accumulator_3D_no_depth(xyz, radial_list, pixel_coor)
+                    toc = time.time_ns()
+                    acc_time += toc-tic
+                    #print("acc space: ", toc-tic)
+                    
+                    print("estimated: ", center_mm_s)
+                    
+                    pre_center_off_mm = math.inf
+                    
+                    estimated_center_mm = center_mm_s[0]
+                    
+                    center_off_mm = ((transformed_gt_center_mm[0,0]-estimated_center_mm[0])**2+
+                                    (transformed_gt_center_mm[0,1]-estimated_center_mm[1])**2+
+                                    (transformed_gt_center_mm[0,2]-estimated_center_mm[2])**2)**0.5
+                    print("estimated offset: ", center_off_mm)
+                    
+                    #save estimations
+                    '''
+                    index 0: original keypoint
+                    index 1: applied gt transformation keypoint
+                    index 2: network estimated keypoint
+                    '''
+                    centers = np.zeros((1,3,3))
+                    centers[0,0] = keypoint
+                    centers[0,1] = transformed_gt_center_mm*0.001
+                    centers[0,2] = estimated_center_mm*0.001
+                    estimated_kpts[keypoint_count] = estimated_center_mm
+                    
+                    if(iter_count==0):
+                        centers_list = centers
+                        if keypoint_count==0:
+                            f_save = int(os.path.splitext(filename)[0][5:])
+                            filenameList=np.array([f_save])
+                            #filenameList = np.expand_dims(filenameList,axis=0)
+                            #print(filenameList)
+                    else:
+                        centers_list = np.append(centers_list, centers, axis=0)
+                        if keypoint_count==0:
+                            filenameList = np.append(filenameList, np.array([int(os.path.splitext(filename)[0][5:])]), axis=0)
+                            #print(filenameList)
+                    #print(centers_list.shape)
+                    iter_count += 1
+                    
+                    keypoint_count+=1
+                    if keypoint_count == 3:
+                        break
+
+                kpts = keypoints[0:3,:]*1000
+                RT = np.zeros((4, 4))
+                horn.lmshorn(kpts, estimated_kpts, 3, RT)
+                dump, xyz_load_est_transformed=project(xyz_load*1000, linemod_K, RT[0:3,:])
+                w,h,d = pcd_load.get_oriented_bounding_box().extent
+                bbox_diagonal = (w**2+h**2+d**2)**0.5
+                if opts.demo_mode:
+                    input_image = np.asarray(Image.open(input_path).convert('RGB'))
+                    for coor in dump:
+                        input_image[int(coor[1]),int(coor[0])] = [255,0,0]
+                    plt.imshow(input_image)
+                    plt.show()
+                sceneGT = o3d.geometry.PointCloud()
+                sceneEst = o3d.geometry.PointCloud()
+                sceneGT.points=o3d.utility.Vector3dVector(xyz_load_transformed*1000)
+                sceneEst.points=o3d.utility.Vector3dVector(xyz_load_est_transformed)
+                sceneGT.paint_uniform_color(np.array([0,0,1]))
+                sceneEst.paint_uniform_color(np.array([1,0,0]))
+                if opts.demo_mode:
+                    o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est before icp')
+                distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+                min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                #print('ADD(s) point distance before ICP: ', distance)
+                if class_name in ycb_syms:
+                    if min_distance <= bbox_diagonal*0.01*1000:
+                        bf_icp+=1
+                else:
+                    if distance <= bbox_diagonal*0.01*1000:
+                        bf_icp+=1  
+                i=0
+                for thre in auc_threshold:
+                    if class_name in ycb_syms:
+                        if min_distance <= thre*1000:
+                            auc_adds_count[0,i]+=1
+                    else:
+                        if distance <= thre*1000:
+                            auc_adds_count[0,i]+=1 
+                    i+=1
+                
+                trans_init = np.asarray([[1, 0, 0, 0],
+                                        [0, 1, 0, 0],
+                                        [0, 0, 1, 0], 
+                                        [0, 0, 0, 1]])
+                threshold = distance
+                criteria = o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000000)
+                reg_p2p = o3d.pipelines.registration.registration_icp(
+                    sceneGT, sceneEst,  threshold, trans_init,
+                    o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+                    criteria)
+                sceneGT.transform(reg_p2p.transformation)
+                if opts.demo_mode:
+                    o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
+                distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+                min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                #print('ADD(s) point distance after ICP: ', distance)
+
+                if class_name in ycb_syms:
+                    if min_distance <= bbox_diagonal*0.01*1000:
+                        af_icp+=1
+                else:
+                    if distance <= bbox_diagonal*0.01*1000:
+                        af_icp+=1  
+                i=0
+                for thre in auc_threshold:
+                    if class_name in ycb_syms:
+                        if min_distance <= thre*1000:
+                            auc_adds_count[1,i]+=1
+                    else:
+                        if distance <= thre*1000:
+                            auc_adds_count[1,i]+=1 
+                    i+=1                
+                general_counter += 1
+    
+    print('ADD\(s\) AUC of '+class_name+' before ICP: ',metrics.auc(auc_threshold, auc_adds_count[0]/general_counter)/0.1)
+    print('ADD\(s\) AUC of '+class_name+' after ICP: ',metrics.auc(auc_threshold, auc_adds_count[1]/general_counter)/0.1)
+    print('ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
+    print('ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter) 
+    
+    #
+
 
 if __name__ == "__main__":
     import argparse

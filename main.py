@@ -20,6 +20,10 @@ if __name__ == "__main__":
                         default='train',
                         choices=['train', 'test'])
     parser.add_argument("--gpu_id", type=int, default=-1)
+    parser.add_argument('--dname',
+                        type=str,
+                        default='lm',
+                        choices=['lm', 'ycb'])
     parser.add_argument("--root_dataset",
                         type=str,
                         default='./datasets/LINEMOD')
@@ -55,7 +59,7 @@ if __name__ == "__main__":
     opts.cfg = cfg
 
     if opts.mode in ['train']:
-        opts.out = get_log_dir(opts.class_name+'Kp'+opts.kpt_num, cfg)
+        opts.out = get_log_dir(opts.dname+'/'+opts.class_name+'Kp'+opts.kpt_num, cfg)
         print('Output logs: ', opts.out)
         vis = SummaryWriter(logdir=opts.out+'/tbLog/')
     else:
