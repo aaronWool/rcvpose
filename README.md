@@ -10,7 +10,7 @@
 
 In order to use this repo, the environement and datasets need to be prepared and downloaded.
 
-The code has been run and tested on both `Windows(10,11)` and `Linux(22.04)`, not `Mac OS`.
+The code has been run and tested on both `Windows(10,11)` and `Linux(Ubuntu 22.04)`, not `Mac OS`.
 
 ### Dependencies
 
@@ -63,7 +63,7 @@ Track the training process by using [Tensorboard](https://www.tensorflow.org/ten
 tensorboard --logdir='PATHTOLOG'
 ```
 
-Three networks are required to be trained before testin as RCVPose use one network for each keypoint.
+Three networks are required to be trained before testing as RCVPose use one network for each keypoint.
 At the project root, create a 'ckpts' folder and save the best models there.
 
 ### Test RCVPose
