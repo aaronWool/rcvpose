@@ -27,7 +27,7 @@ conda activate rcvpose
 
 ### LINEMOD Dataset
 
-Download [LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/EXK2K0B-QrNPi8MYLDFHdB8BQm9cWTxRGV9dQgauczkVYQ?e=beftUz), [LINEMOD_ORIG](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/EaoGIPguY3FAgrFKKhi32fcB_nrMcNRm8jVCZQd7G_-Wbg?e=ig4aHk) and [Occlusion_LINEMOD](https://zjueducn-my.sharepoint.com/:u:/g/personal/pengsida_zju_edu_cn/ESXrP0zskd5IvvuvG3TXD-4BMgbDrHZ_bevurBrAcKE5Dg?e=r0EgoA) from PVNet or [BOP links](https://bop.felk.cvut.cz/datasets/).
+Download LINEMOD, LINEMOD_ORIG, and Occlusion_LINEMOD from [PVNet](https://zjueducn-my.sharepoint.com/personal/pengsida_zju_edu_cn/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fpengsida%5Fzju%5Fedu%5Fcn%2FDocuments%2Fpvnet&ga=1) or [BOP links](https://bop.felk.cvut.cz/datasets/).
 
 Download [dispersed keypoints](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/Em2J6Ka9F4xMpKO4bko86kwBqrGu_6hINHo9KGQFmH8ihA?e=N5VN8a) and [train/test split](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/Eh4gWJtf2ndCsVK2LgdPfxcBd1vAPFpduTxq8LnfZomD_g?e=19FwYq) and unzip it into LINEMOD root, there should exist a 'Outside9.npy' file once finished.
 
