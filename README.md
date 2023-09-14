@@ -5,6 +5,9 @@
 > [Vote from the Center: 6 DoF Pose Estimation in RGB-D Images by Radial Keypoint Voting](https://arxiv.org/abs/2104.02527 "arxiv")
 > Yangzheng Wu, Mohsen Zand, Ali Etemad, Michael Greenspan
 > ECCV 2022
+##Updates
+RCVPose can be trained without the pre-generation of radii maps, just simply run the train script.
+To avoid issues of ckpts trained on multiple GPUs, pre-trained [radii maps]((https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/Eh6ucFDRsMFOsw31lPopfoEBICl8ghNzUe45BDYkgf1xQA?e=S24NeJ)) are now provided.
 
 ## Prior to Usage
 
@@ -68,11 +71,17 @@ At the project root, create a 'ckpts' folder and save the best models there.
 
 ### Test RCVPose
 
-For testing, simply run:
+For testing, download [pretrained radii](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/Eh6ucFDRsMFOsw31lPopfoEBICl8ghNzUe45BDYkgf1xQA?e=S24NeJ), simply run:
 
 ```
 python main.py --root_dataset="D:/Datasets/6dPoseData/LINEMOD/" --mode=test --demo-mode=False
 ```
+
+For testing with ckpts on multiple GPU on a linux, run:
+```
+python main.py --root_dataset="D:/Datasets/6dPoseData/LINEMOD/" --mode=test --demo-mode=False --using_ckpts=True
+```
+
 
 Enable the demo mode if the visualization result is required.
 

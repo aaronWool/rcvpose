@@ -4,6 +4,49 @@ from torch.utils import data
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+from numba import jit, prange
+
+linemod_K = np.array([[572.4114, 0., 325.2611],
+                  [0., 573.57043, 242.04899],
+                  [0., 0., 1.]])
+
+def project(xyz, K, RT):
+    """
+    xyz: [N, 3]
+    K: [3, 3]
+    RT: [3, 4]
+    """
+    #pointc->actual scene
+    xyz = np.dot(xyz, RT[:, :3].T) + RT[:, 3:].T
+    actual_xyz=xyz
+    #np.set_printoptions(threshold=np.inf)
+    #xyz = xyz[np.where(xyz[:,2]>=1)]
+    #distance_list = distance_list[np.where(xyz[:,2]>=1)]
+    #print(xyz)
+    #np.savetxt('GT.txt', actual_xyz*1000, delimiter=' ') 
+    #os.system("pause")
+    #scene->image space
+    xyz = np.dot(xyz, K.T)
+    #np.set_printoptions(threshold=np.inf)
+    #print(xyz)
+    xy = xyz[:, :2] / xyz[:, 2:]
+    return xy,actual_xyz
+
+def rgbd_to_point_cloud(K, depth):
+    vs, us = depth.nonzero()
+    zs = depth[vs, us]
+    #print(zs.min())
+    #print(zs.max())
+    xs = ((us - K[0, 2]) * zs) / float(K[0, 0])
+    ys = ((vs - K[1, 2]) * zs) / float(K[1, 1])
+    pts = np.array([xs, ys, zs]).T
+    return pts, vs, us
+
+@jit(nopython=True, parallel=True)   
+def fast_for_map(yList, xList, xyz, distance_list, Radius3DMap):
+    for i in prange(len(xList)):
+        Radius3DMap[yList[i],xList[i]] = distance_list[i]
+    return Radius3DMap
 
 
 class RData(RMapDataset):
@@ -22,10 +65,25 @@ class RData(RMapDataset):
                         transform=transform
                         )
 
-    def transform(self, img, lbl):
+    def transform(self, img, lbl,depth,mask,gtpose,kpt):
+        #generate gt radius label
+        Radius3DMap = np.zeros(mask.shape)
+        pixel_coor = np.argwhere(mask==255)
+        depth[np.where(mask==0)] = 0
+        xyz,y,x = rgbd_to_point_cloud(linemod_K, depth)
+        xyz=xyz/1000
+        #print(xyz.shape)
+        dump, transformed_kpoint = project(np.array([kpt]),linemod_K,gtpose)
+        transformed_kpoint=transformed_kpoint[0]
+        distance_list = ((xyz[:,0]-transformed_kpoint[0])**2+(xyz[:,1]-transformed_kpoint[1])**2+(xyz[:,2]-transformed_kpoint[2])**2)**0.5
+        Radius3DMap = fast_for_map(y, x, xyz, distance_list, Radius3DMap)
         img = np.array(img, dtype=np.float64)
         img /= 255.
-        lbl = np.array(lbl, dtype=np.float64)
+        lbl = np.array(Radius3DMap, dtype=np.float64)
+        lbl = lbl*10
+        lbl = np.where(lbl>self.max_radii_dm,0,lbl)
+        #plt.imshow(lbl)
+        #plt.show()
         if(len(lbl.shape)==2):
           lbl = np.expand_dims(lbl,axis=0)
         img -= self.mean
@@ -56,7 +114,7 @@ class RData(RMapDataset):
 
 def get_loader(opts):
     from data_loader import RData
-    modes = ['train', 'val']
+    modes = ['val', 'val']
     train_loader = data.DataLoader(RData(opts.root_dataset,
                                         opts.dname,
                                         set=modes[0],

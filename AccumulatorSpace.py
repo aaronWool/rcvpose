@@ -16,7 +16,7 @@ from sklearn import metrics
 import scipy
 
 
-lm_cls_names = ['ape', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp']
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 ycb_cls_names={1:'002_master_chef_can',
            2:'003_cracker_box',
@@ -50,7 +50,11 @@ add_threshold = {
                   'glue': 0.01930723067998101,
                   'can': 0.028415044264086586,
                   'driller': 0.031877906042,
-                  'holepuncher': 0.019606109985}
+                  'holepuncher': 0.019606109985,
+                  'benchvise': .033091264970068,
+                  'iron':.03172344425531,
+                  'lamp':.03165980764376,
+                  'phone':.02543407135792}
 
 linemod_K = np.array([[572.4114, 0., 325.2611],
                   [0., 573.57043, 242.04899],
@@ -512,16 +516,18 @@ def estimate_6d_pose_lm(opts):
         af_icp = 0
         model_list=[]
 
-        for i in range(1,4):
-            model_path = opts.model_dir + class_name+"_pt"+str(i)+".pth.tar"
-            model = DenseFCNResNet152(3,2)
-            #model = torch.nn.DataParallel(model)
-            #checkpoint = torch.load(model_path)
-            #model.load_state_dict(checkpoint)
-            optim = torch.optim.Adam(model.parameters(), lr=1e-3)
-            model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
-            model.eval()
-            model_list.append(model)
+
+        if opts.using_ckpts:
+            for i in range(1,4):
+                model_path = opts.model_dir + class_name+"_pt"+str(i)+".pth.tar"
+                model = DenseFCNResNet152(3,2)
+                #model = torch.nn.DataParallel(model)
+                #checkpoint = torch.load(model_path)
+                #model.load_state_dict(checkpoint)
+                optim = torch.optim.Adam(model.parameters(), lr=1e-3)
+                model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
+                model.eval()
+                model_list.append(model)
         
         #h5 save keypoints
         #h5f = h5py.File(class_name+'PointPairsGT.h5','a')
@@ -537,10 +543,11 @@ def estimate_6d_pose_lm(opts):
         dataPath = rootpvPath + 'JPEGImages/'
             
         for filename in os.listdir(dataPath):
+            #filename = '000011.jpg'
             #print("Evaluating ", filename)
             if filename.endswith(".jpg"):
                 #print(os.path.splitext(filename)[0][5:].zfill(6))
-                if os.path.splitext(filename)[0][5:].zfill(6) in test_list:
+                if os.path.splitext(filename)[0] in test_list:
                 #if filename in test_list:
                     print("Evaluating ", filename)
                     estimated_kpts = np.zeros((3,3))
@@ -552,8 +559,9 @@ def estimate_6d_pose_lm(opts):
                         #print(keypoint)
                         
                         #model_path = "ape_pt0_syn18.pth.tar"
-                        if(os.path.exists(model_path)==False):
-                            raise ValueError(opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar not found")
+                        if opts.using_ckpts:
+                            if(os.path.exists(model_path)==False):
+                                raise ValueError(opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar not found")
                         
                         iter_count = 0
                         
@@ -576,34 +584,34 @@ def estimate_6d_pose_lm(opts):
                         input_path = dataPath +filename
                         normalized_depth = []
                         tic = time.time_ns()
-                        sem_out, radial_out = FCResBackbone(model_list[keypoint_count-1], input_path, normalized_depth)
+                        if opts.using_ckpts:
+                            sem_out, radial_out = FCResBackbone(model_list[keypoint_count-1], input_path, normalized_depth)
                         
                         toc = time.time_ns()
                         net_time += toc-tic
                         #print("Network time consumption: ", network_time_single)
                         depth_map1 = read_depth(rootPath+'data/depth'+os.path.splitext(filename)[0][5:]+'.dpt')
-                        sem_out = np.where(sem_out>0.8,1,0)
+                        if opts.using_ckpts:
+                            sem_out = np.where(sem_out>0.8,1,0)
+                            depth_map = depth_map1*sem_out
+                            pixel_coor = np.where(sem_out==1)
+                            radial_list = radial_out[pixel_coor]
+
+                        radial_est = np.load(rootPath+"Estimated_out_pt"+str(keypoint_count)+"_dm/"+os.path.splitext(filename)[0]+'.npy')
+
+                        sem_out = np.where(radial_est!=0,1,0)
                         depth_map = depth_map1*sem_out
-                        pixel_coor = np.where(sem_out==1)
-                        #plt.imshow(depth_map)
-                        #plt.show()
-
-                        #radial_gt = np.load(rootPath+"Out_pt"+str(keypoint_count)+"_dm/"+os.path.splitext(filename)[0]+'.npy')
-
-                        radial_list = radial_out[pixel_coor]
-                        #print(radial_list)
-                        #radial_list = radial_gt[pixel_coor]
-                        #print(radial_list)
                         xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
+                        radial_list = radial_est[depth_map.nonzero()]
+                        if opts.using_ckpts:
+                            radial_list = radial_out[depth_map.nonzero()]
                         #print(xyz)
                         xyz = xyz_mm/1000
 
-                        #radial_list = ((xyz_mm[:,0]-transformed_gt_center_mm[0])**2+(xyz_mm[:,1]-transformed_gt_center_mm[1])**2+(xyz_mm[:,2]-transformed_gt_center_mm[2])**2)**0.5/100
-                        #print(radial_list)
-                        
                         dump, xyz_load_transformed=project(xyz_load, linemod_K, RTGT)
                         tic = time.time_ns()
                         center_mm_s = Accumulator_3D(xyz, radial_list)
+                        #center_mm_s = transformed_gt_center_mm
                         #center_mm_s = Accumulator_3D_no_depth(xyz, radial_list, pixel_coor)
                         toc = time.time_ns()
                         acc_time += toc-tic
@@ -614,11 +622,12 @@ def estimate_6d_pose_lm(opts):
                         pre_center_off_mm = math.inf
                         
                         estimated_center_mm = center_mm_s[0]
+                        #estimated_center_mm = transformed_gt_center_mm
                         
                         center_off_mm = ((transformed_gt_center_mm[0]-estimated_center_mm[0])**2+
                                         (transformed_gt_center_mm[1]-estimated_center_mm[1])**2+
                                         (transformed_gt_center_mm[2]-estimated_center_mm[2])**2)**0.5
-                        #print("keypoint"+str(keypoint_count)+"estimated offset: ", center_off_mm)
+                        print("keypoint"+str(keypoint_count)+"estimated offset: ", center_off_mm)
                         
                         #save estimations
                         '''
@@ -687,7 +696,10 @@ def estimate_6d_pose_lm(opts):
                                             [0, 1, 0, 0],
                                             [0, 0, 1, 0], 
                                             [0, 0, 0, 1]])
-                    threshold = distance
+                    if class_name in lm_syms:
+                        threshold = min_distance
+                    else:
+                        threshold = distance
                     criteria = o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000000)
                     reg_p2p = o3d.pipelines.registration.registration_icp(
                         sceneGT, sceneEst,  threshold, trans_init,
@@ -708,14 +720,17 @@ def estimate_6d_pose_lm(opts):
                         if distance <= add_threshold[class_name]*1000:
                             af_icp+=1                   
                     general_counter += 1
-                    #print('ADD\(s\) of '+class_name+' before ICP: ', bf_icp)
-                    #print('ADD\(s\) of '+class_name+' after ICP: ', af_icp) 
+                    print('Current ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
+                    print('Currnet ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter) 
             
         
         #os.system("pause")
-        
-        print('ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
-        print('ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter)   
+        if class_name in lm_syms:    
+            print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
+            print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
+        else:
+            print('ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
+            print('ADD of '+class_name+' after ICP: ', af_icp/general_counter)  
 
 def estimate_6d_pose_lmo(opts):
     horn = HornPoseFitting()
@@ -1118,6 +1133,9 @@ if __name__ == "__main__":
                     default='ckpts/')   
     parser.add_argument('--demo_mode',
                     type=bool,
-                    default=False)   
+                    default=False)  
+    parser.add_argument('--using_ckpts',
+                    type=bool,
+                    default=False)    
     opts = parser.parse_args()   
     estimate_6d_pose_lm(opts) 
