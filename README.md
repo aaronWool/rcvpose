@@ -5,7 +5,7 @@
 > [Vote from the Center: 6 DoF Pose Estimation in RGB-D Images by Radial Keypoint Voting](https://arxiv.org/abs/2104.02527 "arxiv")
 > Yangzheng Wu, Mohsen Zand, Ali Etemad, Michael Greenspan
 > ECCV 2022
-##Updates
+## Updates
 RCVPose can be trained without the pre-generation of radii maps, just simply run the train script.
 To avoid issues of ckpts trained on multiple GPUs, pre-trained [radii maps]((https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/Eh6ucFDRsMFOsw31lPopfoEBICl8ghNzUe45BDYkgf1xQA?e=S24NeJ)) are now provided.
 
@@ -44,7 +44,7 @@ python 3DRadius.py
 
 Based on our experiments, three keypoints are sufficient enough for optimal performance. After the radial map generation is done, there should be a series of folders named `Out_pt*_dm` within each object's folder.
 
-##Training and Testing
+## Training and Testing
 
 The [pre-trained models](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/EmSWfjRys1tJkWdsCP4zVsIBwIwY0AXoDBVK1n51LUWK0g?e=kUpEhn) can be downloaded and tested directly without training. The ckpts can now work on any GPU configurtaions, if not, please raise an issue(<del>Note that the checkpoints will only work when [PyTorch data parallel](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) is enabled.</del>).
 
