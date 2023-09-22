@@ -6,7 +6,7 @@
 > Yangzheng Wu, Mohsen Zand, Ali Etemad, Michael Greenspan
 > ECCV 2022
 ## Updates
-[Liam Salass] (https://github.com/Liamsalass/) has commited to the most recent updates and this is a special thanks to him!
+[Liam Salass](https://github.com/Liamsalass/) has commited to the most recent updates and this is a special thanks to him!
 
 RCVPose can be trained without the pre-generation of radii maps, just simply run the train script directly.
 
