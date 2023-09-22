@@ -46,7 +46,7 @@ class RMapDataset(Dataset):
                          +(cad_model_points_mm[:,1]-self.kpt[1])**2
                          +(cad_model_points_mm[:,2]-self.kpt[2])**2)**0.5
             self.max_radii_dm = dsitances.max()*10
-            print('maximum radial distance: ', self.max_radii_dm)
+            #print('maximum radial distance: ', self.max_radii_dm)
 
 
             #print(self.kpt)
@@ -77,7 +77,7 @@ class RMapDataset(Dataset):
             img = np.array(ycbh5f[img_id])
             ycbh5f.close()
         if self.transform is not None:
-            img_torch, target_torch, sem_target_torch = self.transform(img, target,depth,mask,gtpose,self.kpt)
+            img_torch, target_torch, sem_target_torch = self.transform(img_id, img, target,depth,mask,gtpose,self.kpt)
 
         return img_torch, target_torch, sem_target_torch
 

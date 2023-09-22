@@ -6,8 +6,11 @@
 > Yangzheng Wu, Mohsen Zand, Ali Etemad, Michael Greenspan
 > ECCV 2022
 ## Updates
-RCVPose can be trained without the pre-generation of radii maps, just simply run the train script.
-To avoid issues of ckpts trained on multiple GPUs, pre-trained [radii maps]((https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/Eh6ucFDRsMFOsw31lPopfoEBICl8ghNzUe45BDYkgf1xQA?e=S24NeJ)) are now provided.
+[Liam Salass] (https://github.com/Liamsalass/) has commited to the most recent updates and this is a special thanks to him!
+
+RCVPose can be trained without the pre-generation of radii maps, just simply run the train script directly.
+
+To avoid issues of ckpts trained on multiple GPUs, pre-trained [radii maps](https://queensuca-my.sharepoint.com/:f:/g/personal/16yw113_queensu_ca/Eh6ucFDRsMFOsw31lPopfoEBICl8ghNzUe45BDYkgf1xQA?e=wrWcHQ) are now provided for testing.
 
 ## Prior to Usage
 

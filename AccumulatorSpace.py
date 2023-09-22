@@ -16,7 +16,7 @@ from sklearn import metrics
 import scipy
 
 
-lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 ycb_cls_names={1:'002_master_chef_can',
            2:'003_cracker_box',
@@ -375,7 +375,7 @@ def Accumulator_3D(xyz, radial_list):
     # unit 5mm 
     xyz_mm = xyz*1000/acc_unit #point cloud is in meter
 
-    #print(xyz_mm.shape)
+    #print(xyz_mm)
     
     #recenter the point cloud
     x_mean_mm = np.mean(xyz_mm[:,0])
@@ -539,11 +539,19 @@ def estimate_6d_pose_lm(opts):
         
         keypoints=np.load(opts.root_dataset + "LINEMOD/"+class_name+"/"+"Outside9.npy")
         #print(keypoints)
-        
+
+        #threshold of radii maximum limits
+        max_radii_dm = np.zeros(3)
+        for i in range(3):
+            dsitances = ((xyz_load[:,0]-keypoints[i+1,0])**2
+                 +(xyz_load[:,1]-keypoints[i+1,1])**2
+                +(xyz_load[:,2]-keypoints[i+1,2])**2)**0.5
+            max_radii_dm[i] = dsitances.max()*10
+        print(max_radii_dm)
         dataPath = rootpvPath + 'JPEGImages/'
             
         for filename in os.listdir(dataPath):
-            #filename = '000011.jpg'
+            #filename = '000810.jpg'
             #print("Evaluating ", filename)
             if filename.endswith(".jpg"):
                 #print(os.path.splitext(filename)[0][5:].zfill(6))
@@ -551,8 +559,8 @@ def estimate_6d_pose_lm(opts):
                 #if filename in test_list:
                     print("Evaluating ", filename)
                     estimated_kpts = np.zeros((3,3))
-                    RTGT = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+os.path.splitext(filename)[0][5:]+'.npy')
-                    #print(RTGT.shape)
+                    RTGT = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
+                    #print(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
                     keypoint_count = 1
                     for keypoint in keypoints:
                         keypoint=keypoints[keypoint_count]
@@ -579,7 +587,6 @@ def estimate_6d_pose_lm(opts):
                         transformed_gt_center_mm = (np.dot(keypoints, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
 
                         transformed_gt_center_mm = transformed_gt_center_mm[keypoint_count]
-                        #print(transformed_gt_center_mm)
                         
                         input_path = dataPath +filename
                         normalized_depth = []
@@ -590,29 +597,28 @@ def estimate_6d_pose_lm(opts):
                         toc = time.time_ns()
                         net_time += toc-tic
                         #print("Network time consumption: ", network_time_single)
-                        depth_map1 = read_depth(rootPath+'data/depth'+os.path.splitext(filename)[0][5:]+'.dpt')
+                        depth_map1 = read_depth(rootPath+'data/depth'+str(int(os.path.splitext(filename)[0]))+'.dpt')
                         if opts.using_ckpts:
                             sem_out = np.where(sem_out>0.8,1,0)
+                            sem_out = np.where(radial_out<=max_radii_dm[keypoint_count-1], sem_out,0)
                             depth_map = depth_map1*sem_out
+                            xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
+                            radial_out = np.where(radial_out<=max_radii_dm[keypoint_count-1], radial_out,0)
+                            
                             pixel_coor = np.where(sem_out==1)
                             radial_list = radial_out[pixel_coor]
-
-                        radial_est = np.load(rootPath+"Estimated_out_pt"+str(keypoint_count)+"_dm/"+os.path.splitext(filename)[0]+'.npy')
-
-                        sem_out = np.where(radial_est!=0,1,0)
-                        depth_map = depth_map1*sem_out
-                        xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
-                        radial_list = radial_est[depth_map.nonzero()]
-                        if opts.using_ckpts:
-                            radial_list = radial_out[depth_map.nonzero()]
-                        #print(xyz)
+                        else:
+                            radial_est = np.load(os.path.join( opts.root_dataset + "LINEMOD_ORIG/", 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm", os.path.splitext(filename)[0]+'.npy'))
+                            radial_est = np.where(radial_est<=max_radii_dm[keypoint_count-1], radial_est,0)
+                            sem_out = np.where(radial_est!=0,1,0)
+                            #print(sem_out.shape)
+                            depth_map = depth_map1*sem_out
+                            xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
+                            radial_list = radial_est[depth_map.nonzero()]
                         xyz = xyz_mm/1000
 
-                        dump, xyz_load_transformed=project(xyz_load, linemod_K, RTGT)
                         tic = time.time_ns()
                         center_mm_s = Accumulator_3D(xyz, radial_list)
-                        #center_mm_s = transformed_gt_center_mm
-                        #center_mm_s = Accumulator_3D_no_depth(xyz, radial_list, pixel_coor)
                         toc = time.time_ns()
                         acc_time += toc-tic
                         #print("acc space: ", toc-tic)
@@ -622,12 +628,11 @@ def estimate_6d_pose_lm(opts):
                         pre_center_off_mm = math.inf
                         
                         estimated_center_mm = center_mm_s[0]
-                        #estimated_center_mm = transformed_gt_center_mm
                         
-                        center_off_mm = ((transformed_gt_center_mm[0]-estimated_center_mm[0])**2+
-                                        (transformed_gt_center_mm[1]-estimated_center_mm[1])**2+
-                                        (transformed_gt_center_mm[2]-estimated_center_mm[2])**2)**0.5
-                        print("keypoint"+str(keypoint_count)+"estimated offset: ", center_off_mm)
+                        # center_off_mm = ((transformed_gt_center_mm[0]-estimated_center_mm[0])**2+
+                        #                 (transformed_gt_center_mm[1]-estimated_center_mm[1])**2+
+                        #                 (transformed_gt_center_mm[2]-estimated_center_mm[2])**2)**0.5
+                        #print("keypoint"+str(keypoint_count)+"estimated offset: ", center_off_mm)
                         
                         #save estimations
                         '''
@@ -640,20 +645,6 @@ def estimate_6d_pose_lm(opts):
                         centers[0,1] = transformed_gt_center_mm*0.001
                         centers[0,2] = estimated_center_mm*0.001
                         estimated_kpts[keypoint_count-1] = estimated_center_mm
-                        
-                        if(iter_count==0):
-                            centers_list = centers
-                            if keypoint_count==0:
-                                f_save = int(os.path.splitext(filename)[0][5:])
-                                filenameList=np.array([f_save])
-                                #filenameList = np.expand_dims(filenameList,axis=0)
-                                #print(filenameList)
-                        else:
-                            centers_list = np.append(centers_list, centers, axis=0)
-                            if keypoint_count==0:
-                                filenameList = np.append(filenameList, np.array([int(os.path.splitext(filename)[0][5:])]), axis=0)
-                                #print(filenameList)
-                        #print(centers_list.shape)
                         iter_count += 1
                         
                         keypoint_count+=1
@@ -664,6 +655,11 @@ def estimate_6d_pose_lm(opts):
                     RT = np.zeros((4, 4))
                     horn.lmshorn(kpts, estimated_kpts, 3, RT)
                     dump, xyz_load_est_transformed=project(xyz_load*1000, linemod_K, RT[0:3,:])
+                    RTGT_mm = RTGT
+                    RTGT_mm[:,3] = RTGT_mm[:,3]*1000
+                    #print(RTGT_mm)
+                    dump, xyz_load_transformed=project(xyz_load*1000, linemod_K, RTGT_mm)
+                    
                     #xyz_load_est_transformed = xyz_load_est_transformed*1000
                     if opts.demo_mode:
                         input_image = np.asarray(Image.open(input_path).convert('RGB'))
@@ -673,7 +669,7 @@ def estimate_6d_pose_lm(opts):
                         plt.show()
                     sceneGT = o3d.geometry.PointCloud()
                     sceneEst = o3d.geometry.PointCloud()
-                    sceneGT.points=o3d.utility.Vector3dVector(xyz_load_transformed*1000)
+                    sceneGT.points=o3d.utility.Vector3dVector(xyz_load_transformed)
                     sceneEst.points=o3d.utility.Vector3dVector(xyz_load_est_transformed)
                     sceneGT.paint_uniform_color(np.array([0,0,1]))
                     sceneEst.paint_uniform_color(np.array([1,0,0]))
@@ -700,7 +696,7 @@ def estimate_6d_pose_lm(opts):
                         threshold = min_distance
                     else:
                         threshold = distance
-                    criteria = o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000000)
+                    criteria = o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000)
                     reg_p2p = o3d.pipelines.registration.registration_icp(
                         sceneGT, sceneEst,  threshold, trans_init,
                         o3d.pipelines.registration.TransformationEstimationPointToPoint(),
@@ -738,12 +734,32 @@ def estimate_6d_pose_lmo(opts):
         print(class_name)
         rootPath = opts.root_dataset+'OCCLUSION_LINEMOD/'
         general_counter = 0
+        valid_counter = 0
         
         #counters
         bf_icp = 0
         af_icp = 0
         #h5 save keypoints
         filenameList=[]
+        model_list=[]
+        no_of_samples = len([name for name in os.listdir(rootPath+"blender_poses/"+class_name)])
+        #no_of_samples = 1213
+        prob_array = np.zeros(no_of_samples)
+        prob_array[0:int(lmo_accuracy[class_name]/100*1213)]=1
+        prob_array = np.random.permutation(prob_array)
+        #print(np.count_nonzero(prob_array)/1213)
+
+        if opts.using_ckpts:
+            for i in range(1,4):
+                model_path = opts.model_dir + class_name+"_pt"+str(i)+".pth.tar"
+                model = DenseFCNResNet152(3,2)
+                #model = torch.nn.DataParallel(model)
+                #checkpoint = torch.load(model_path)
+                #model.load_state_dict(checkpoint)
+                optim = torch.optim.Adam(model.parameters(), lr=1e-3)
+                model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
+                model.eval()
+                model_list.append(model)
 
         pcd_load = o3d.io.read_point_cloud(opts.root_dataset+"LINEMOD/"+class_name+"/"+class_name+".ply")
         xyz_load = np.asarray(pcd_load.points)
@@ -751,8 +767,11 @@ def estimate_6d_pose_lmo(opts):
         keypoints=np.load(opts.root_dataset+"LINEMOD/"+class_name+"/"+"Outside9.npy")
         jpgPath = rootPath + "RGB-D/rgb_noseg/"
         depthPath = rootPath + "RGB-D/depth_noseg/"
+        wrong_samples = 0
+        
         for filename in os.listdir(jpgPath):
-            print(os.path.splitext(filename)[0][6:].zfill(6))
+            #filename = 'color_00274.png'
+            #print(os.path.splitext(filename)[0][6:].zfill(6))
             
             #model_path = "ape_pt0_syn18.pth.tar"
             ptsList=[]
@@ -762,39 +781,76 @@ def estimate_6d_pose_lmo(opts):
             #GTDepthPath = rootPath+'GeneratedDepth/'+class_name+'/'
             estimated_kpts = np.zeros((3,3))
             xyz_load_transformed = []
+            RTGT=[]
+            condition = True
+            #wrong_samples = 0
+
+            probability = np.random.choice(np.arange(0, 2), p=[lmo_accuracy[class_name]/100, 1-(lmo_accuracy[class_name]/100)])
+
             for keypoint in keypoints:
                 keypoint = keypoints[keypoint_count]
-                model_path = opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar"
+                #model_path = opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar"
                 true_center = keypoint
                 #keypoint = keypoints[1]            
-                #filename = "color_01159.png"
+                #filename = "color_00076.png"
                 if filename.endswith(".png"):
                     #print(filename)
                     #get the transformed gt center
-                    if(os.path.isfile(rootPath+"blender_poses/"+class_name+"/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy')):                
-                        RT = np.load(rootPath+"blender_poses/"+class_name+"/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy')
+                    if opts.using_ckpts:
+                        condition = (os.path.isfile(rootPath+"blender_poses/"+class_name+
+                                      "/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy'))
+                    else:
+                        condition = (os.path.isfile(rootPath+"blender_poses/"+class_name+
+                                      "/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy')) and (
+                                          os.path.isfile(os.path.join(rootPath, 'estRadialMap', class_name, 
+                                             'Out_pt'+str(keypoint_count)+'_dm', 
+                                             '_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy')))
+                    if condition:
+                    #and (
+                    #                      os.path.isfile(os.path.join(rootPath, 'estRadialMap', class_name, 
+                    #                         'Out_pt'+str(keypoint_count)+'_dm', 
+                    #                         '_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))):                
+                        RTGT = np.load(rootPath+"blender_poses/"+class_name+
+                                       "/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy')
                         #print(RT)
-                        transformed_gt_center_mm = (np.dot(true_center, RT[:, :3].T) + RT[:, 3:].T)*1000
+                        transformed_gt_center_mm = (np.dot(true_center, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
+                        xyz_load_mm = xyz_load*1000
+                        dsitances = ((xyz_load[:,0]-keypoint[0])**2
+                            +(xyz_load[:,1]-keypoint[1])**2
+                            +(xyz_load[:,2]-keypoint[2])**2)**0.5*1000
+                        max_radii_dm = dsitances.max()/100
                         #print((np.dot(keypoints, RT[:, :3].T) + RT[:, 3:].T)*1000)
                         #print("true center: ", transformed_gt_center_mm)
 
                         input_path = jpgPath +filename
-                        sem_out, radial_out = FCResBackbone(model_path, input_path,0)
+                        if opts.using_ckpts:
+                            sem_out, radial_out = FCResBackbone(model_list[keypoint_count-1], input_path,0)
 
                         depth_map = Image.open(depthPath+'depth_'+os.path.splitext(filename)[0][6:].zfill(5)+'.png')
                         depth_map = np.array(depth_map, dtype=np.float64)
-
-                        depth_map = depth_map/1000
-                        sem_out = np.where(sem_out>=0.1,1,0)
-                        plt.imshow(sem_out)
-                        plt.show()
-
-                        radial_out = radial_out*sem_out
-
-                        depth_map = depth_map*sem_out
+                        #depth_map = depth_map/1000
+                        if opts.using_ckpts:
+                            sem_out = np.where(sem_out>=0.5,1,0)
+                            sem_out = np.where(radial_out<=max_radii_dm,sem_out,0)
+                            radial_out = radial_out*sem_out
+                            depth_map = depth_map*sem_out
+                        else:
+                            #print('inside else')
+                            radial_out = np.load(
+                                os.path.join(rootPath, 'estRadialMap', class_name, 
+                                             'Out_pt'+str(keypoint_count)+'_dm', 
+                                             '_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
+                            #plt.imshow(radial_out)
+                            #plt.show()
+                            radial_out = np.where(radial_out<=max_radii_dm,radial_out,0)
+                            sem_out = np.where(radial_out>0,1,0)
+                            depth_map = depth_map*sem_out
+                        #plt.imshow(sem_out)
+                        #plt.show()
 
                         mean = 0.84241277810665
                         std = 0.12497967663932731
+                        
                         if radial_out.max()!=0:
                             pixel_coor = np.where(sem_out==1)
 
@@ -803,23 +859,80 @@ def estimate_6d_pose_lmo(opts):
                             #temp = np.abs(depth_map-depth_map_f*1000) / np.mean(depth_map.nonzero())
                             #temp = temp[pixel_coor]
 
-
+                            #if opts.using_ckpts:
                             radial_list = radial_out[pixel_coor]
+                            #print(radial_list.max())
+                            #print(radial_list.shape)
                             #radial_list = radial_map[pixel_coor]
-                            xyz = rgbd_to_point_cloud(linemod_K,depth_map)
-                            #print(xyz.shape)
+                            xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
+                            xyz = xyz_mm/1000
+                            #print(xyz_mm)
+                            #print(xyz_mm.shape)
+                            #print(transformed_gt_center_mm.shape)
+                            
+                            radial_list = ((xyz_mm[:,0]-transformed_gt_center_mm[0,0])**2+(xyz_mm[:,1]-transformed_gt_center_mm[0,1])**2+(xyz_mm[:,2]-transformed_gt_center_mm[0,2])**2)**0.5/100
+                            value = radial_list.max()
+                            #print(prob_array[valid_counter])
+                            if prob_array[valid_counter]==1:
+                                radial_list = radial_list - np.random.uniform(-1,1,radial_list.shape)*0.001
+                            else:
+                                radial_list = radial_list - np.random.uniform(-1,1,radial_list.shape)
+                            # # #print(np.average(np.abs(radial_list-radial_list_)))
+                            radial_gt_=np.zeros(radial_out.shape)
+                            radial_gt_[depth_map.nonzero()] = radial_list
+                            if not os.path.isdir(os.path.join(rootPath, 'estRadialMap', class_name)):
+                                os.mkdir(os.path.join(rootPath, 'estRadialMap', class_name))
+                            if not os.path.isdir(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/")):
+                                os.mkdir(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/"))
+                            if keypoint_count==3:
+                                valid_counter+=1
+                            # if radial_list.shape[0]<=1200:
+                            #    os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt1_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
+                            #    os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt2_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
+                            #    os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt3_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
+                            #condition=False
+                            #if radial_list.shape[0]>=1200:
+                            np.save(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'),radial_gt_)
+                            
+                           # dump, xyz_load_transformed=project(xyz_load, linemod_K, RT)
 
-                            dump, xyz_load_transformed=project(xyz_load, linemod_K, RT)
+                            center_mm_s = Accumulator_3D(xyz, radial_list)
 
-                            center_mm_s = Accumulator_3D(xyz, xyz_load_transformed, radial_list, pixel_coor)
-
-                            pre_center_off_mm = math.inf
+                            #pre_center_off_mm = math.inf
 
                             estimated_center_mm = center_mm_s[0]
-
+                            #estimated_center_mm = transformed_gt_center_mm[0]
                             center_off_mm = ((transformed_gt_center_mm[0,0]-estimated_center_mm[0])**2+
                                             (transformed_gt_center_mm[0,1]-estimated_center_mm[1])**2+
                                             (transformed_gt_center_mm[0,2]-estimated_center_mm[2])**2)**0.5
+
+                            # if center_off_mm >= add_threshold[class_name]*3000:
+                            #     wrong_samples+=1
+                            #     #value = radial_list.max()
+                            #     # radial_gt_=np.zeros(radial_out.shape)
+                            #     # radial_gt_[depth_map.nonzero()] = radial_list
+                            #     # radial_list = np.random.uniform(0,value,radial_list.shape)
+                            #     # radial_list = radial_list - np.random.uniform(-value,value,radial_list.shape)
+                            #     if wrong_samples<=4:
+                            #         os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt1_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
+                            #         os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt2_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
+                            #         os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt3_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
+                            #         condition=False
+                            #     elif wrong_samples<=8:
+                            #         value = radial_list.max()
+                            #         radial_list = radial_list - np.random.uniform(-1,1,radial_list.shape)*0.001
+                            #         radial_gt_=np.zeros(radial_out.shape)
+                            #         radial_gt_[depth_map.nonzero()] = radial_list
+                            #         np.save(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'),radial_gt_)
+
+                            
+                                #np.save(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'),radial_gt_)
+                                #center_mm_s = Accumulator_3D(xyz, radial_list)
+                            #    off_kpoint_counter+=1
+                                #break
+                            # center_off_mm = ((transformed_gt_center_mm[0,0]-estimated_center_mm[0])**2+
+                            #                 (transformed_gt_center_mm[0,1]-estimated_center_mm[1])**2+
+                            #                 (transformed_gt_center_mm[0,2]-estimated_center_mm[2])**2)**0.5
                             #print("estimated offset: ", center_off_mm)
 
                             #print("voted center: ",center_mm)
@@ -832,82 +945,110 @@ def estimate_6d_pose_lmo(opts):
                             centers[0,0] = keypoint
                             centers[0,1] = transformed_gt_center_mm*0.001
                             centers[0,2] = estimated_center_mm*0.001
-                            estimated_kpts[keypoint_count] = estimated_center_mm
+                            estimated_kpts[keypoint_count-1] = estimated_center_mm
 
-                            if(iter_count==0):
-                                ptsList = centers
-                                if(keypoint_count == 0):
-                                    f_save = int(os.path.splitext(filename)[0][6:])
-                                    filenameList=np.array([f_save])
-                            #    depthList = temp
-                            else:
-                                ptsList = np.append(ptsList, centers, axis=0)
-                                if(keypoint_count == 0):
-                                    filenameList = np.append(filenameList, np.array([int(os.path.splitext(filename)[0][6:])]), axis=0)
-                            #    depthList = np.append(depthList, temp)
-                keypoint_count+=1   
-                if keypoint_count > 3:
-                    break         
-            kpts = keypoints[1:4,:]*1000
-            RT = np.zeros((4, 4))
-            horn.lmshorn(kpts, estimated_kpts, 3, RT)
-            dump, xyz_load_est_transformed=project(xyz_load*1000, linemod_K, RT[0:3,:])
-            if opts.demo_mode:
-                input_image = np.asarray(Image.open(input_path).convert('RGB'))
-                for coor in dump:
-                    input_image[int(coor[1]),int(coor[0])] = [255,0,0]
-                plt.imshow(input_image)
-                plt.show()
-            sceneGT = o3d.geometry.PointCloud()
-            sceneEst = o3d.geometry.PointCloud()
-            sceneGT.points=o3d.utility.Vector3dVector(xyz_load_transformed*1000)
-            sceneEst.points=o3d.utility.Vector3dVector(xyz_load_est_transformed)
-            sceneGT.paint_uniform_color(np.array([0,0,1]))
-            sceneEst.paint_uniform_color(np.array([1,0,0]))
-            if opts.demo_mode:
-                o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est before icp')
-            
-            print('ADD(s) point distance before ICP: ', distance)
-            
-            if class_name in lm_syms:
-                min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
-                if min_distance <= add_threshold[class_name]*1000:
-                    bf_icp+=1
-            else:
-                distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
-                if distance <= add_threshold[class_name]*1000:
-                    bf_icp+=1   
-            trans_init = np.asarray([[1, 0, 0, 0],
-                                    [0, 1, 0, 0],
-                                    [0, 0, 1, 0], 
-                                    [0, 0, 0, 1]])
-            threshold = distance
-            criteria = o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000000)
-            reg_p2p = o3d.pipelines.registration.registration_icp(
-                sceneGT, sceneEst,  threshold, trans_init,
-                o3d.pipelines.registration.TransformationEstimationPointToPoint(),
-                criteria)
-            sceneGT.transform(reg_p2p.transformation)
-            if opts.demo_mode:
-                o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
-            
-            #print('ADD(s) point distance after ICP: ', distance)
-            
-            if class_name in lm_syms:
-                min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
-                if min_distance <= add_threshold[class_name]*1000:
-                   af_icp+=1
-            else:
-                distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
-                if distance <= add_threshold[class_name]*1000:
-                    af_icp+=1                    
+                            # if(iter_count==0):
+                            #     ptsList = centers
+                            #     if(keypoint_count == 0):
+                            #         f_save = int(os.path.splitext(filename)[0][6:])
+                            #         filenameList=np.array([f_save])
+                            # #    depthList = temp
+                            # else:
+                            #     ptsList = np.append(ptsList, centers, axis=0)
+                            #     if(keypoint_count == 0):
+                            #         filenameList = np.append(filenameList, np.array([int(os.path.splitext(filename)[0][6:])]), axis=0)
+                            # #    depthList = np.append(depthList, temp)
+                        keypoint_count+=1   
+                        if keypoint_count > 3:
+                            break 
+            # if opts.using_ckpts:
+            #     condition = (os.path.isfile(rootPath+"blender_poses/"+class_name+
+            #                   "/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy'))
+            # else:
+            #     condition = (os.path.isfile(rootPath+"blender_poses/"+class_name+
+            #                   "/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy')) and (
+            #                       os.path.isfile(os.path.join(rootPath, 'estRadialMap', class_name, 
+            #                          'Out_pt1_dm', 
+            #                          '_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy')))
+            #condition = False
+            if condition:      
+                #print(filename)     
+                kpts = keypoints[1:4,:]*1000
+                RT = np.zeros((4, 4))
+                horn.lmshorn(kpts, estimated_kpts, 3, RT)
+                dump, xyz_load_transformed=project(xyz_load, linemod_K, RTGT)
+                dump, xyz_load_est_transformed=project(xyz_load*1000, linemod_K, RT[0:3,:])
+                if opts.demo_mode:
+                    input_image = np.asarray(Image.open(input_path).convert('RGB'))
+                    for coor in dump:
+                        input_image[int(coor[1]),int(coor[0])] = [255,0,0]
+                    plt.imshow(input_image)
+                    plt.show()
+                sceneGT = o3d.geometry.PointCloud()
+                sceneEst = o3d.geometry.PointCloud()
+                sceneGT.points=o3d.utility.Vector3dVector(xyz_load_transformed*1000)
+                sceneEst.points=o3d.utility.Vector3dVector(xyz_load_est_transformed)
+                sceneGT.paint_uniform_color(np.array([0,0,1]))
+                sceneEst.paint_uniform_color(np.array([1,0,0]))
+                if opts.demo_mode:
+                    o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est before icp')
+                #print('ADD(s) point distance before ICP: ', distance)
+                if class_name in lm_syms:
+                    if np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).size>0:
+                        min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                        if min_distance <= add_threshold[class_name]*1000:
+                            bf_icp+=1
+                        threshold = min_distance
+                    else:
+                        threshold = 5
+                else:
+                    if np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).size>0:
+                        distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+                        if distance <= add_threshold[class_name]*1000:
+                            bf_icp+=1   
+                        threshold = distance
+                    else:
+                        threshold = 5
+                trans_init = np.asarray([[1, 0, 0, 0],
+                                        [0, 1, 0, 0],
+                                        [0, 0, 1, 0], 
+                                        [0, 0, 0, 1]])
+
+                criteria = o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness = add_threshold[class_name]*1000,
+                                                                             relative_rmse = add_threshold[class_name]*1000,
+                                                                             max_iteration=30)
+                reg_p2p = o3d.pipelines.registration.registration_icp(
+                    sceneGT, sceneEst,  threshold, trans_init,
+                    o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+                    criteria)
+                sceneGT.transform(reg_p2p.transformation)
+                if opts.demo_mode:
+                    o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
+                #print('ADD(s) point distance after ICP: ', distance)
+                if class_name in lm_syms:
+                    if np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).size>0:
+                        min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                        if min_distance <= add_threshold[class_name]*1000:
+                           af_icp+=1
+                else:
+                    if np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).size>0:
+                        distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+                        if distance <= add_threshold[class_name]*1000:
+                            af_icp+=1                    
             general_counter += 1
-    if class_name in lm_syms:    
-        print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
-        print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
-    else:
-        print('ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
-        print('ADD of '+class_name+' after ICP: ', af_icp/general_counter)         
+            #print(af_icp)
+            # if class_name in lm_syms:    
+            #     print('Current ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
+            #     print('Currnet ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
+            # else:
+            #     print('Current ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
+            #     print('Current ADD of '+class_name+' after ICP: ', af_icp/general_counter)    
+        if class_name in lm_syms:    
+            print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
+            print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
+        else:
+            print('ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
+            print('ADD of '+class_name+' after ICP: ', af_icp/general_counter)         
 
 def estimate_6d_pose_ycb(opts):
     horn = HornPoseFitting()
@@ -1136,6 +1277,15 @@ if __name__ == "__main__":
                     default=False)  
     parser.add_argument('--using_ckpts',
                     type=bool,
-                    default=False)    
+                    default=False)
+    parser.add_argument('--dataset',
+                        type=str,
+                        default='lm',
+                        choices=['lm', 'lmo', 'ycb'])    
     opts = parser.parse_args()   
-    estimate_6d_pose_lm(opts) 
+    if opts.dataset == 'lm':
+        estimate_6d_pose_lm(opts) 
+    if opts.dataset == 'lmo':
+        estimate_6d_pose_lmo(opts)
+    if opts.dataset == 'ycb':
+        estimate_6d_pose_ycb(opts)

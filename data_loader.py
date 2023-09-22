@@ -65,15 +65,20 @@ class RData(RMapDataset):
                         transform=transform
                         )
 
-    def transform(self, img, lbl,depth,mask,gtpose,kpt):
+    def transform(self, img_id, img, lbl,depth,mask,gtpose,kpt):
+        #print(img_id)
         #generate gt radius label
         Radius3DMap = np.zeros(mask.shape)
         pixel_coor = np.argwhere(mask==255)
         depth[np.where(mask==0)] = 0
-        xyz,y,x = rgbd_to_point_cloud(linemod_K, depth)
-        xyz=xyz/1000
-        #print(xyz.shape)
-        dump, transformed_kpoint = project(np.array([kpt]),linemod_K,gtpose)
+        xyz_mm,y,x = rgbd_to_point_cloud(linemod_K, depth)
+        xyz=xyz_mm/1000
+        #print(xyz)
+        #print(gtpose)
+        linemod_K_m = linemod_K
+        linemod_K_m[0:2,:] = linemod_K[0:2,:]/1000
+        #print(linemod_K_m)
+        dump, transformed_kpoint = project(np.array([kpt]),linemod_K_m,gtpose)
         transformed_kpoint=transformed_kpoint[0]
         distance_list = ((xyz[:,0]-transformed_kpoint[0])**2+(xyz[:,1]-transformed_kpoint[1])**2+(xyz[:,2]-transformed_kpoint[2])**2)**0.5
         Radius3DMap = fast_for_map(y, x, xyz, distance_list, Radius3DMap)
