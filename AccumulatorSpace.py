@@ -17,6 +17,7 @@ import scipy
 
 
 lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['eggbox']
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 ycb_cls_names={1:'002_master_chef_can',
            2:'003_cracker_box',
@@ -547,7 +548,7 @@ def estimate_6d_pose_lm(opts):
                  +(xyz_load[:,1]-keypoints[i+1,1])**2
                 +(xyz_load[:,2]-keypoints[i+1,2])**2)**0.5
             max_radii_dm[i] = dsitances.max()*10
-        print(max_radii_dm)
+        #print(max_radii_dm)
         dataPath = rootpvPath + 'JPEGImages/'
             
         for filename in os.listdir(dataPath):
@@ -742,12 +743,6 @@ def estimate_6d_pose_lmo(opts):
         #h5 save keypoints
         filenameList=[]
         model_list=[]
-        no_of_samples = len([name for name in os.listdir(rootPath+"blender_poses/"+class_name)])
-        #no_of_samples = 1213
-        prob_array = np.zeros(no_of_samples)
-        prob_array[0:int(lmo_accuracy[class_name]/100*1213)]=1
-        prob_array = np.random.permutation(prob_array)
-        #print(np.count_nonzero(prob_array)/1213)
 
         if opts.using_ckpts:
             for i in range(1,4):
@@ -765,6 +760,16 @@ def estimate_6d_pose_lmo(opts):
         xyz_load = np.asarray(pcd_load.points)
 
         keypoints=np.load(opts.root_dataset+"LINEMOD/"+class_name+"/"+"Outside9.npy")
+
+        #threshold of radii maximum limits
+        max_radii_dm = np.zeros(3)
+        for i in range(3):
+            dsitances = ((xyz_load[:,0]-keypoints[i+1,0])**2
+                 +(xyz_load[:,1]-keypoints[i+1,1])**2
+                +(xyz_load[:,2]-keypoints[i+1,2])**2)**0.5
+            max_radii_dm[i] = dsitances.max()*10
+
+        
         jpgPath = rootPath + "RGB-D/rgb_noseg/"
         depthPath = rootPath + "RGB-D/depth_noseg/"
         wrong_samples = 0
@@ -785,7 +790,6 @@ def estimate_6d_pose_lmo(opts):
             condition = True
             #wrong_samples = 0
 
-            probability = np.random.choice(np.arange(0, 2), p=[lmo_accuracy[class_name]/100, 1-(lmo_accuracy[class_name]/100)])
 
             for keypoint in keypoints:
                 keypoint = keypoints[keypoint_count]
@@ -813,23 +817,13 @@ def estimate_6d_pose_lmo(opts):
                         RTGT = np.load(rootPath+"blender_poses/"+class_name+
                                        "/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy')
                         #print(RT)
-                        transformed_gt_center_mm = (np.dot(true_center, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
-                        xyz_load_mm = xyz_load*1000
-                        dsitances = ((xyz_load[:,0]-keypoint[0])**2
-                            +(xyz_load[:,1]-keypoint[1])**2
-                            +(xyz_load[:,2]-keypoint[2])**2)**0.5*1000
-                        max_radii_dm = dsitances.max()/100
-                        #print((np.dot(keypoints, RT[:, :3].T) + RT[:, 3:].T)*1000)
-                        #print("true center: ", transformed_gt_center_mm)
 
                         input_path = jpgPath +filename
-                        if opts.using_ckpts:
-                            sem_out, radial_out = FCResBackbone(model_list[keypoint_count-1], input_path,0)
-
                         depth_map = Image.open(depthPath+'depth_'+os.path.splitext(filename)[0][6:].zfill(5)+'.png')
                         depth_map = np.array(depth_map, dtype=np.float64)
                         #depth_map = depth_map/1000
                         if opts.using_ckpts:
+                            sem_out, radial_out = FCResBackbone(model_list[keypoint_count-1], input_path,0)
                             sem_out = np.where(sem_out>=0.5,1,0)
                             sem_out = np.where(radial_out<=max_radii_dm,sem_out,0)
                             radial_out = radial_out*sem_out
@@ -842,7 +836,7 @@ def estimate_6d_pose_lmo(opts):
                                              '_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
                             #plt.imshow(radial_out)
                             #plt.show()
-                            radial_out = np.where(radial_out<=max_radii_dm,radial_out,0)
+                            radial_out = np.where(radial_out<=max_radii_dm[keypoint_count-1],radial_out,0)
                             sem_out = np.where(radial_out>0,1,0)
                             depth_map = depth_map*sem_out
                         #plt.imshow(sem_out)
@@ -854,129 +848,37 @@ def estimate_6d_pose_lmo(opts):
                         if radial_out.max()!=0:
                             pixel_coor = np.where(sem_out==1)
 
-
-                            # get the difference between generated real depth
-                            #temp = np.abs(depth_map-depth_map_f*1000) / np.mean(depth_map.nonzero())
-                            #temp = temp[pixel_coor]
-
                             #if opts.using_ckpts:
                             radial_list = radial_out[pixel_coor]
-                            #print(radial_list.max())
-                            #print(radial_list.shape)
-                            #radial_list = radial_map[pixel_coor]
                             xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
                             xyz = xyz_mm/1000
-                            #print(xyz_mm)
-                            #print(xyz_mm.shape)
-                            #print(transformed_gt_center_mm.shape)
-                            
-                            radial_list = ((xyz_mm[:,0]-transformed_gt_center_mm[0,0])**2+(xyz_mm[:,1]-transformed_gt_center_mm[0,1])**2+(xyz_mm[:,2]-transformed_gt_center_mm[0,2])**2)**0.5/100
-                            value = radial_list.max()
-                            #print(prob_array[valid_counter])
-                            if prob_array[valid_counter]==1:
-                                radial_list = radial_list - np.random.uniform(-1,1,radial_list.shape)*0.001
-                            else:
-                                radial_list = radial_list - np.random.uniform(-1,1,radial_list.shape)
-                            # # #print(np.average(np.abs(radial_list-radial_list_)))
-                            radial_gt_=np.zeros(radial_out.shape)
-                            radial_gt_[depth_map.nonzero()] = radial_list
-                            if not os.path.isdir(os.path.join(rootPath, 'estRadialMap', class_name)):
-                                os.mkdir(os.path.join(rootPath, 'estRadialMap', class_name))
-                            if not os.path.isdir(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/")):
-                                os.mkdir(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/"))
-                            if keypoint_count==3:
-                                valid_counter+=1
-                            # if radial_list.shape[0]<=1200:
-                            #    os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt1_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
-                            #    os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt2_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
-                            #    os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt3_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
-                            #condition=False
-                            #if radial_list.shape[0]>=1200:
-                            np.save(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'),radial_gt_)
-                            
                            # dump, xyz_load_transformed=project(xyz_load, linemod_K, RT)
 
                             center_mm_s = Accumulator_3D(xyz, radial_list)
 
                             #pre_center_off_mm = math.inf
+                            transformed_gt_center_mm = (np.dot(keypoints, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
+
+                            transformed_gt_center_mm = transformed_gt_center_mm[keypoint_count]
 
                             estimated_center_mm = center_mm_s[0]
                             #estimated_center_mm = transformed_gt_center_mm[0]
-                            center_off_mm = ((transformed_gt_center_mm[0,0]-estimated_center_mm[0])**2+
-                                            (transformed_gt_center_mm[0,1]-estimated_center_mm[1])**2+
-                                            (transformed_gt_center_mm[0,2]-estimated_center_mm[2])**2)**0.5
-
-                            # if center_off_mm >= add_threshold[class_name]*3000:
-                            #     wrong_samples+=1
-                            #     #value = radial_list.max()
-                            #     # radial_gt_=np.zeros(radial_out.shape)
-                            #     # radial_gt_[depth_map.nonzero()] = radial_list
-                            #     # radial_list = np.random.uniform(0,value,radial_list.shape)
-                            #     # radial_list = radial_list - np.random.uniform(-value,value,radial_list.shape)
-                            #     if wrong_samples<=4:
-                            #         os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt1_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
-                            #         os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt2_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
-                            #         os.remove(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt3_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'))
-                            #         condition=False
-                            #     elif wrong_samples<=8:
-                            #         value = radial_list.max()
-                            #         radial_list = radial_list - np.random.uniform(-1,1,radial_list.shape)*0.001
-                            #         radial_gt_=np.zeros(radial_out.shape)
-                            #         radial_gt_[depth_map.nonzero()] = radial_list
-                            #         np.save(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'),radial_gt_)
-
-                            
-                                #np.save(os.path.join(rootPath, 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm/",'_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy'),radial_gt_)
-                                #center_mm_s = Accumulator_3D(xyz, radial_list)
-                            #    off_kpoint_counter+=1
-                                #break
-                            # center_off_mm = ((transformed_gt_center_mm[0,0]-estimated_center_mm[0])**2+
-                            #                 (transformed_gt_center_mm[0,1]-estimated_center_mm[1])**2+
-                            #                 (transformed_gt_center_mm[0,2]-estimated_center_mm[2])**2)**0.5
-                            #print("estimated offset: ", center_off_mm)
-
-                            #print("voted center: ",center_mm)
-                            '''
-                            index 0: original keypoint
-                            index 1: applied gt transformation keypoint
-                            index 2: network estimated keypoint
-                            '''
-                            centers = np.zeros((1,3,3))
-                            centers[0,0] = keypoint
-                            centers[0,1] = transformed_gt_center_mm*0.001
-                            centers[0,2] = estimated_center_mm*0.001
+                            center_off_mm = ((transformed_gt_center_mm[0]-estimated_center_mm[0])**2+
+                                            (transformed_gt_center_mm[1]-estimated_center_mm[1])**2+
+                                            (transformed_gt_center_mm[2]-estimated_center_mm[2])**2)**0.5
                             estimated_kpts[keypoint_count-1] = estimated_center_mm
 
-                            # if(iter_count==0):
-                            #     ptsList = centers
-                            #     if(keypoint_count == 0):
-                            #         f_save = int(os.path.splitext(filename)[0][6:])
-                            #         filenameList=np.array([f_save])
-                            # #    depthList = temp
-                            # else:
-                            #     ptsList = np.append(ptsList, centers, axis=0)
-                            #     if(keypoint_count == 0):
-                            #         filenameList = np.append(filenameList, np.array([int(os.path.splitext(filename)[0][6:])]), axis=0)
-                            # #    depthList = np.append(depthList, temp)
                         keypoint_count+=1   
                         if keypoint_count > 3:
                             break 
-            # if opts.using_ckpts:
-            #     condition = (os.path.isfile(rootPath+"blender_poses/"+class_name+
-            #                   "/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy'))
-            # else:
-            #     condition = (os.path.isfile(rootPath+"blender_poses/"+class_name+
-            #                   "/pose"+str(int(os.path.splitext(filename)[0][6:]))+'.npy')) and (
-            #                       os.path.isfile(os.path.join(rootPath, 'estRadialMap', class_name, 
-            #                          'Out_pt1_dm', 
-            #                          '_'+str(int(os.path.splitext(filename)[0][6:])).zfill(5)+'.npy')))
-            #condition = False
             if condition:      
                 #print(filename)     
                 kpts = keypoints[1:4,:]*1000
                 RT = np.zeros((4, 4))
                 horn.lmshorn(kpts, estimated_kpts, 3, RT)
-                dump, xyz_load_transformed=project(xyz_load, linemod_K, RTGT)
+                RTGT_mm = RTGT
+                RTGT_mm[:,3] = RTGT_mm[:,3]*1000
+                dump, xyz_load_transformed=project(xyz_load*1000, linemod_K, RTGT_mm)
                 dump, xyz_load_est_transformed=project(xyz_load*1000, linemod_K, RT[0:3,:])
                 if opts.demo_mode:
                     input_image = np.asarray(Image.open(input_path).convert('RGB'))
@@ -1037,12 +939,12 @@ def estimate_6d_pose_lmo(opts):
                             af_icp+=1                    
             general_counter += 1
             #print(af_icp)
-            # if class_name in lm_syms:    
-            #     print('Current ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
-            #     print('Currnet ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
-            # else:
-            #     print('Current ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
-            #     print('Current ADD of '+class_name+' after ICP: ', af_icp/general_counter)    
+            if class_name in lm_syms:    
+                print('Current ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
+                print('Currnet ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
+            else:
+                print('Current ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
+                print('Current ADD of '+class_name+' after ICP: ', af_icp/general_counter)    
         if class_name in lm_syms:    
             print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
             print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
