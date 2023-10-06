@@ -65,7 +65,7 @@ class RData(RMapDataset):
                         transform=transform
                         )
 
-    def transform(self, img_id, img, lbl,depth,mask,gtpose,kpt):
+    def transform(self, img_id, img, depth,mask,gtpose,kpt):
         #print(img_id)
         #generate gt radius label
         Radius3DMap = np.zeros(mask.shape)

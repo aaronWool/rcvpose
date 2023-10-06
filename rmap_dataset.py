@@ -29,16 +29,16 @@ class RMapDataset(Dataset):
 
 
         if self.dname == 'lm':
-            self._imgpath = os.path.join(self.root, 'LINEMOD', self.obj_name, 'JPEGImages', '%s.jpg')
-            self._radialpath = os.path.join(self.root, 'LINEMOD_ORIG', self.obj_name, 'Out_pt'+kpt_num+'_dm', '%s.npy')
-            self._depthpath = os.path.join(self.root, 'LINEMOD_ORIG', self.obj_name, 'data', 'depth%s.dpt')
-            self._maskpath = os.path.join(self.root, 'LINEMOD', self.obj_name, 'mask', '%s.png')
-            self._gtposepath = os.path.join(self.root, 'LINEMOD', self.obj_name, 'pose', 'pose%s.npy')
-            self._imgsetpath = os.path.join(self.root,'LINEMOD', self.obj_name, 'Split', '%s.txt')
+            self._imgpath = os.path.join(self.root, self.obj_name, 'JPEGImages', '%s.jpg')
+            #self._radialpath = os.path.join(self.root, 'LINEMOD_ORIG', self.obj_name, 'Out_pt'+kpt_num+'_dm', '%s.npy')
+            self._depthpath = os.path.join(self.root, self.obj_name, 'data', 'depth%s.dpt')
+            self._maskpath = os.path.join(self.root, self.obj_name, 'mask', '%s.png')
+            self._gtposepath = os.path.join(self.root, self.obj_name, 'pose', 'pose%s.npy')
+            self._imgsetpath = os.path.join(self.root, self.obj_name, 'Split', '%s.txt')
 
             # load ply 
             #print(self.kpt)        
-            cad_model_mm = o3d.io.read_point_cloud(os.path.join(self.root, 'LINEMOD_ORIG', self.obj_name, 'mesh.ply'))
+            cad_model_mm = o3d.io.read_point_cloud(os.path.join(self.root, self.obj_name, 'mesh.ply'))
             cad_model_points_m = np.asarray(cad_model_mm.points)/1000
             if os.path.isfile(os.path.join(self.root,'LINEMOD',self.obj_name,'Outside9.npy')):
                 self.kpt = np.load(os.path.join(self.root,'LINEMOD',self.obj_name,'Outside9.npy'))
@@ -71,7 +71,7 @@ class RMapDataset(Dataset):
         img_id = self.ids[item]
 
         if self.dname == 'lm':
-            target = np.load(self._radialpath % img_id)
+            #target = np.load(self._radialpath % img_id)
             depth = read_depth(self._depthpath % str(int(img_id)))
             mask = np.asarray(Image.open((self._maskpath % str(int(img_id)).zfill(4))),dtype=int)[:,:,0]
             gtpose = np.load(self._gtposepath% str(int(img_id)))
@@ -85,7 +85,7 @@ class RMapDataset(Dataset):
             img = np.array(ycbh5f[img_id])
             ycbh5f.close()
         if self.transform is not None:
-            img_torch, target_torch, sem_target_torch = self.transform(img_id, img, target,depth,mask,gtpose,self.kpt)
+            img_torch, target_torch, sem_target_torch = self.transform(img_id, img, depth, mask, gtpose, self.kpt)
 
         return img_torch, target_torch, sem_target_torch
 
