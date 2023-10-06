@@ -35,16 +35,24 @@ class RMapDataset(Dataset):
             self._maskpath = os.path.join(self.root, 'LINEMOD', self.obj_name, 'mask', '%s.png')
             self._gtposepath = os.path.join(self.root, 'LINEMOD', self.obj_name, 'pose', 'pose%s.npy')
             self._imgsetpath = os.path.join(self.root,'LINEMOD', self.obj_name, 'Split', '%s.txt')
-            self.kpt = np.load(os.path.join(self.root,'LINEMOD',self.obj_name,'Outside9.npy'))
-            self.kpt = self.kpt[int(kpt_num)]
+
             # load ply 
             #print(self.kpt)        
-            cad_model = o3d.io.read_point_cloud(os.path.join(self.root, 'LINEMOD_ORIG', self.obj_name, 'mesh.ply'))
-            cad_model_points_mm = np.asarray(cad_model.points)/1000
+            cad_model_mm = o3d.io.read_point_cloud(os.path.join(self.root, 'LINEMOD_ORIG', self.obj_name, 'mesh.ply'))
+            cad_model_points_m = np.asarray(cad_model_mm.points)/1000
+            if os.path.isfile(os.path.join(self.root,'LINEMOD',self.obj_name,'Outside9.npy')):
+                self.kpt = np.load(os.path.join(self.root,'LINEMOD',self.obj_name,'Outside9.npy'))
+            else:
+                print("No kpt file found, generating kpts...")
+                BBox = cad_model_mm.get_oriented_bounding_box()
+                bboxcorners=np.asarray((BBox.get_box_points()))
+                self.kpt = bboxcorners*2
+                np.save(os.path.join(self.root,'LINEMOD',self.obj_name,'Outside9.npy'), self.kpt)
+            self.kpt = self.kpt[int(kpt_num)]
             #print(cad_model_points)
-            dsitances = ((cad_model_points_mm[:,0]-self.kpt[0])**2
-                         +(cad_model_points_mm[:,1]-self.kpt[1])**2
-                         +(cad_model_points_mm[:,2]-self.kpt[2])**2)**0.5
+            dsitances = ((cad_model_points_m[:,0]-self.kpt[0])**2
+                         +(cad_model_points_m[:,1]-self.kpt[1])**2
+                         +(cad_model_points_m[:,2]-self.kpt[2])**2)**0.5
             self.max_radii_dm = dsitances.max()*10
             #print('maximum radial distance: ', self.max_radii_dm)
 
