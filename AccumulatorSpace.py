@@ -888,7 +888,7 @@ def estimate_6d_pose_lmo(opts):
                     plt.show()
                 sceneGT = o3d.geometry.PointCloud()
                 sceneEst = o3d.geometry.PointCloud()
-                sceneGT.points=o3d.utility.Vector3dVector(xyz_load_transformed*1000)
+                sceneGT.points=o3d.utility.Vector3dVector(xyz_load_transformed)
                 sceneEst.points=o3d.utility.Vector3dVector(xyz_load_est_transformed)
                 sceneGT.paint_uniform_color(np.array([0,0,1]))
                 sceneEst.paint_uniform_color(np.array([1,0,0]))
