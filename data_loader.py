@@ -74,12 +74,15 @@ class RData(RMapDataset):
         xyz_mm,y,x = rgbd_to_point_cloud(linemod_K, depth)
         xyz=xyz_mm/1000
         #print(xyz)
-        #print(gtpose)
-        linemod_K_m = linemod_K
-        linemod_K_m[0:2,:] = linemod_K[0:2,:]/1000
+        #print(gtpose.shape)
+        gtpose_mm = gtpose.copy()
+        gtpose_mm[:,3:] = gtpose[:,3:]*1000
         #print(linemod_K_m)
-        dump, transformed_kpoint = project(np.array([kpt]),linemod_K_m,gtpose)
-        transformed_kpoint=transformed_kpoint[0]
+        kpt_mm = kpt*1000
+        #print(kpt_mm)
+        dump, transformed_kpoint = project(np.array([kpt_mm]),linemod_K,gtpose_mm)
+        #print(transformed_kpoint)
+        transformed_kpoint=transformed_kpoint[0]/1000
         distance_list = ((xyz[:,0]-transformed_kpoint[0])**2+(xyz[:,1]-transformed_kpoint[1])**2+(xyz[:,2]-transformed_kpoint[2])**2)**0.5
         Radius3DMap = fast_for_map(y, x, xyz, distance_list, Radius3DMap)
         img = np.array(img, dtype=np.float64)
@@ -87,8 +90,6 @@ class RData(RMapDataset):
         lbl = np.array(Radius3DMap, dtype=np.float64)
         lbl = lbl*10
         lbl = np.where(lbl>self.max_radii_dm,0,lbl)
-        #plt.imshow(lbl)
-        #plt.show()
         if(len(lbl.shape)==2):
           lbl = np.expand_dims(lbl,axis=0)
         img -= self.mean

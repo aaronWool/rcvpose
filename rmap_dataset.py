@@ -29,7 +29,7 @@ class RMapDataset(Dataset):
 
 
         if self.dname == 'lm':
-            self._imgpath = os.path.join(self.root, self.obj_name, 'JPEGImages', '%s.jpg')
+            self._imgpath = os.path.join(self.root, self.obj_name,  'JPEGImages', '%s.jpg')
             #self._radialpath = os.path.join(self.root, 'LINEMOD_ORIG', self.obj_name, 'Out_pt'+kpt_num+'_dm', '%s.npy')
             self._depthpath = os.path.join(self.root, self.obj_name, 'data', 'depth%s.dpt')
             self._maskpath = os.path.join(self.root, self.obj_name, 'mask', '%s.png')
@@ -40,14 +40,14 @@ class RMapDataset(Dataset):
             #print(self.kpt)        
             cad_model_mm = o3d.io.read_point_cloud(os.path.join(self.root, self.obj_name, 'mesh.ply'))
             cad_model_points_m = np.asarray(cad_model_mm.points)/1000
-            if os.path.isfile(os.path.join(self.root,'LINEMOD',self.obj_name,'Outside9.npy')):
-                self.kpt = np.load(os.path.join(self.root,'LINEMOD',self.obj_name,'Outside9.npy'))
+            if os.path.isfile(os.path.join(self.root,self.obj_name,'Outside9.npy')):
+                self.kpt = np.load(os.path.join(self.root,self.obj_name,'Outside9.npy'))
             else:
                 print("No kpt file found, generating kpts...")
                 BBox = cad_model_mm.get_oriented_bounding_box()
                 bboxcorners=np.asarray((BBox.get_box_points()))
                 self.kpt = bboxcorners*2
-                np.save(os.path.join(self.root,'LINEMOD',self.obj_name,'Outside9.npy'), self.kpt)
+                np.save(os.path.join(self.root,self.obj_name,'Outside9.npy'), self.kpt)
             self.kpt = self.kpt[int(kpt_num)]
             #print(cad_model_points)
             dsitances = ((cad_model_points_m[:,0]-self.kpt[0])**2
