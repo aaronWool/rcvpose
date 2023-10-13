@@ -23,12 +23,7 @@ def centerest(point_list, radius_list):
     return X[0], X[1], X[2]
 
 
-vote = np.dtype([
-    ('mse', np.float64),
-    ('x', np.float64),
-    ('y', np.float64),
-    ('z', np.float64)
-])
+
 
 def random_centerest(xyz, radial_list, iterations):
     vote_list = np.zeros(iterations, dtype=vote)
@@ -112,8 +107,6 @@ def RANSAC_3D(xyz, radial_list):
     
 
     return center
-
-
 
 
 def main():
