@@ -11,7 +11,7 @@ vote = np.dtype([
 
 def random_centerest(xyz, radial_list, iterations):
     vote_list = np.zeros(iterations, dtype=vote)
-    for itr in prange(iterations):
+    for itr in range(iterations):
         index = np.random.randint(0, len(xyz), 4)
         point_list = xyz[index]
         radius_list = radial_list[index]
