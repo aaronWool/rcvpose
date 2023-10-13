@@ -9,6 +9,7 @@ from numba import jit,njit,cuda
 import os
 import open3d as o3d
 import time
+from ransac import RANSAC_3D
 from numba import prange
 import math
 import h5py
@@ -618,7 +619,11 @@ def estimate_6d_pose_lm(opts):
                         xyz = xyz_mm/1000
 
                         tic = time.time_ns()
-                        center_mm_s = Accumulator_3D(xyz, radial_list)
+
+                        center_mm_s = RANSAC_3D(xyz, radial_list)
+
+                        #center_mm_s = Accumulator_3D(xyz, radial_list)
+                        
                         toc = time.time_ns()
                         acc_time += toc-tic
                         #print("acc space: ", toc-tic)
@@ -627,7 +632,7 @@ def estimate_6d_pose_lm(opts):
                         
                         pre_center_off_mm = math.inf
                         
-                        estimated_center_mm = center_mm_s[0]
+                        estimated_center_mm = center_mm_s
                         
                         # center_off_mm = ((transformed_gt_center_mm[0]-estimated_center_mm[0])**2+
                         #                 (transformed_gt_center_mm[1]-estimated_center_mm[1])**2+
