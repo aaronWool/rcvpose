@@ -562,6 +562,7 @@ def estimate_6d_pose_lm(opts):
                     RTGT = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
                     #print(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
                     keypoint_count = 1
+                    xyz_mm_icp = []
                     for keypoint in keypoints:
                         keypoint=keypoints[keypoint_count]
                         #print(keypoint)
@@ -616,6 +617,12 @@ def estimate_6d_pose_lm(opts):
                             xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
                             radial_list = radial_est[depth_map.nonzero()]
                         xyz = xyz_mm/1000
+                        if keypoint_count == 1:
+                            xyz_mm_icp = xyz_mm
+                        else:
+                            for coor in xyz_mm:
+                                if not (coor == xyz_mm_icp).all(1).any():
+                                    xyz_mm_icp = np.append(xyz_mm_icp, np.expand_dims(coor,axis=0),axis=0)
 
                         tic = time.time_ns()
                         center_mm_s = Accumulator_3D(xyz, radial_list)
@@ -650,7 +657,6 @@ def estimate_6d_pose_lm(opts):
                         keypoint_count+=1
                         if keypoint_count > 3:
                             break
-
                     kpts = keypoints[1:4,:]*1000
                     RT = np.zeros((4, 4))
                     horn.lmshorn(kpts, estimated_kpts, 3, RT)
@@ -687,32 +693,37 @@ def estimate_6d_pose_lm(opts):
                         #print('ADD(s) point distance before ICP: ', distance)
                         if distance <= add_threshold[class_name]*1000:
                             bf_icp+=1
-                    
-                    trans_init = np.asarray([[1, 0, 0, 0],
-                                            [0, 1, 0, 0],
-                                            [0, 0, 1, 0], 
-                                            [0, 0, 0, 1]])
+
+                    scene = o3d.geometry.PointCloud()
+                    scene.points = o3d.utility.Vector3dVector(xyz_mm_icp)
+                    cad_model = o3d.geometry.PointCloud()
+                    cad_model.points = o3d.utility.Vector3dVector(xyz_load*1000)
+                    # trans_init = np.asarray([[1, 0, 0, 0],
+                    #                         [0, 1, 0, 0],
+                    #                         [0, 0, 1, 0], 
+                    #                         [0, 0, 0, 1]])
+                    trans_init = RT
                     if class_name in lm_syms:
                         threshold = min_distance
                     else:
                         threshold = distance
-                    criteria = o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000)
+                    criteria = o3d.pipelines.registration.ICPConvergenceCriteria()
                     reg_p2p = o3d.pipelines.registration.registration_icp(
-                        sceneGT, sceneEst,  threshold, trans_init,
+                        cad_model, scene, threshold, trans_init,
                         o3d.pipelines.registration.TransformationEstimationPointToPoint(),
                         criteria)
-                    sceneGT.transform(reg_p2p.transformation)
+                    cad_model.transform(reg_p2p.transformation)
                     if opts.demo_mode:
-                        o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
+                        o3d.visualization.draw_geometries([sceneGT, cad_model],window_name='gt vs est after icp')
                     
                     
                     #print('ADD(s) point distance after ICP: ', distance)
                     if class_name in lm_syms:
-                        min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                        min_distance = np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).min()
                         if min_distance <= add_threshold[class_name]*1000:
                             af_icp+=1
                     else:
-                        distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+                        distance = np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).mean()
                         if distance <= add_threshold[class_name]*1000:
                             af_icp+=1                   
                     general_counter += 1
@@ -789,7 +800,7 @@ def estimate_6d_pose_lmo(opts):
             condition = True
             #wrong_samples = 0
 
-
+            xyz_mm_icp = []
             for keypoint in keypoints:
                 keypoint = keypoints[keypoint_count]
                 #model_path = opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar"
@@ -852,6 +863,12 @@ def estimate_6d_pose_lmo(opts):
                             xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
                             xyz = xyz_mm/1000
                            # dump, xyz_load_transformed=project(xyz_load, linemod_K, RT)
+                            if keypoint_count == 1:
+                                xyz_mm_icp = xyz_mm
+                            else:
+                                for coor in xyz_mm:
+                                    if not (coor == xyz_mm_icp).all(1).any():
+                                        xyz_mm_icp = np.append(xyz_mm_icp, np.expand_dims(coor,axis=0),axis=0)
 
                             center_mm_s = Accumulator_3D(xyz, radial_list)
 
@@ -910,30 +927,35 @@ def estimate_6d_pose_lmo(opts):
                         threshold = distance
                     else:
                         threshold = 5
-                trans_init = np.asarray([[1, 0, 0, 0],
-                                        [0, 1, 0, 0],
-                                        [0, 0, 1, 0], 
-                                        [0, 0, 0, 1]])
+                scene = o3d.geometry.PointCloud()
+                scene.points = o3d.utility.Vector3dVector(xyz_mm_icp)
+                cad_model = o3d.geometry.PointCloud()
+                cad_model.points = o3d.utility.Vector3dVector(xyz_load*1000)                
+                # trans_init = np.asarray([[1, 0, 0, 0],
+                #                         [0, 1, 0, 0],
+                #                         [0, 0, 1, 0], 
+                #                         [0, 0, 0, 1]])
+                trans_init = RT
 
                 criteria = o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness = add_threshold[class_name]*1000,
                                                                              relative_rmse = add_threshold[class_name]*1000,
                                                                              max_iteration=30)
                 reg_p2p = o3d.pipelines.registration.registration_icp(
-                    sceneGT, sceneEst,  threshold, trans_init,
+                    cad_model, scene,  threshold, trans_init,
                     o3d.pipelines.registration.TransformationEstimationPointToPoint(),
                     criteria)
-                sceneGT.transform(reg_p2p.transformation)
+                cad_model.transform(reg_p2p.transformation)
                 if opts.demo_mode:
-                    o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
+                    o3d.visualization.draw_geometries([sceneGT, cad_model],window_name='gt vs est after icp')
                 #print('ADD(s) point distance after ICP: ', distance)
                 if class_name in lm_syms:
-                    if np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).size>0:
-                        min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                    if np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).size>0:
+                        min_distance = np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).min()
                         if min_distance <= add_threshold[class_name]*1000:
                            af_icp+=1
                 else:
-                    if np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).size>0:
-                        distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+                    if np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).size>0:
+                        distance = np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).mean()
                         if distance <= add_threshold[class_name]*1000:
                             af_icp+=1                    
             general_counter += 1
@@ -994,10 +1016,11 @@ def estimate_6d_pose_ycb(opts):
                 estimated_kpts = np.zeros((3,3))
                 cycle, idx = filename.split('_')
                 sceneInfo = scipy.io.loadmat(opts.root_dataset+'data/'+cycle+"/"+idx)
-                RT = sceneInfo['poses'][:,:,np.where(sceneInfo['cls_indexes']==class_id)]
+                RTGT = sceneInfo['poses'][:,:,np.where(sceneInfo['cls_indexes']==class_id)]
                 
                 #print(RTGT.shape)
                 keypoint_count = 1
+                xyz_icp = []
                 for keypoint in keypoints:
                     keypoint=keypoints[keypoint_count]
                     #print(keypoint)
@@ -1032,6 +1055,12 @@ def estimate_6d_pose_ycb(opts):
                     
                     radial_list = radial_out[pixel_coor]
                     xyz = rgbd_to_point_cloud(sceneInfo['intrinsic_matrix'],depth_map)
+                    if keypoint_count == 1:
+                        xyz_icp = xyz
+                    else:
+                        for coor in xyz:
+                            if not (coor == xyz_icp).all(1).any():
+                                xyz_icp = np.append(xyz_icp, np.expand_dims(coor,axis=0),axis=0)
                     
                     dump, xyz_load_transformed=project(xyz_load, linemod_K, RTGT)
                     tic = time.time_ns()
@@ -1121,22 +1150,28 @@ def estimate_6d_pose_ycb(opts):
                         if distance <= thre*1000:
                             auc_adds_count[0,i]+=1 
                     i+=1
+
+                scene = o3d.geometry.PointCloud()
+                scene.points = o3d.utility.Vector3dVector(xyz_icp*1000)
+                cad_model = o3d.geometry.PointCloud()
+                cad_model.points = o3d.utility.Vector3dVector(xyz_load*1000)
                 
-                trans_init = np.asarray([[1, 0, 0, 0],
-                                        [0, 1, 0, 0],
-                                        [0, 0, 1, 0], 
-                                        [0, 0, 0, 1]])
+                # trans_init = np.asarray([[1, 0, 0, 0],
+                #                         [0, 1, 0, 0],
+                #                         [0, 0, 1, 0], 
+                #                         [0, 0, 0, 1]])
+                trans_init = RT
                 threshold = distance
                 criteria = o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000000)
                 reg_p2p = o3d.pipelines.registration.registration_icp(
-                    sceneGT, sceneEst,  threshold, trans_init,
+                     cad_model, scene,  threshold, trans_init,
                     o3d.pipelines.registration.TransformationEstimationPointToPoint(),
                     criteria)
-                sceneGT.transform(reg_p2p.transformation)
+                cad_model.transform(reg_p2p.transformation)
                 if opts.demo_mode:
-                    o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
-                distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
-                min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                    o3d.visualization.draw_geometries([sceneGT, cad_model],window_name='gt vs est after icp')
+                distance = np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).mean()
+                min_distance = np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).min()
                 #print('ADD(s) point distance after ICP: ', distance)
 
                 if class_name in ycb_syms:
