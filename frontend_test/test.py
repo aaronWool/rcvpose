@@ -75,7 +75,7 @@ def estimate_6d_pose_lm(opts):
         test_list = open(opts.root_dataset + "LINEMOD/"+class_name+"/" +"Split/val.txt","r").readlines()
         test_list = [ s.replace('\n', '') for s in test_list]
         
-        classFrontEndTimes = []
+        classFrontendTimes = []
 
         image_accuracies = []
         
@@ -92,6 +92,8 @@ def estimate_6d_pose_lm(opts):
             
             kpGT_mm = (np.dot(keypoints, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
             
+            frontend_avg_time = 0
+
             imgStart = time.time_ns()
 
             estAcc = np.zeros((3,1))
@@ -124,7 +126,7 @@ def estimate_6d_pose_lm(opts):
 
                 assert xyz.shape[0] == radList.shape[0]
 
-                frontEndStart = time.time_ns()
+                frontend_Start = time.time_ns()
                 
                 estKP = np.array([0,0,0])
 
@@ -133,9 +135,11 @@ def estimate_6d_pose_lm(opts):
                 elif opts.frontend == 'accumulator':
                     estKP = Accumulator_3D(xyz, radList)
 
-                frontEndEnd = time.time_ns()
+                frontend_End = time.time_ns()
 
-                classFrontEndTimes.append((frontEndEnd - frontEndStart)/1000000)
+                frontend_avg_time += (frontend_End - frontend_Start)/1000000
+
+                classFrontendTimes.append((frontend_End - frontend_Start)/1000000)
 
                 offset = np.linalg.norm(CenterGT_mm - estKP)
 
@@ -160,9 +164,12 @@ def estimate_6d_pose_lm(opts):
                 print('Accuracies: \n', estAcc)
                 print('Image Accuracy: ', image_accuracy)
                 print('Image Time: ', imgTime)
-                print('Frontend Times: ', classFrontEndTimes)
+                print('Total Frontend Time: ', frontend_avg_time)
+                print('Average Frontend Time: ', frontend_avg_time / 3)
+                
 
-        frontendTimes.append(classFrontEndTimes)
+        class_time = classFrontendTimes.mean(axis=0)
+        frontendTimes.append(class_time)
         avgClassAccuracy = image_accuracies.mean(axis=0)
         print('Average' , class_name, ' Accuracy: ', avgClassAccuracy)
         accuracies.append(avgClassAccuracy)
