@@ -104,7 +104,7 @@ def estimate_6d_pose_lm(opts):
 
             img_kpt_offsets = []
             
-            frontend_avg_time = 0
+            frontend_time = 0
 
             imgStart = time.time_ns()
 
@@ -154,7 +154,7 @@ def estimate_6d_pose_lm(opts):
 
                 frontend_End = time.time_ns()
 
-                frontend_avg_time += (frontend_End - frontend_Start)/1000000
+                frontend_time += (frontend_End - frontend_Start)/1000000
 
                 classFrontendTimes.append((frontend_End - frontend_Start)/1000000)
 
@@ -182,14 +182,15 @@ def estimate_6d_pose_lm(opts):
             imgTime = (imgEnd - imgStart)/1000000
 
             if debug:
-                print('Frontend Time: ', frontend_avg_time)
+                print('Frontend Time: ', frontend_time)
                 print('Image Time: ', imgTime)
                 print('Image Acc: ', img_acc)
                 print('Image Std: ', img_std)
                 print('Total Acc: ', total_acc)
                 print('Total Std: ', total_std)
             else:
-                print('\r', img_count, '/', test_list_size,': Current ', class_name, ' avg ccc: ', total_acc, ', avg std: ', total_std, end='', flush=True)
+                avg_frontend_time = classFrontendTimes.mean(axis=0)
+                print('\r', img_count, '/', test_list_size,': Current', class_name, 'avg acc:', total_acc, 'mm, avg std:', total_std, ', avg frontend time:',avg_frontend_time, 'ms', end='', flush=True)
 
                 
         avg = np.mean(keypoint_offsets)
@@ -210,7 +211,6 @@ def estimate_6d_pose_lm(opts):
     print ('Average Accuracy: ', np.mean(class_accuracies), 'mm')
 
 
-            
         
 if __name__ == "__main__":
     import argparse
