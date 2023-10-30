@@ -12,6 +12,7 @@ import math
 import h5py
 from sklearn import metrics
 import scipy
+import datetime
 from accumulator3D import Accumulator_3D
 
 
@@ -59,10 +60,9 @@ def estimate_6d_pose_lm(opts):
     if opts.verbose:
         debug = True
     
-    imageTimes = []
-    frontendTimes = []
 
-    accuracies = []
+    class_accuracies = []
+    frontend_times = []
     
     totalTimeStart = time.time_ns()
 
@@ -74,35 +74,48 @@ def estimate_6d_pose_lm(opts):
         
         test_list = open(opts.root_dataset + "LINEMOD/"+class_name+"/" +"Split/val.txt","r").readlines()
         test_list = [ s.replace('\n', '') for s in test_list]
+
+        test_list_size = len(test_list)
         
         classFrontendTimes = []
 
-        image_accuracies = []
+        keypoint_offsets = []
         
-        keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
         #keypoints = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/Outside9.npy")
+        keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
+        keypoints = keypoints[0:3]
+
+        keypoints = keypoints / 1000
+
+        if debug:
+            print('keypoints: \n', keypoints)
 
         dataPath = rootpvPath + 'JPEGImages/'
 
+        img_count = 0
+
         for filename in test_list:
-            print("\nEvaluating ", filename)
+            if debug:
+                print("\nEvaluating ", filename)
 
             RTGT = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
-
             
             kpGT_mm = (np.dot(keypoints, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
+
+            img_kpt_offsets = []
             
             frontend_avg_time = 0
 
             imgStart = time.time_ns()
 
-            estAcc = np.zeros((3,1))
-            estKPs = np.zeros((3,3))
-
             keypoint_count = 0
             for keypoint in keypoints:
            
                 CenterGT_mm = kpGT_mm[keypoint_count]
+
+                if debug:
+                    print ('Keypoint: ', keypoint_count + 1)
+                    print ('GT Center: \n', CenterGT_mm)
 
                 radialMapPath = rootRadialMapPath + 'Out_pt'+str(keypoint_count + 1)+'_dm/'+str(filename)+'.npy'
 
@@ -135,51 +148,67 @@ def estimate_6d_pose_lm(opts):
                 elif opts.frontend == 'accumulator':
                     estKP = Accumulator_3D(xyz, radList)
 
+                if debug:
+                    print ('Est Center: \n', estKP[0])
+
+
                 frontend_End = time.time_ns()
 
                 frontend_avg_time += (frontend_End - frontend_Start)/1000000
 
                 classFrontendTimes.append((frontend_End - frontend_Start)/1000000)
 
-                offset = np.linalg.norm(CenterGT_mm - estKP)
+                offset = np.linalg.norm(CenterGT_mm - estKP[0])
 
-                estAcc[keypoint_count] = offset
-                estKPs[keypoint_count] = estKP[0]
-                
+                if debug:
+                    print ('Offset: ', offset)
+
+                keypoint_offsets.append(offset)
+                img_kpt_offsets.append(offset)
+               
                 keypoint_count+=1
+                
                 if (keypoint_count==3):
                     break
 
             imgEnd = time.time_ns()
+            img_count += 1
+
+            img_acc = np.mean(img_kpt_offsets)
+            img_std = np.std(img_kpt_offsets)
+            total_acc = np.mean(keypoint_offsets)
+            total_std = np.std(keypoint_offsets)
+
             imgTime = (imgEnd - imgStart)/1000000
 
-            imageTimes.append(imgTime)
-            image_accuracies.append(estAcc)
-
-            image_accuracy = estAcc.mean(axis=0)
-
             if debug:
-                print('GT Keypoints: \n', kpGT_mm)
-                print('Estimated Keypoints: \n', estKPs)
-                print('Accuracies: \n', estAcc)
-                print('Image Accuracy: ', image_accuracy)
+                print('Frontend Time: ', frontend_avg_time)
                 print('Image Time: ', imgTime)
-                print('Total Frontend Time: ', frontend_avg_time)
-                print('Average Frontend Time: ', frontend_avg_time / 3)
-                
+                print('Image Acc: ', img_acc)
+                print('Image Std: ', img_std)
+                print('Total Acc: ', total_acc)
+                print('Total Std: ', total_std)
+            else:
+                print('\r', img_count, '/', test_list_size,': Current ', class_name, ' avg ccc: ', total_acc, ', avg std: ', total_std, end='', flush=True)
 
+                
+        avg = np.mean(keypoint_offsets)
+        std = np.std(keypoint_offsets)
+        class_accuracies.append(avg)
+        
         class_time = classFrontendTimes.mean(axis=0)
-        frontendTimes.append(class_time)
-        avgClassAccuracy = image_accuracies.mean(axis=0)
-        print('Average' , class_name, ' Accuracy: ', avgClassAccuracy)
-        accuracies.append(avgClassAccuracy)
-    
+        frontend_times.append(class_time)
+
+        print('Average' , class_name, ' Accuracy: ', avg, 'mm')
+        print('Average' , class_name, ' Std: ', std, 'mm')
+        print('Average' , class_name, ' Time: ', class_time, 'ms')
+
+
     totalTimeEnd = time.time_ns()
     totalTime = (totalTimeEnd - totalTimeStart)/1000000
-    print('Total Time: \n\t', totalTime)
-    print('Image Times: \n', imageTimes)
-    print('Frontend Times: \n', frontendTimes)
-    print('Accuracies: \n', accuracies)
+    print('Total Time: ', str(datetime.timedelta(milliseconds=totalTime)))
+    print ('Average Accuracy: ', np.mean(class_accuracies), 'mm')
+
 
             
         
@@ -196,7 +225,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--verbose',
                         type=bool,
-                    default=True)
+                    default=False)
 
     opts = parser.parse_args()
     print ('Root Dataset: ' + opts.root_dataset)
