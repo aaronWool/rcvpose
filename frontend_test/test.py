@@ -146,19 +146,17 @@ def estimate_6d_pose_lm(opts):
                 if opts.frontend == 'ransac':
                     estKP = RANSAC_3D(xyz, radList)
                 elif opts.frontend == 'accumulator':
-                    estKP = Accumulator_3D(xyz, radList)
+                    estKP = Accumulator_3D(xyz, radList)[0]
 
                 if debug:
-                    print ('Est Center: \n', estKP[0])
+                    print ('Est Center: \n', estKP)
 
 
                 frontend_End = time.time_ns()
 
                 frontend_time += (frontend_End - frontend_Start)/1000000
 
-                classFrontendTimes.append((frontend_End - frontend_Start)/1000000)
-
-                offset = np.linalg.norm(CenterGT_mm - estKP[0])
+                offset = np.linalg.norm(CenterGT_mm - estKP)
 
                 if debug:
                     print ('Offset: ', offset)
@@ -173,7 +171,7 @@ def estimate_6d_pose_lm(opts):
 
             imgEnd = time.time_ns()
             img_count += 1
-
+            classFrontendTimes.append(frontend_time)
             img_acc = np.mean(img_kpt_offsets)
             img_std = np.std(img_kpt_offsets)
             total_acc = np.mean(keypoint_offsets)
@@ -189,8 +187,8 @@ def estimate_6d_pose_lm(opts):
                 print('Total Acc: ', total_acc)
                 print('Total Std: ', total_std)
             else:
-                avg_frontend_time = classFrontendTimes.mean(axis=0)
-                print('\r', img_count, '/', test_list_size,': Current', class_name, 'avg acc:', total_acc, 'mm, avg std:', total_std, ', avg frontend time:',avg_frontend_time, 'ms', end='', flush=True)
+                avg_frontend_time = np.mean(classFrontendTimes)
+                print('\r', img_count, '/', test_list_size,': Current', class_name, 'avg acc:', total_acc, 'mm, avg std:', total_std, ', avg frontend time:',avg_frontend_time, 'ms        ', end='', flush=True)
 
                 
         avg = np.mean(keypoint_offsets)
@@ -211,7 +209,6 @@ def estimate_6d_pose_lm(opts):
     print ('Average Accuracy: ', np.mean(class_accuracies), 'mm')
 
 
-        
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -221,8 +218,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--frontend',
                     type=str,
-                    default='accumulator')
-    
+                    default='ransac')
+    # accumulator, ransac
     parser.add_argument('--verbose',
                         type=bool,
                     default=False)

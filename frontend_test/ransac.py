@@ -31,28 +31,34 @@ vote = np.dtype([
 ])
 
 def random_centerest(xyz, radial_list, iterations):
+    n = len(xyz)
     vote_list = np.zeros(iterations, dtype=vote)
     for itr in range(iterations):
-        index = np.random.randint(0, len(xyz), 4)
+        index = np.random.randint(0, n, 4)
+
         point_list = xyz[index]
+
         radius_list = radial_list[index]
+
         x, y, z = centerest(point_list, radius_list)
+
         error = 0
-        for i in range (len(xyz)):
+
+        for i in prange(n):
             p = xyz[i]
             r = radial_list[i]
             dist = np.sqrt((p[0]-x)*(p[0]-x) + (p[1]-y)*(p[1]-y) + (p[2]-z)*(p[2]-z))
             error += abs(dist-r)
+
         error /= len(xyz)
+
         vote_list[itr] = (error, x, y, z)
 
     return vote_list
     
 
-def RANSAC_3D(xyz, radial_list):
+def RANSAC_3D(xyz, radial_list, debug=False):
     acc_unit = 5
-
-    print('Number of points: ' , len(xyz))
 
     xyz_mm = xyz*1000/acc_unit 
 
@@ -63,7 +69,6 @@ def RANSAC_3D(xyz, radial_list):
     xyz_mm[:,0] -= x_mean_mm
     xyz_mm[:,1] -= y_mean_mm
     xyz_mm[:,2] -= z_mean_mm
-
 
     radial_list_mm = radial_list*100/acc_unit  
 
@@ -86,6 +91,7 @@ def RANSAC_3D(xyz, radial_list):
     radial_list_inliers = []
     xyz_mm_inliers = []
     radial_list_inliers = []
+
     for i in range(len(xyz_mm)):
         p = xyz_mm[i]
         r = radial_list_mm[i]
@@ -94,9 +100,6 @@ def RANSAC_3D(xyz, radial_list):
             xyz_mm_inliers += [p]
             radial_list_inliers += [r]
 
-
-    print('Number of removed points: ', len(xyz_mm)-len(xyz_mm_inliers))
-    print('Number of remaining points: ', len(xyz_mm_inliers))
 
     center = centerest(xyz_mm_inliers, radial_list_inliers)
 
@@ -110,7 +113,6 @@ def RANSAC_3D(xyz, radial_list):
     center[1] = (center[1]+y_mean_mm+0.5)*acc_unit
     center[2] = (center[2]+z_mean_mm+0.5)*acc_unit
     
-
     return center
 
 
