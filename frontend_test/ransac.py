@@ -1,20 +1,21 @@
 from numba import jit, prange
 import numpy as np
 
+@jit(nopython=True)
 def centerest(point_list, radius_list):
     assert len(point_list) == len(radius_list), 'different number of points and radii'
     assert len(point_list) >= 4, 'less than 4 points'
 
-    A = []
-    b = []
-    for i in range(len(point_list)):
+    A = np.zeros((len(point_list), 5))
+    b = np.zeros((len(point_list), 5))
+    for i in prange(len(point_list)):
         p = point_list[i]
         r = radius_list[i]
         x = p[0]
         y = p[1]
         z = p[2]
-        A += [[-2*x, -2*y, -2*z, 1, x*x+y*y+z*z-r*r]]
-        b += [[0, 0, 0, 0, 0]]
+        A[i] = [-2*x, -2*y, -2*z, 1, x*x+y*y+z*z-r*r]
+        b[i] = [0, 0, 0, 0, 0]
 
     U, S, Vh = np.linalg.svd(A)
     X = Vh[-1]
@@ -30,16 +31,17 @@ vote = np.dtype([
     ('z', np.float64)
 ])
 
+@jit(nopython=True, parallel=True)
 def random_centerest(xyz, radial_list, iterations):
     n = len(xyz)
-    vote_list = np.zeros(iterations, dtype=vote)
-    for itr in range(iterations):
+    best_vote = (1e10, 0, 0, 0)
+    for itr in prange(iterations):
         index = np.random.randint(0, n, 4)
 
         point_list = xyz[index]
 
         radius_list = radial_list[index]
-
+        
         x, y, z = centerest(point_list, radius_list)
 
         error = 0
@@ -52,9 +54,12 @@ def random_centerest(xyz, radial_list, iterations):
 
         error /= len(xyz)
 
-        vote_list[itr] = (error, x, y, z)
+        if error < best_vote[0]:
+            best_vote = (error, x, y, z)
+    
+    return best_vote
 
-    return vote_list
+    
     
 
 def RANSAC_3D(xyz, radial_list, debug=False):
@@ -81,11 +86,9 @@ def RANSAC_3D(xyz, radial_list, debug=False):
     if(zero_boundary<0):
         xyz_mm -= zero_boundary
        
-    iterations = 100
+    iterations = 1000
 
-    random_center_list = random_centerest(xyz_mm, radial_list_mm, iterations)
-    
-    best_vote = np.sort(random_center_list, order='mse')[0]
+    best_vote = random_centerest(xyz_mm, radial_list_mm, iterations)
 
     xyz_mm_inliers = []
     radial_list_inliers = []
@@ -100,7 +103,9 @@ def RANSAC_3D(xyz, radial_list, debug=False):
             xyz_mm_inliers += [p]
             radial_list_inliers += [r]
 
-
+    if np.size(xyz_mm_inliers) == 0:
+        return (0, 0, 0)
+    
     center = centerest(xyz_mm_inliers, radial_list_inliers)
 
     center = np.array([center[0], center[1], center[2]])

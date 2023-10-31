@@ -186,6 +186,7 @@ def estimate_6d_pose_lm(opts):
                 print('Image Std: ', img_std)
                 print('Total Acc: ', total_acc)
                 print('Total Std: ', total_std)
+                wait = input("PRESS ENTER TO CONTINUE.")
             else:
                 avg_frontend_time = np.mean(classFrontendTimes)
                 print('\r', img_count, '/', test_list_size,': Current', class_name, 'avg acc:', total_acc, 'mm, avg std:', total_std, ', avg frontend time:',avg_frontend_time, 'ms        ', end='', flush=True)
@@ -195,7 +196,7 @@ def estimate_6d_pose_lm(opts):
         std = np.std(keypoint_offsets)
         class_accuracies.append(avg)
         
-        class_time = classFrontendTimes.mean(axis=0)
+        class_time = np.mean(classFrontendTimes)
         frontend_times.append(class_time)
 
         print('Average' , class_name, ' Accuracy: ', avg, 'mm')
