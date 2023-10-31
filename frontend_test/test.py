@@ -158,6 +158,17 @@ def estimate_6d_pose_lm(opts):
 
                 offset = np.linalg.norm(CenterGT_mm - estKP)
 
+                if offset > 1000:
+                    print ('\n\tERROR: Extremely innaccurate output!')
+                    print ('\tKeypoint: ', keypoint_count + 1)
+                    print ('\tOffset: ', offset)
+                    print ('\tGT Center: \n', CenterGT_mm)
+                    print ('\tEst Center: \n', estKP)
+                    print ('\tFilename: ', filename)
+                    print ('\tRadial Map Path: ', radialMapPath)
+                    print ('\tDepth Map Path: ', rootPath+'data/depth'+str(int(os.path.splitext(filename)[0]))+'.dpt')
+                    wait = input("PRESS ENTER TO CONTINUE.")
+
                 if debug:
                     print ('Offset: ', offset)
 
@@ -199,15 +210,20 @@ def estimate_6d_pose_lm(opts):
         class_time = np.mean(classFrontendTimes)
         frontend_times.append(class_time)
 
-        print('Average' , class_name, ' Accuracy: ', avg, 'mm')
+        print('\nAverage' , class_name, ' Accuracy: ', avg, 'mm')
         print('Average' , class_name, ' Std: ', std, 'mm')
-        print('Average' , class_name, ' Time: ', class_time, 'ms')
+        print('Average' , class_name, ' Time: ', class_time, 'ms\n')
 
 
     totalTimeEnd = time.time_ns()
     totalTime = (totalTimeEnd - totalTimeStart)/1000000
+
+    avg_total_frontend_time = np.mean(frontend_times)
+
     print('Total Time: ', str(datetime.timedelta(milliseconds=totalTime)))
     print ('Average Accuracy: ', np.mean(class_accuracies), 'mm')
+    print ('Average Std: ', np.std(class_accuracies), 'mm')
+    print ('Average Frontend Time: ', avg_total_frontend_time, 'ms')
 
 
 if __name__ == "__main__":
@@ -224,9 +240,19 @@ if __name__ == "__main__":
     parser.add_argument('--verbose',
                         type=bool,
                     default=False)
-
+    
+    parser.add_argument('--ransac_iterations', '-ri',
+                    type=int,
+                    default=100)
+    
     opts = parser.parse_args()
     print ('Root Dataset: ' + opts.root_dataset)
+    if opts.verbose:
+        print ('Verbose: ', opts.verbose)
     print ('Frontend: ' + opts.frontend)
+    if opts.frontend == 'ransac':
+        print ('RANSAC Iterations: ', opts.ransac_iterations)
+
+
     estimate_6d_pose_lm(opts) 
 
