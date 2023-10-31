@@ -2,7 +2,6 @@ import numpy as np
 import time
 from numba import jit,njit,cuda
 import os
-import open3d as o3d
 from numba import prange
 import math
 import h5py
