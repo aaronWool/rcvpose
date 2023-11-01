@@ -60,6 +60,7 @@ def estimate_6d_pose_lm(opts):
     if opts.verbose:
         debug = True
     
+    RANSAC_itr = opts.ransac_iterations
 
     class_accuracies = []
     frontend_times = []
@@ -144,7 +145,7 @@ def estimate_6d_pose_lm(opts):
                 estKP = np.array([0,0,0])
 
                 if opts.frontend == 'ransac':
-                    estKP = RANSAC_3D(xyz, radList)
+                    estKP = RANSAC_3D(xyz, radList, iterations=RANSAC_itr)
                 elif opts.frontend == 'accumulator':
                     estKP = Accumulator_3D(xyz, radList)[0]
 
@@ -167,7 +168,14 @@ def estimate_6d_pose_lm(opts):
                     print ('\tFilename: ', filename)
                     print ('\tRadial Map Path: ', radialMapPath)
                     print ('\tDepth Map Path: ', rootPath+'data/depth'+str(int(os.path.splitext(filename)[0]))+'.dpt')
-                    wait = input("PRESS ENTER TO CONTINUE.")
+
+                    print ('\n\tAttempting to fix with RANSAC...')
+                    estKP = RANSAC_3D(xyz, radList, RANSAC_itr, True)
+                    offset = np.linalg.norm(CenterGT_mm - estKP)
+                    print ('\tNew Offset: ', offset)
+                    if offset > 1000:
+                        print ('\n\tERROR: Extremely innaccurate output again!')
+                        offset = 1000
 
                 if debug:
                     print ('Offset: ', offset)
@@ -200,7 +208,7 @@ def estimate_6d_pose_lm(opts):
                 wait = input("PRESS ENTER TO CONTINUE.")
             else:
                 avg_frontend_time = np.mean(classFrontendTimes)
-                print('\r', img_count, '/', test_list_size,': Current', class_name, 'avg acc:', total_acc, 'mm, avg std:', total_std, ', avg frontend time:',avg_frontend_time, 'ms        ', end='', flush=True)
+                print('\r', img_count, '/', test_list_size,': Current', class_name, 'avg acc:', total_acc, 'mm, avg std:', total_std, ', FPS:', (1 / avg_frontend_time) * 1000, '\t\t', end='', flush=True)
 
                 
         avg = np.mean(keypoint_offsets)
@@ -212,7 +220,7 @@ def estimate_6d_pose_lm(opts):
 
         print('\nAverage' , class_name, ' Accuracy: ', avg, 'mm')
         print('Average' , class_name, ' Std: ', std, 'mm')
-        print('Average' , class_name, ' Time: ', class_time, 'ms\n')
+        print('Average', class_name, 'FPS: ', (1 / class_time) * 1000, '\n')
 
 
     totalTimeEnd = time.time_ns()
@@ -224,6 +232,7 @@ def estimate_6d_pose_lm(opts):
     print ('Average Accuracy: ', np.mean(class_accuracies), 'mm')
     print ('Average Std: ', np.std(class_accuracies), 'mm')
     print ('Average Frontend Time: ', avg_total_frontend_time, 'ms')
+    print ('Average FPS', (1 / avg_total_frontend_time) * 1000, '\n')
 
 
 if __name__ == "__main__":
@@ -243,7 +252,12 @@ if __name__ == "__main__":
     
     parser.add_argument('--ransac_iterations', '-ri',
                     type=int,
-                    default=100)
+                    default=500)
+    
+    parser.add_argument('--out_file',
+                        type=str,
+                    default='output.txt'
+                    )
     
     opts = parser.parse_args()
     print ('Root Dataset: ' + opts.root_dataset)
