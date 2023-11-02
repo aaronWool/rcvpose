@@ -1,0 +1,76 @@
+  warnings.warn(problem)
+                                                                                                                                                                   Average Accuracy for ape: 14.53260 mm
+Standard Deviation for ape: 31.62768 mm
+FPS for ape: 35.73985
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 1800
+                                                                                                                                                                   Average Accuracy for ape: 14.10513 mm
+Standard Deviation for ape: 30.95416 mm
+FPS for ape: 57.15725
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 1850
+                                                                                                                                                                   Average Accuracy for ape: 14.62987 mm
+Standard Deviation for ape: 31.88347 mm
+FPS for ape: 45.55208
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 1900
+
+Average Accuracy for ape: 14.17037 mm
+Standard Deviation for ape: 31.10227 mm
+FPS for ape: 48.51347
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 1950
+
+Average Accuracy for ape: 14.21386 mm
+Standard Deviation for ape: 31.27355 mm
+FPS for ape: 63.60600
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 2000
+
+Average Accuracy for ape: 14.12133 mm
+Standard Deviation for ape: 30.67288 mm
+FPS for ape: 63.85908
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 2050
+
+Average Accuracy for ape: 14.36335 mm
+Standard Deviation for ape: 31.24516 mm
+FPS for ape: 61.94746
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 2100
+
+Average Accuracy for ape: 14.68278 mm
+Standard Deviation for ape: 32.21438 mm
+FPS for ape: 63.38755
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 2159
+
+Average Accuracy for ape: 14.29585 mm
+Standard Deviation for ape: 31.51196 mm
+FPS for ape: 57.10502
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 2200
+
+Average Accuracy for ape: 14.00479 mm
+Standard Deviation for ape: 30.54185 mm
+FPS for ape: 63.93736
+
+
+Estimating 6D Pose on LINEMOD for ape object with RANSAC iterations: 2250
+
+Average Accuracy for ape: 14.71112 mm
+Standard Deviation for ape: 32.92753 mm
+FPS for ape: 66.07933
+
+
+
+(rcvpose) C:\Users\User\.cw\work\rcvp

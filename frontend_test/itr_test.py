@@ -118,12 +118,12 @@ def estimate_6d_pose_lm(opts, RANSAC_itr):
 
         img_end = time.time_ns()
         count += 1
+        img_times.append((frontend_time))
 
         img_time = (img_end - frontend_start)/1000000
+        img_time_mean = np.mean(img_times)
+        fps = (1 / img_time_mean) * 1000 if img_time_mean > 0 else float('inf')
 
-        fps = (1 / frontend_time) * 1000 if frontend_time > 0 else float('inf')
-
-        img_times.append((frontend_time))
         current_acc = np.mean(img_kpt_offsets)
         accuracies.append(current_acc)
 
@@ -138,7 +138,7 @@ def estimate_6d_pose_lm(opts, RANSAC_itr):
 
     print(f'\rAverage Accuracy for {opts.class_name}: {avg_accuracy:.5f} mm')
     print(f'Standard Deviation for {opts.class_name}: {std_dev:.5f} mm')
-    print(f'FPS for {opts.class_name}: {total_fps:.5f}\n\n')
+    print(f'Average FPS for {opts.class_name}: {total_fps:.5f}\n\n')
 
     return avg_accuracy, std_dev, fps
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
                     default=False)
     parser.add_argument('--class_name', type=str, default='ape')
     parser.add_argument('--ransac_iterations_list', nargs='+', type=int, 
-                        default=[500 ,750, 1000, 1250, 1500, 1750, 2000, 2250, 2500])
+                        default=[1750 ,1800, 1850, 1900, 1950, 2000, 2050, 2100, 2159, 2200, 2250])
 
     opts = parser.parse_args()
 
@@ -193,4 +193,5 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
+    plt.savefig('ape_metrics2.png')
         
