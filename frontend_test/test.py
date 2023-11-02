@@ -63,6 +63,7 @@ def estimate_6d_pose_lm(opts):
     RANSAC_itr = opts.ransac_iterations
 
     class_accuracies = []
+    class_std = []
     frontend_times = []
     
     totalTimeStart = time.time_ns()
@@ -159,24 +160,6 @@ def estimate_6d_pose_lm(opts):
 
                 offset = np.linalg.norm(CenterGT_mm - estKP)
 
-                if offset > 1000:
-                    print ('\n\tERROR: Extremely innaccurate output!')
-                    print ('\tKeypoint: ', keypoint_count + 1)
-                    print ('\tOffset: ', offset)
-                    print ('\tGT Center: \n', CenterGT_mm)
-                    print ('\tEst Center: \n', estKP)
-                    print ('\tFilename: ', filename)
-                    print ('\tRadial Map Path: ', radialMapPath)
-                    print ('\tDepth Map Path: ', rootPath+'data/depth'+str(int(os.path.splitext(filename)[0]))+'.dpt')
-
-                    print ('\n\tAttempting to fix with RANSAC...')
-                    estKP = RANSAC_3D(xyz, radList, RANSAC_itr, True)
-                    offset = np.linalg.norm(CenterGT_mm - estKP)
-                    print ('\tNew Offset: ', offset)
-                    if offset > 1000:
-                        print ('\n\tERROR: Extremely innaccurate output again!')
-                        offset = 1000
-
                 if debug:
                     print ('Offset: ', offset)
 
@@ -214,7 +197,7 @@ def estimate_6d_pose_lm(opts):
         avg = np.mean(keypoint_offsets)
         std = np.std(keypoint_offsets)
         class_accuracies.append(avg)
-        
+        class_std.append(std)
         class_time = np.mean(classFrontendTimes)
         frontend_times.append(class_time)
 
@@ -230,7 +213,7 @@ def estimate_6d_pose_lm(opts):
 
     print('Total Time: ', str(datetime.timedelta(milliseconds=totalTime)))
     print ('Average Accuracy: ', np.mean(class_accuracies), 'mm')
-    print ('Average Std: ', np.std(class_accuracies), 'mm')
+    print ('Average Std: ', np.mean(class_std), 'mm')
     print ('Average Frontend Time: ', avg_total_frontend_time, 'ms')
     print ('Average FPS', (1 / avg_total_frontend_time) * 1000, '\n')
 

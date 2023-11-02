@@ -84,7 +84,9 @@ def RANSAC_3D(xyz, radial_list, iterations=100 ,debug=False):
 
     if(zero_boundary<0):
         xyz_mm -= zero_boundary
-       
+    
+    if iterations > len(xyz_mm):
+        iterations = len(xyz_mm)
 
     best_vote = random_centerest(xyz_mm, radial_list_mm, iterations, debug=debug)
 
