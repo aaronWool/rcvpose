@@ -8,4 +8,4 @@
 #SBATCH --error=output/%j.err
 #SBATCH --time=05:00:00
 
-python test.py --frontend accumulator --root_dataset /ingenuity_NAS/datasets/public/RCVLab/Bluewrist/16yw113/
+python test.py --frontend accumulator --root_dataset /ingenuity_NAS/dataset/public/RCVLab/Bluewrist/16yw113/
