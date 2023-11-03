@@ -193,5 +193,4 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('ape_metrics2.png')
         
