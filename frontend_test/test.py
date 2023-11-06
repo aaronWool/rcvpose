@@ -235,7 +235,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--ransac_iterations', '-ri',
                     type=int,
-                    default=500)
+                    default=5000)
     
     parser.add_argument('--out_file',
                         type=str,

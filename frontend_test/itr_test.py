@@ -47,6 +47,9 @@ def estimate_6d_pose_lm(opts, RANSAC_itr):
     size = len(test_list)
     count = 0
     for filename in test_list:
+        #if count > 100:
+        #    break
+
         if debug:
                 print("\nEvaluating ", filename)
 
@@ -150,8 +153,6 @@ if __name__ == "__main__":
                         type=bool,
                     default=False)
     parser.add_argument('--class_name', type=str, default='ape')
-    parser.add_argument('--ransac_iterations_list', nargs='+', type=int, 
-                        default=[1750 ,1800, 1850, 1900, 1950, 2000, 2050, 2100, 2159, 2200, 2250])
 
     opts = parser.parse_args()
 
@@ -159,34 +160,35 @@ if __name__ == "__main__":
     if opts.verbose:
         print ('Verbose: ', opts.verbose)
     print ('Class Name: ' + opts.class_name)
-    print ('RANSAC Iterations List: ', opts.ransac_iterations_list)
 
     
     all_accuracies = []
     all_std_devs = []
     all_fps = []
-
-    for RANSAC_itr in opts.ransac_iterations_list:
+    itr_count = []
+    for RANSAC_itr in range(1000, 10000, 100):
         avg_accuracy, std_dev, fps = estimate_6d_pose_lm(opts, RANSAC_itr)
         all_accuracies.append(avg_accuracy)
         all_std_devs.append(std_dev)
         all_fps.append(fps)
+        itr_count.append(RANSAC_itr)
+
 
     plt.figure(figsize=(12, 8))
 
     plt.subplot(3, 1, 1)
-    plt.plot(opts.ransac_iterations_list, all_accuracies, marker='o')
+    plt.plot(itr_count, all_accuracies, marker='o')
     plt.title('RANSAC Iterations vs. Metrics')
     plt.ylabel('Mean Accuracy (mm)')
     plt.grid(True)
 
     plt.subplot(3, 1, 2)
-    plt.plot(opts.ransac_iterations_list, all_std_devs, marker='o', color='orange')
+    plt.plot(itr_count, all_std_devs, marker='o', color='orange')
     plt.ylabel('Standard Deviation (mm)')
     plt.grid(True)
 
     plt.subplot(3, 1, 3)
-    plt.plot(opts.ransac_iterations_list, all_fps, marker='o', color='green')
+    plt.plot(itr_count, all_fps, marker='o', color='green')
     plt.ylabel('FPS')
     plt.xlabel('RANSAC Iterations')
     plt.grid(True)

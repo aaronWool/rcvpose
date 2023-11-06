@@ -85,7 +85,7 @@ def RANSAC_3D(xyz, radial_list, iterations=100 ,debug=False):
     if(zero_boundary<0):
         xyz_mm -= zero_boundary
     
-    best_vote = random_centerest(xyz_mm, radial_list_mm, iterations, debug=debug)
+    best_vote = random_centerest(xyz_mm, radial_list_mm, (iterations//3)*2, debug=debug)
 
     if debug:
         print('\tBest vote after first random centerest calc: ' + str(best_vote))
@@ -113,9 +113,12 @@ def RANSAC_3D(xyz, radial_list, iterations=100 ,debug=False):
         center = np.array(center)
         if debug:
             print('\tCenterest output: ', center)
+
     
     if len(xyz_inliers) > 4:
-        random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), len(xyz_inliers)//2)
+        #iterations = len(xyz_inliers//2)
+        iterations = iterations // 2
+        random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), (iterations//3) )
         center = np.array([random_center[1], random_center[2], random_center[3]])
         if debug:
             print('\tRandom centerest output #2: ', center)
