@@ -54,7 +54,7 @@ def read_depth(path):
 
 depthList=[]
 
-def estimate_6d_pose_lm(opts, iterations): 
+def estimate_6d_pose_lm(opts, iterations, itr_split=0.66): 
     print('Estimating 6D Pose on LINEMOD')  
     debug = False
     if opts.verbose:
@@ -67,7 +67,7 @@ def estimate_6d_pose_lm(opts, iterations):
     totalTimeStart = time.time_ns()
 
     for class_name in lm_cls_names:
-        print("Evaluation on ", class_name)
+        print("\tEvaluation on ", class_name)
         rootPath = opts.root_dataset + "LINEMOD_ORIG/"+class_name+"/" 
         rootpvPath = opts.root_dataset + "LINEMOD/"+class_name+"/" 
         rootRadialMapPath = opts.root_dataset + "rkhs_estRadialMap/"+class_name+"/"
@@ -144,7 +144,7 @@ def estimate_6d_pose_lm(opts, iterations):
                 estKP = np.array([0,0,0])
 
                 if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-                    estKP = RANSAC_3D(xyz, radList, iterations=iterations)
+                    estKP = RANSAC_3D(xyz, radList, iterations=iterations, itr_split=itr_split, debug=debug)
                 elif opts.frontend == 'accumulator':
                     estKP = Accumulator_3D(xyz, radList)[0]
 
@@ -189,9 +189,9 @@ def estimate_6d_pose_lm(opts, iterations):
                 wait = input("PRESS ENTER TO CONTINUE.")
             else:
                 avg_frontend_time = np.mean(classFrontendTimes)
-                print('\r', img_count, '/', test_list_size,': Current', class_name, 'avg acc:', total_acc, 'mm, avg std:', total_std, ', FPS:', (1 / avg_frontend_time) * 1000, '\t\t', end='', flush=True)
+                print('\r[', img_count, '/', test_list_size,']: Current', class_name, 'avg acc:', total_acc, 'mm, avg std:', total_std, ', FPS:', (1 / avg_frontend_time) * 1000, '\t\t\r', end='', flush=True)
 
-                
+        print('\r',' '*200,'\r', end='', flush=True)
         avg = np.mean(keypoint_offsets)
         std = np.std(keypoint_offsets)
         class_accuracies.append(avg)
@@ -199,9 +199,9 @@ def estimate_6d_pose_lm(opts, iterations):
         class_time = np.mean(classFrontendTimes)
         frontend_times.append(class_time)
 
-        print('\nAverage' , class_name, ' Accuracy: ', avg, 'mm')
-        print('Average' , class_name, ' Std: ', std, 'mm')
-        print('Average', class_name, 'FPS: ', (1 / class_time) * 1000, '\n')
+        print('\tAverage' , class_name, ' Accuracy: ', avg, 'mm')
+        print('\tAverage' , class_name, ' Std: ', std, 'mm')
+        print('\tAverage', class_name, 'FPS: ', (1 / class_time) * 1000, '\n')
 
 
     totalTimeEnd = time.time_ns()
@@ -209,12 +209,17 @@ def estimate_6d_pose_lm(opts, iterations):
 
     avg_total_frontend_time = np.mean(frontend_times)
 
+    mean = np.mean(class_accuracies)
+    std = np.mean(class_std)
+    fps = (1 / avg_total_frontend_time) * 1000
+
     print('Total Time: ', str(datetime.timedelta(milliseconds=totalTime)))
-    print ('Average Accuracy: ', np.mean(class_accuracies), 'mm')
-    print ('Average Std: ', np.mean(class_std), 'mm')
+    print ('Average Accuracy: ', mean, 'mm')
+    print ('Average Std: ', std, 'mm')
     print ('Average Frontend Time: ', avg_total_frontend_time, 'ms')
-    print ('Average FPS', (1 / avg_total_frontend_time) * 1000, '\n')
-    return np.mean(class_accuracies), np.mean(class_std), (1 / avg_total_frontend_time) * 1000
+    print ('Average FPS', fps)
+
+    return mean, std, fps
 
 
 if __name__ == "__main__":
@@ -250,13 +255,15 @@ if __name__ == "__main__":
     fpss = []
     
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for i in range(1000, 1200, 100):
-            print ('Iterations: ', i)
-            iterations.append(i)
-            mean, std, fps = estimate_6d_pose_lm(opts, i) 
+        for itr in range(1000, 10000, 200):
+            print ('Iterations: ', itr)
+            iterations.append(itr)
+            mean, std, fps = estimate_6d_pose_lm(opts, itr, 0.66) 
             means.append(mean)
             stds.append(std)
             fpss.append(fps)
+            print('='*50)
+            print('\n')
         fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
 
         ax1.plot(iterations, means, label='Mean')
@@ -274,6 +281,8 @@ if __name__ == "__main__":
 
         plt.savefig(opts.out_plot)
         plt.show()
+    else:
+        estimate_6d_pose_lm(opts, 0)
         
 
 
