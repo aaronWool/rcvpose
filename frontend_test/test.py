@@ -15,8 +15,8 @@ import scipy
 import datetime
 from accumulator3D import Accumulator_3D
 
-
-lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['ape', 'can']
+#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
 lm_syms = ['eggbox', 'glue']
@@ -54,13 +54,11 @@ def read_depth(path):
 
 depthList=[]
 
-def estimate_6d_pose_lm(opts): 
+def estimate_6d_pose_lm(opts, iterations): 
     print('Estimating 6D Pose on LINEMOD')  
     debug = False
     if opts.verbose:
         debug = True
-    
-    RANSAC_itr = opts.ransac_iterations
 
     class_accuracies = []
     class_std = []
@@ -145,8 +143,8 @@ def estimate_6d_pose_lm(opts):
                 
                 estKP = np.array([0,0,0])
 
-                if opts.frontend == 'ransac':
-                    estKP = RANSAC_3D(xyz, radList, iterations=RANSAC_itr)
+                if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
+                    estKP = RANSAC_3D(xyz, radList, iterations=iterations)
                 elif opts.frontend == 'accumulator':
                     estKP = Accumulator_3D(xyz, radList)[0]
 
@@ -216,6 +214,7 @@ def estimate_6d_pose_lm(opts):
     print ('Average Std: ', np.mean(class_std), 'mm')
     print ('Average Frontend Time: ', avg_total_frontend_time, 'ms')
     print ('Average FPS', (1 / avg_total_frontend_time) * 1000, '\n')
+    return np.mean(class_accuracies), np.mean(class_std), (1 / avg_total_frontend_time) * 1000
 
 
 if __name__ == "__main__":
@@ -227,19 +226,16 @@ if __name__ == "__main__":
 
     parser.add_argument('--frontend',
                     type=str,
-                    default='ransac')
-    # accumulator, ransac
+                    default='RANSAC')
+    # accumulator, ransac, RANSAC
     parser.add_argument('--verbose',
                         type=bool,
                     default=False)
     
-    parser.add_argument('--ransac_iterations', '-ri',
-                    type=int,
-                    default=5000)
     
-    parser.add_argument('--out_file',
+    parser.add_argument('--out_plot',
                         type=str,
-                    default='output.txt'
+                    default='out_plot'
                     )
     
     opts = parser.parse_args()
@@ -247,9 +243,38 @@ if __name__ == "__main__":
     if opts.verbose:
         print ('Verbose: ', opts.verbose)
     print ('Frontend: ' + opts.frontend)
-    if opts.frontend == 'ransac':
-        print ('RANSAC Iterations: ', opts.ransac_iterations)
+
+    iterations = []
+    means = []
+    stds = []
+    fpss = []
+    
+    if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
+        for i in range(1000, 1200, 100):
+            print ('Iterations: ', i)
+            iterations.append(i)
+            mean, std, fps = estimate_6d_pose_lm(opts, i) 
+            means.append(mean)
+            stds.append(std)
+            fpss.append(fps)
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
+
+        ax1.plot(iterations, means, label='Mean')
+        ax1.set_ylabel('Mean')
+        ax1.legend()
+
+        ax2.plot(iterations, stds, label='Std')
+        ax2.set_ylabel('Std')
+        ax2.legend()
+
+        ax3.plot(iterations, fpss, label='FPS')
+        ax3.set_ylabel('FPS')
+        ax3.set_xlabel('Iterations')
+        ax3.legend()
+
+        plt.savefig(opts.out_plot)
+        plt.show()
+        
 
 
-    estimate_6d_pose_lm(opts) 
 
