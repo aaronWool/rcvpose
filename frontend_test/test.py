@@ -13,12 +13,13 @@ import scipy
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
+import json
 
 import warnings
 warnings.filterwarnings("ignore")
 
-lm_cls_names = ['benchvise', 'can']
-#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+#lm_cls_names = ['benchvise', 'can']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
 lm_syms = ['eggbox', 'glue']
@@ -165,6 +166,9 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
                 frontend_time += (frontend_End - frontend_Start)/1000000
 
                 offset = np.linalg.norm(CenterGT_mm - estKP)
+                if offset > 100000:
+                    print ('\tERROR: Offset: ', offset, 'mm, Count: ', img_count, ' Keypoint: ', keypoint_count + 1, 'GT Center: ', CenterGT_mm, 'Est Center: ', estKP)
+                    continue
 
                 if debug:
                     print ('Offset: ', offset)
@@ -240,12 +244,12 @@ if __name__ == "__main__":
     # accumulator, ransac, RANSAC
     parser.add_argument('--verbose',
                         type=bool,
-                    default=True)
+                    default=False)
     
     
     parser.add_argument('--out_plot',
                         type=str,
-                    default='out_plot'
+                    default='ransac2_metrics'
                     )
     
     opts = parser.parse_args()
@@ -263,7 +267,7 @@ if __name__ == "__main__":
 
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for itr in range(500, 10000, 500):
+        for itr in range(500, 6000, 500):
             iterations.append(itr)
             mean, std, fps = estimate_6d_pose_lm(opts, itr, 0.66) 
             means.append(mean)
@@ -288,6 +292,15 @@ if __name__ == "__main__":
 
         plt.savefig(opts.out_plot)
         plt.show()
+
+        metrics = {
+            "iterations": iterations,
+            "means": means,
+            "stds": stds,
+            "fpss": fpss
+        }
+        with open("metrics.json", "w") as f:
+            json.dump(metrics, f)
     else:
         estimate_6d_pose_lm(opts, 0)
         
