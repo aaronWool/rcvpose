@@ -4,8 +4,6 @@ from numba import jit,njit,cuda
 import os
 from numba import prange
 import math
-import h5py
-
 
 
 

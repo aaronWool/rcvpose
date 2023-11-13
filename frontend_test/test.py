@@ -101,7 +101,7 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
 
         img_count = 0
 
-        for filename in tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, leave=False, unit='image'):
+        for filename in (test_list if debug else tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, unit='image', leave=False)):
             if debug:
                 print("\nEvaluating ", filename)
 
@@ -139,13 +139,14 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
                 pixelCoords = np.where(semMask==1)
 
                 radList = radMap[pixelCoords]
+               
 
                 xyz_mm = rgbd_to_point_cloud(linemod_K, depthMap)
 
                 xyz = xyz_mm / 1000
 
                 assert xyz.shape[0] == radList.shape[0]
-
+ 
                 frontend_Start = time.time_ns()
                 
                 estKP = np.array([0,0,0])
@@ -231,7 +232,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='C:/Users/User/.cw/work/datasets/test/')
+                    default='D:/datasets/')
 
     parser.add_argument('--frontend',
                     type=str,
@@ -239,7 +240,7 @@ if __name__ == "__main__":
     # accumulator, ransac, RANSAC
     parser.add_argument('--verbose',
                         type=bool,
-                    default=False)
+                    default=True)
     
     
     parser.add_argument('--out_plot',
@@ -262,7 +263,7 @@ if __name__ == "__main__":
 
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for itr in iteration_list:
+        for itr in range(500, 10000, 500):
             iterations.append(itr)
             mean, std, fps = estimate_6d_pose_lm(opts, itr, 0.66) 
             means.append(mean)

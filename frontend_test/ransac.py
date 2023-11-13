@@ -91,7 +91,7 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=F
     best_vote = random_centerest(xyz_mm, radial_list_mm, first_iteration, debug=debug)
 
     if debug:
-        print('\tBest vote after first random centerest calc: ' + str(best_vote))
+        print('\tRandom centerest 1: ' + str(best_vote))
 
     xyz_inliers = []
     radial_list_inliers = []
@@ -109,7 +109,7 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=F
     center = np.array([best_vote[1], best_vote[2], best_vote[3]])
 
     if debug:
-        print('\tNumber of inliers: ' + str(len(xyz_inliers)))
+        print('\tNumber of inliers 1: ' + str(len(xyz_inliers)))
 
     if len(xyz_inliers) == 4:
         center = centerest(xyz_inliers, radial_list_inliers)
@@ -121,7 +121,8 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=F
         random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), second_iteration)
         xyz_inliers_2 = []
         radial_list_inliers_2 = []
-
+        if debug:
+            print('\tRandom centerest 2: ', random_center)
         for _ in range(50):
             i = random.randint(0, len(xyz_inliers) - 1)
             p = xyz_inliers[i]
@@ -131,13 +132,14 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=F
                 xyz_inliers_2.append(p)
                 radial_list_inliers_2.append(r)
         if len(radial_list_inliers) > 4:
+            print('\tNumber of inliers 2: ' + str(len(xyz_inliers_2)))
             center = centerest(xyz_inliers_2, radial_list_inliers_2)
         else:
             center = np.array([random_center[1], random_center[2], random_center[3]])
         center = np.array(center)
         #center = np.array([random_center[1], random_center[2], random_center[3]])
         if debug:
-            print('\tRandom centerest output #2: ', center)
+            print('\tRefined centerest: ', center)
             
         
     center = center.astype("float64")
