@@ -17,8 +17,8 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings("ignore")
 
-#lm_cls_names = ['ape', 'can']
-lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['benchvise', 'can']
+#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
 lm_syms = ['eggbox', 'glue']
@@ -203,7 +203,7 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
         class_time = np.mean(classFrontendTimes)
         frontend_times.append(class_time)
 
-        print('\tAverage' , class_name, 'Accuracy:\t\t', avg, 'mm')
+        print('\tAverage' , class_name, 'Acc:\t\t', avg, 'mm')
         print('\tAverage' , class_name, 'Std:\t\t', std, 'mm')
         print('\tAverage', class_name, 'FPS:\t\t', (1 / class_time) * 1000, '\n')
 
@@ -218,7 +218,7 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
     fps = (1 / avg_total_frontend_time) * 1000
 
     print('Total Time: ', str(datetime.timedelta(milliseconds=totalTime)))
-    print ('Average Accuracy: ', mean, 'mm')
+    print ('Average Acc: ', mean, 'mm')
     print ('Average Std: ', std, 'mm')
     print ('Average Frontend Time: ', avg_total_frontend_time, 'ms')
     print ('Average FPS', fps)
@@ -258,9 +258,11 @@ if __name__ == "__main__":
     stds = []
     fpss = []
     
+    iteration_list = [250, 500, 750, 1000, 1250, 1500, 1750, 2000, 3000, 5000, 10000]
+
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for itr in range(1000, 10000, 200):
+        for itr in iteration_list:
             iterations.append(itr)
             mean, std, fps = estimate_6d_pose_lm(opts, itr, 0.66) 
             means.append(mean)
