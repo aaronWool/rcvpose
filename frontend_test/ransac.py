@@ -3,8 +3,26 @@ import numpy as np
 import random
 
 
-@jit(nopython=True)
 def centerest(point_list, radius_list):
+    """
+    Estimates the center of a sphere given a set of points on the sphere's surface and the sphere's radius
+
+    Parameters
+    ----------
+    point_list : array_like
+        A list of points (x, y, z) on the sphere's surface
+    radius_list : array_like
+        A list of radii corresponding to the points in point_list
+
+    Returns
+    -------
+    x : float
+        The estimated x coordinate of the sphere's center
+    y : float
+        The estimated y coordinate of the sphere's center
+    z : float
+        The estimated z coordinate of the sphere's center
+    """
     assert len(point_list) == len(radius_list), 'different number of points and radii'
     assert len(point_list) >= 4, 'less than 4 points'
 
@@ -29,6 +47,29 @@ def centerest(point_list, radius_list):
 
 @jit(nopython=True, parallel=True)
 def random_centerest(xyz, radial_list, iterations, debug=False):
+    """
+    Estimates the center of a sphere given a set of random points on the sphere's surface and their corresponding radii.
+
+    This function generates random subsets of points and radii from the provided data and computes the sphere's center
+    using the `centerest` function for each subset. It then calculates the error for each estimated center and selects
+    the center with the lowest error as the best estimate.
+
+    Parameters
+    ----------
+    xyz : ndarray
+        An array of shape (n, 3) containing the coordinates of n random points on the sphere's surface in 3D space.
+    radial_list : ndarray
+        An array of length n containing the corresponding radii for the points in `xyz`.
+    iterations : int
+        The number of random subsets of points to consider when estimating the sphere's center.
+    debug : bool, optional
+        If True, print debug information during execution (default is False).
+
+    Returns
+    -------
+    best_vote : tuple
+        A tuple containing the estimated error, x, y, and z coordinates of the sphere's center for the best estimate.
+    """
     n = len(xyz)
     votes = np.zeros((iterations, 4))
 
@@ -61,7 +102,47 @@ def random_centerest(xyz, radial_list, iterations, debug=False):
     return best_vote
 
 
+
 def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=False):
+    """
+    Estimate the center of a 3D sphere using the RANSAC algorithm.
+
+    This function applies the Random Sample Consensus (RANSAC) algorithm to estimate the center of a 3D sphere
+    given a set of points on the sphere's surface and their corresponding radii.
+
+    Parameters
+    ----------
+    xyz : ndarray
+        An array of shape (n, 3) containing the coordinates of n points in 3D space.
+    radial_list : ndarray
+        An array of length n containing the corresponding radii for the points in `xyz`.
+    iterations : int, optional
+        The total number of RANSAC iterations to perform (default is 2000).
+    iteration_split : float, optional
+        The proportion of RANSAC iterations allocated for the initial random center estimation (default is 0.66).
+    debug : bool, optional
+        If True, print debug information during execution (default is False).
+
+    Returns
+    -------
+    center : ndarray
+        A 3-element array representing the estimated x, y, and z coordinates of the sphere's center.
+
+    Notes
+    -----
+    - This function adjusts the input data and performs RANSAC to estimate the center of a sphere.
+    - It relies on the `random_centerest` function for random center estimation.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from your_module import RANSAC_3D
+    >>> xyz = np.random.rand(100, 3)  # Generate random points
+    >>> radii = np.random.rand(100)    # Corresponding radii
+    >>> center = RANSAC_3D(xyz, radii)
+    >>> print("Estimated Center:", center)
+    """
+
     acc_unit = 5
 
     first_iteration = int(iterations*iteration_split)

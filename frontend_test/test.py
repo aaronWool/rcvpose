@@ -4,12 +4,10 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from numba import jit,njit,cuda
 import os
-import open3d as o3d
 import time
 from ransac import RANSAC_3D
 from numba import prange
 import math
-import h5py
 from sklearn import metrics
 import scipy
 import datetime
@@ -73,7 +71,7 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
     class_accuracies = []
     class_std = []
     frontend_times = []
-    
+
     totalTimeStart = time.time_ns()
 
     for class_name in lm_cls_names:
