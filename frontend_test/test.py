@@ -14,9 +14,13 @@ from sklearn import metrics
 import scipy
 import datetime
 from accumulator3D import Accumulator_3D
+from tqdm import tqdm
 
-lm_cls_names = ['ape', 'can']
-#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+import warnings
+warnings.filterwarnings("ignore")
+
+#lm_cls_names = ['ape', 'can']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
 lm_syms = ['eggbox', 'glue']
@@ -55,7 +59,13 @@ def read_depth(path):
 depthList=[]
 
 def estimate_6d_pose_lm(opts, iterations, itr_split=0.66): 
-    print('Estimating 6D Pose on LINEMOD')  
+    start = 'Estimating 6D Pose on LINEMOD' 
+    if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
+        start += ' with RANSAC Iterations: ' + str(iterations)
+    else:
+        start += 'with Accumulator'
+    print(start)
+
     debug = False
     if opts.verbose:
         debug = True
@@ -67,7 +77,6 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
     totalTimeStart = time.time_ns()
 
     for class_name in lm_cls_names:
-        print("\tEvaluation on ", class_name)
         rootPath = opts.root_dataset + "LINEMOD_ORIG/"+class_name+"/" 
         rootpvPath = opts.root_dataset + "LINEMOD/"+class_name+"/" 
         rootRadialMapPath = opts.root_dataset + "rkhs_estRadialMap/"+class_name+"/"
@@ -94,7 +103,7 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
 
         img_count = 0
 
-        for filename in test_list:
+        for filename in tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, leave=False, unit='image'):
             if debug:
                 print("\nEvaluating ", filename)
 
@@ -144,7 +153,7 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
                 estKP = np.array([0,0,0])
 
                 if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-                    estKP = RANSAC_3D(xyz, radList, iterations=iterations, itr_split=itr_split, debug=debug)
+                    estKP = RANSAC_3D(xyz, radList, iterations=iterations, iteration_split=itr_split, debug=debug)
                 elif opts.frontend == 'accumulator':
                     estKP = Accumulator_3D(xyz, radList)[0]
 
@@ -187,11 +196,8 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
                 print('Total Acc: ', total_acc)
                 print('Total Std: ', total_std)
                 wait = input("PRESS ENTER TO CONTINUE.")
-            else:
-                avg_frontend_time = np.mean(classFrontendTimes)
-                print('\r[', img_count, '/', test_list_size,']: Current', class_name, 'avg acc:', total_acc, 'mm, avg std:', total_std, ', FPS:', (1 / avg_frontend_time) * 1000, '\t\t\r', end='', flush=True)
+                
 
-        print('\r',' '*200,'\r', end='', flush=True)
         avg = np.mean(keypoint_offsets)
         std = np.std(keypoint_offsets)
         class_accuracies.append(avg)
@@ -199,9 +205,9 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
         class_time = np.mean(classFrontendTimes)
         frontend_times.append(class_time)
 
-        print('\tAverage' , class_name, ' Accuracy: ', avg, 'mm')
-        print('\tAverage' , class_name, ' Std: ', std, 'mm')
-        print('\tAverage', class_name, 'FPS: ', (1 / class_time) * 1000, '\n')
+        print('\tAverage' , class_name, 'Accuracy:\t\t', avg, 'mm')
+        print('\tAverage' , class_name, 'Std:\t\t', std, 'mm')
+        print('\tAverage', class_name, 'FPS:\t\t', (1 / class_time) * 1000, '\n')
 
 
     totalTimeEnd = time.time_ns()
@@ -254,9 +260,9 @@ if __name__ == "__main__":
     stds = []
     fpss = []
     
+
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
         for itr in range(1000, 10000, 200):
-            print ('Iterations: ', itr)
             iterations.append(itr)
             mean, std, fps = estimate_6d_pose_lm(opts, itr, 0.66) 
             means.append(mean)

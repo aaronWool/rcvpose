@@ -95,14 +95,13 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=F
 
     xyz_inliers = []
     radial_list_inliers = []
-    num_iterations = 200  
 
-    for _ in range(num_iterations):
+    for _ in range(200):
         i = random.randint(0, len(xyz_mm) - 1)
         p = xyz_mm[i]
         r = radial_list_mm[i]
         dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
-        if abs(dist - r) < best_vote[0]:
+        if abs(dist - r) < 10:
             xyz_inliers.append(p)
             radial_list_inliers.append(r)
 
@@ -117,12 +116,25 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=F
         if debug:
             print('\tCenterest output: ', center)
 
-    
     if len(xyz_inliers) > 4:
-        #iterations = len(xyz_inliers//2)
-        iterations = iterations // 2
         random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), second_iteration)
-        center = np.array([random_center[1], random_center[2], random_center[3]])
+        xyz_inliers_2 = []
+        radial_list_inliers_2 = []
+
+        for _ in range(50):
+            i = random.randint(0, len(xyz_inliers) - 1)
+            p = xyz_inliers[i]
+            r = radial_list_inliers[i]
+            dist = np.sqrt((p[0] - random_center[1]) ** 2 + (p[1] - random_center[2]) ** 2 + (p[2] - random_center[3]) ** 2)
+            if abs(dist - r) < 10:
+                xyz_inliers_2.append(p)
+                radial_list_inliers_2.append(r)
+        if len(radial_list_inliers) > 4:
+            center = centerest(xyz_inliers_2, radial_list_inliers_2)
+        else:
+            center = np.array([random_center[1], random_center[2], random_center[3]])
+        center = np.array(center)
+        #center = np.array([random_center[1], random_center[2], random_center[3]])
         if debug:
             print('\tRandom centerest output #2: ', center)
             
