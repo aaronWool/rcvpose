@@ -286,6 +286,14 @@ if __name__ == "__main__":
         plt.savefig(opts.out_plot)
         plt.show()
 
+        print()
+        for itr in iterations:
+            print('Iterations: ', itr)
+            print('Mean: ', means[iterations.index(itr)])
+            print('Std: ', stds[iterations.index(itr)])
+            print('FPS: ', fpss[iterations.index(itr)])
+            print()
+
     else:
         estimate_6d_pose_lm(opts, 0)
         
