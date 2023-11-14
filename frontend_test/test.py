@@ -1,19 +1,12 @@
-import torch
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
-from numba import jit,njit,cuda
 import os
 import time
 from ransac import RANSAC_3D
-from numba import prange
-import math
-from sklearn import metrics
-import scipy
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
-import json
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -267,7 +260,7 @@ if __name__ == "__main__":
 
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for itr in range(500, 6000, 500):
+        for itr in range(5000, 7000, 500):
             iterations.append(itr)
             mean, std, fps = estimate_6d_pose_lm(opts, itr, 0.66) 
             means.append(mean)
@@ -293,14 +286,6 @@ if __name__ == "__main__":
         plt.savefig(opts.out_plot)
         plt.show()
 
-        metrics = {
-            "iterations": iterations,
-            "means": means,
-            "stds": stds,
-            "fpss": fpss
-        }
-        with open("metrics.json", "w") as f:
-            json.dump(metrics, f)
     else:
         estimate_6d_pose_lm(opts, 0)
         
