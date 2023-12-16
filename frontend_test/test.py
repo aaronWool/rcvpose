@@ -17,8 +17,8 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings("ignore")
 
-lm_cls_names = ['benchvise', 'can']
-#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+#lm_cls_names = ['benchvise', 'can']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
 lm_syms = ['eggbox', 'glue']
@@ -56,7 +56,7 @@ def read_depth(path):
 
 depthList=[]
 
-def estimate_6d_pose_lm(opts, iterations, itr_split=0.66): 
+def estimate_6d_pose_lm(opts, iterations=2000): 
     start = 'Estimating 6D Pose on LINEMOD' 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
         start += ' with RANSAC Iterations: ' + str(iterations)
@@ -151,7 +151,7 @@ def estimate_6d_pose_lm(opts, iterations, itr_split=0.66):
                 estKP = np.array([0,0,0])
 
                 if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-                    estKP = RANSAC_3D(xyz, radList, iterations=iterations, iteration_split=itr_split, debug=debug)
+                    estKP = RANSAC_3D(xyz, radList, iterations=iterations, debug=debug)
                 elif opts.frontend == 'accumulator':
                     estKP = Accumulator_3D(xyz, radList)[0]
 
@@ -244,7 +244,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--out_plot',
                         type=str,
-                    default='out_plot'
+                    default='RANSACv4'
                     )
     
     opts = parser.parse_args()
@@ -258,37 +258,36 @@ if __name__ == "__main__":
     stds = []
     fpss = []
     
-    iteration_list = [250, 500, 750, 1000, 1250, 1500, 1750, 2000, 3000, 5000, 10000]
-
+    iteration_list = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
         for itr in iteration_list:
             iterations.append(itr)
-            mean, std, fps = estimate_6d_pose_lm(opts, itr, 0.66) 
+            mean, std, fps = estimate_6d_pose_lm(opts, itr) 
             means.append(mean)
             stds.append(std)
             fpss.append(fps)
             print('='*50)
             print('\n')
-        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
+            fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
 
-        ax1.plot(iterations, means, label='Mean')
-        ax1.set_ylabel('Mean')
-        ax1.legend()
+            ax1.plot(iterations, means, label='Mean')
+            ax1.set_ylabel('Mean')
+            ax1.legend()
 
-        ax2.plot(iterations, stds, label='Std')
-        ax2.set_ylabel('Std')
-        ax2.legend()
+            ax2.plot(iterations, stds, label='Std')
+            ax2.set_ylabel('Std')
+            ax2.legend()
 
-        ax3.plot(iterations, fpss, label='FPS')
-        ax3.set_ylabel('FPS')
-        ax3.set_xlabel('Iterations')
-        ax3.legend()
+            ax3.plot(iterations, fpss, label='FPS')
+            ax3.set_ylabel('FPS')
+            ax3.set_xlabel('Iterations')
+            ax3.legend()
 
-        plt.savefig(opts.out_plot)
-        plt.show()
+            plt.savefig(opts.out_plot)
+            plt.show()
     else:
-        estimate_6d_pose_lm(opts, 0)
+        estimate_6d_pose_lm(opts)
         
 
 
