@@ -78,7 +78,7 @@ def accumulate_inliers(xyz, radial_list, iterations, estimated_keypoint):
             radial_list_inliers[num_iterations] = radial_list[index]
             num_iterations+=1
     
-    return xyz_inliers, radial_list_inliers
+    return xyz_inliers[:num_iterations], radial_list_inliers[:num_iterations]
 
 
 
