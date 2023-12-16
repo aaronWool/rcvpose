@@ -3,7 +3,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import os
 import time
-from ransac import RANSAC_3D
+from ransac_v3 import RANSAC_3D
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='D:/datasets/')
+                    default='../../datasets/test/')
 
     parser.add_argument('--frontend',
                     type=str,
@@ -256,10 +256,10 @@ if __name__ == "__main__":
     stds = []
     fpss = []
     
-    iteration_list = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    iteration_list = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for itr in range(5000, 7000, 500):
+        for itr in iteration_list:
             iterations.append(itr)
             mean, std, fps = estimate_6d_pose_lm(opts, itr) 
             means.append(mean)
