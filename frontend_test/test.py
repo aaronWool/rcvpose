@@ -1,15 +1,9 @@
-import torch
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
-from numba import jit,njit,cuda
 import os
 import time
 from ransac import RANSAC_3D
-from numba import prange
-import math
-from sklearn import metrics
-import scipy
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
@@ -101,7 +95,7 @@ def estimate_6d_pose_lm(opts, iterations=2000):
 
         img_count = 0
 
-        for filename in tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, leave=False, unit='image'):
+        for filename in (test_list if debug else tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, unit='image', leave=False)):
             if debug:
                 print("\nEvaluating ", filename)
 
@@ -139,13 +133,14 @@ def estimate_6d_pose_lm(opts, iterations=2000):
                 pixelCoords = np.where(semMask==1)
 
                 radList = radMap[pixelCoords]
+               
 
                 xyz_mm = rgbd_to_point_cloud(linemod_K, depthMap)
 
                 xyz = xyz_mm / 1000
 
                 assert xyz.shape[0] == radList.shape[0]
-
+ 
                 frontend_Start = time.time_ns()
                 
                 estKP = np.array([0,0,0])
@@ -164,6 +159,9 @@ def estimate_6d_pose_lm(opts, iterations=2000):
                 frontend_time += (frontend_End - frontend_Start)/1000000
 
                 offset = np.linalg.norm(CenterGT_mm - estKP)
+                if offset > 100000:
+                    print ('\tERROR: Offset: ', offset, 'mm, Count: ', img_count, ' Keypoint: ', keypoint_count + 1, 'GT Center: ', CenterGT_mm, 'Est Center: ', estKP)
+                    continue
 
                 if debug:
                     print ('Offset: ', offset)
@@ -231,7 +229,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='C:/Users/User/.cw/work/datasets/test/')
+                    default='D:/datasets/')
 
     parser.add_argument('--frontend',
                     type=str,
@@ -261,7 +259,7 @@ if __name__ == "__main__":
     iteration_list = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for itr in iteration_list:
+        for itr in range(5000, 7000, 500):
             iterations.append(itr)
             mean, std, fps = estimate_6d_pose_lm(opts, itr) 
             means.append(mean)

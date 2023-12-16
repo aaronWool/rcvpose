@@ -140,7 +140,6 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, debug=False):
 
 def main():
     #   generate random point, within unit sphere
-    import random
     c = [random.random(), random.random(), random.random()]
     print('center = ', c)
 
