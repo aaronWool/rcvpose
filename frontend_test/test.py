@@ -3,7 +3,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import os
 import time
-from ransac_v3 import RANSAC_3D
+from ransac_v4 import RANSAC_3D
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
@@ -283,7 +283,6 @@ if __name__ == "__main__":
             ax3.legend()
 
             plt.savefig(opts.out_plot)
-            plt.show()
     else:
         estimate_6d_pose_lm(opts)
         
