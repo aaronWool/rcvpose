@@ -107,7 +107,7 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, debug=False):
             p = xyz_mm[i]
             r = radial_list_mm[i]
             dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
-            if abs(dist - r) < epsilon:
+            if abs(dist - r) < best_vote[0]:
                 xyz_inliers.append(p)
                 radial_list_inliers.append(r)
 
