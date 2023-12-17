@@ -59,27 +59,10 @@ def random_centerest(xyz, radial_list, iterations, max_num_refinements = 10, deb
     return sorted_votes 
 
 @jit(nopython=True, parallel=True)
-def accumulate_inliers(xyz, radial_list, iterations, estimated_keypoint):
+def accumulate_inliers(xyz, radial_list, iterations, error):
     xyz_inliers = np.zeros((iterations, 3))
     radial_list_inliers = np.zeros(iterations)
     
-    n = len(xyz)
-    num_iterations = 0
-
-    for _ in prange(iterations):
-        index = np.random.randint(0, n)
-
-        p = xyz[index]
-        r = radial_list[index]
-
-        dist = np.sqrt((p[0]-estimated_keypoint[1])*(p[0]-estimated_keypoint[1]) + (p[1]-estimated_keypoint[2])*(p[1]-estimated_keypoint[2]) + (p[2]-estimated_keypoint[3])*(p[2]-estimated_keypoint[3]))
-        if(abs(dist-r)<estimated_keypoint[0]):
-            xyz_inliers[num_iterations] = xyz[index]
-            radial_list_inliers[num_iterations] = radial_list[index]
-            num_iterations+=1
-    
-    return xyz_inliers[:num_iterations], radial_list_inliers[:num_iterations]
-
 
 
 def RANSAC_3D(xyz, radial_list, iterations=2000, debug=False):
@@ -107,7 +90,7 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, debug=False):
     if(zero_boundary<0):
         xyz_mm -= zero_boundary
     
-    max_num_refinements = 10
+    max_num_refinements = 5
     #epsilon = 10
     center = np.array([0, 0, 0])
     prev_error = 1000
@@ -115,12 +98,29 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, debug=False):
     for itr in range(max_num_refinements):     
         best_vote = random_centerest(xyz_mm, radial_list_mm, iterations, debug=debug)
 
-        iterations = int(iterations/2)
+        iterations = int(iterations/3)
         best_vote = best_vote[0]
+    
+        xyz_inliers = []
+        radial_list_inliers = []
 
-        inlier_iterations = int(len(xyz_mm)/2)
+        if len(xyz_mm) > 200:
+            inlier_itr = 200
+        else:
+            inlier_itr = len(xyz_mm)
+    
+        for _ in range(inlier_itr):
+            i = random.randint(0, len(xyz_mm) - 1)
+            p = xyz_mm[i]
+            r = radial_list_mm[i]
+            dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
+            if abs(dist - r) < best_vote[0]:
+                xyz_inliers.append(p)
+                radial_list_inliers.append(r)
 
-        xyz_mm, radial_list_mm = accumulate_inliers(xyz_mm, radial_list_mm, inlier_iterations, best_vote)
+   
+        xyz_mm = np.array(xyz_inliers)
+        radial_list_mm = np.array(radial_list_inliers)
 
         if best_vote[0] < prev_error:
             prev_error = best_vote[0]
