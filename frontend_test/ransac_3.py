@@ -95,14 +95,14 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=F
 
     xyz_inliers = []
     radial_list_inliers = []
-    num_iterations = 200  
+    num_iterations = 300  
 
     for _ in range(num_iterations):
         i = random.randint(0, len(xyz_mm) - 1)
         p = xyz_mm[i]
         r = radial_list_mm[i]
         dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
-        if abs(dist - r) < best_vote[0]:
+        if abs(dist - r) < 5.0:
             xyz_inliers.append(p)
             radial_list_inliers.append(r)
 

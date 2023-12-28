@@ -242,7 +242,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--out_plot',
                         type=str,
-                    default='RANSAC_3'
+                    default='graphs/RANSAC_3_5mm'
                     )
     
     opts = parser.parse_args()
@@ -259,30 +259,33 @@ if __name__ == "__main__":
     iteration_list = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for itr in iteration_list:
-            iterations.append(itr)
-            mean, std, fps = estimate_6d_pose_lm(opts, itr) 
-            means.append(mean)
-            stds.append(std)
-            fpss.append(fps)
-            print('='*50)
-            print('\n')
-            fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
+        with open('outputs/RANSAC_3_5mm.txt', 'w') as file:
+            for itr in iteration_list:
+                iterations.append(itr)
+                mean, std, fps = estimate_6d_pose_lm(opts, itr) 
+                means.append(mean)
+                stds.append(std)
+                fpss.append(fps)
+                file.write(f"Iterations: {itr}, Mean: {mean}, Std: {std}, FPS: {fps}\n")
+       
+                print('='*50)
+                print('\n')
+                fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
 
-            ax1.plot(iterations, means, label='Mean')
-            ax1.set_ylabel('Mean')
-            ax1.legend()
+                ax1.plot(iterations, means, label='Mean')
+                ax1.set_ylabel('Mean')
+                ax1.legend()
 
-            ax2.plot(iterations, stds, label='Std')
-            ax2.set_ylabel('Std')
-            ax2.legend()
+                ax2.plot(iterations, stds, label='Std')
+                ax2.set_ylabel('Std')
+                ax2.legend()
 
-            ax3.plot(iterations, fpss, label='FPS')
-            ax3.set_ylabel('FPS')
-            ax3.set_xlabel('Iterations')
-            ax3.legend()
+                ax3.plot(iterations, fpss, label='FPS')
+                ax3.set_ylabel('FPS')
+                ax3.set_xlabel('Iterations')
+                ax3.legend()
 
-            plt.savefig(opts.out_plot)
+                plt.savefig(opts.out_plot)
     else:
         estimate_6d_pose_lm(opts)
         
