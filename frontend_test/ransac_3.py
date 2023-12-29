@@ -61,7 +61,23 @@ def random_centerest(xyz, radial_list, iterations, debug=False):
     return best_vote
 
 
-def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=False):
+def accumulate_inliers(xyz, radial_list, iterations, best_vote, error):
+    xyz_inliers = []
+    radial_list_inliers = []
+
+    for itr in range(iterations):
+        i = random.randint(0, len(xyz) - 1)
+        p = xyz[i]
+        r = radial_list[i]
+        dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
+        if abs(dist - r) < error:
+            xyz_inliers.append(p)
+            radial_list_inliers.append(r)
+    
+    return xyz_inliers, radial_list_inliers
+
+
+def RANSAC_3D(xyz, radial_list, iterations=2000, epsilon = 5, iteration_split = 0.66, debug=False):
     acc_unit = 5
 
     first_iteration = int(iterations*iteration_split)
@@ -93,18 +109,15 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, iteration_split = 0.66, debug=F
     if debug:
         print('\tRandom centerest 1: ' + str(best_vote))
 
-    xyz_inliers = []
-    radial_list_inliers = []
-    num_iterations = 300  
+    num_iterations = 300
 
-    for _ in range(num_iterations):
-        i = random.randint(0, len(xyz_mm) - 1)
-        p = xyz_mm[i]
-        r = radial_list_mm[i]
-        dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
-        if abs(dist - r) < 5.0:
-            xyz_inliers.append(p)
-            radial_list_inliers.append(r)
+    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon)
+
+    if xyz_inliers == []:
+        xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon+1)
+        if xyz_inliers == []:
+            print ('\tERROR: No inliers found')
+            return np.array([0, 0, 0])
 
     center = np.array([best_vote[1], best_vote[2], best_vote[3]])
 

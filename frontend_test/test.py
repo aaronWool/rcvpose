@@ -50,7 +50,7 @@ def read_depth(path):
 
 depthList=[]
 
-def estimate_6d_pose_lm(opts, iterations=2000): 
+def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5): 
     start = 'Estimating 6D Pose on LINEMOD' 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
         start += ' with RANSAC Iterations: ' + str(iterations)
@@ -146,7 +146,7 @@ def estimate_6d_pose_lm(opts, iterations=2000):
                 estKP = np.array([0,0,0])
 
                 if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-                    estKP = RANSAC_3D(xyz, radList, iterations=iterations, debug=debug)
+                    estKP = RANSAC_3D(xyz, radList, epsilon=epsilon, iterations=iterations, debug=debug)
                 elif opts.frontend == 'accumulator':
                     estKP = Accumulator_3D(xyz, radList)[0]
 
@@ -242,7 +242,12 @@ if __name__ == "__main__":
     
     parser.add_argument('--out_plot',
                         type=str,
-                    default='graphs/RANSAC_3_5mm'
+                    default='graphs/RANSAC_3'
+                    )
+    
+    parser.add_argument('--out_file',
+                        type=str,
+                    default='outputs/RANSAC_3'
                     )
     
     opts = parser.parse_args()
@@ -250,24 +255,32 @@ if __name__ == "__main__":
     if opts.verbose:
         print ('Verbose: ', opts.verbose)
     print ('Frontend: ' + opts.frontend)
+    print()
 
     iterations = []
     means = []
     stds = []
     fpss = []
     
-    iteration_list = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    iteration_list = [2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        with open('outputs/RANSAC_3_5mm.txt', 'w') as file:
+        for epsilon in [10,9,8,7,6,5,4,3,2,1]:
+            print ('Epsilon: ', epsilon)
+            out_file = opts.out_file + '_' + str(epsilon) + 'mm.txt'
+            out_plot = opts.out_plot + '_' + str(epsilon) + '.png'
+            print ('Out File: ', out_file)
+            print ('Out Plot: ', out_plot)
+            print()
             for itr in iteration_list:
                 iterations.append(itr)
-                mean, std, fps = estimate_6d_pose_lm(opts, itr) 
+                mean, std, fps = estimate_6d_pose_lm(opts, itr, epsilon) 
                 means.append(mean)
                 stds.append(std)
                 fpss.append(fps)
-                file.write(f"Iterations: {itr}, Mean: {mean}, Std: {std}, FPS: {fps}\n")
-       
+                with open(out_file, 'a') as file:
+                    file.write(f"Iterations: {itr}, Mean: {mean}, Std: {std}, FPS: {fps}\n")
+
                 print('='*50)
                 print('\n')
                 fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
@@ -285,7 +298,11 @@ if __name__ == "__main__":
                 ax3.set_xlabel('Iterations')
                 ax3.legend()
 
-                plt.savefig(opts.out_plot)
+                plt.savefig(out_plot)
+                plt.close()
+            means = []
+            stds = []
+            fpss = []
     else:
         estimate_6d_pose_lm(opts)
         
