@@ -257,15 +257,16 @@ if __name__ == "__main__":
     print ('Frontend: ' + opts.frontend)
     print()
 
-    iterations = []
-    means = []
-    stds = []
-    fpss = []
+   
     
     iteration_list = [2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for epsilon in [10,9,8,7,6,5,4,3,2,1]:
+        for epsilon in [8,7,6,5,4,3,2,1]:
+            iterations = []
+            means = []
+            stds = []
+            fpss = []
             print ('Epsilon: ', epsilon)
             out_file = opts.out_file + '_' + str(epsilon) + 'mm.txt'
             out_plot = opts.out_plot + '_' + str(epsilon) + '.png'
@@ -300,9 +301,6 @@ if __name__ == "__main__":
 
                 plt.savefig(out_plot)
                 plt.close()
-            means = []
-            stds = []
-            fpss = []
     else:
         estimate_6d_pose_lm(opts)
         

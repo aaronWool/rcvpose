@@ -134,32 +134,6 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, epsilon = 5, iteration_split = 
         
         random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), second_iteration)
 
-        # Second point refinement results in lower acc
-        #xyz_inliers_2 = []
-        #radial_list_inliers_2 = []
-        #
-        #if debug:
-        #    print('\tRandom centerest 2: ', random_center)
-        #
-        #for _ in range(50):
-        #    i = random.randint(0, len(xyz_inliers) - 1)
-        #    p = xyz_inliers[i]
-        #    r = radial_list_inliers[i]
-        #    dist = np.sqrt((p[0] - random_center[1]) ** 2 + (p[1] - random_center[2]) ** 2 + (p[2] - random_center[3]) ** 2)
-        #    if abs(dist - r) < random_center[0]:
-        #        xyz_inliers_2.append(p)
-        #        radial_list_inliers_2.append(r)
-        #        if len(xyz_inliers_2) > 4:
-        #            break
-        #
-        #
-        #if len(radial_list_inliers) > 4:
-        #    random_center = random_centerest(np.array(xyz_inliers_2), np.array(radial_list_inliers_2), len(xyz_inliers_2)*2)
-        #    center = np.array([random_center[0], random_center[1], random_center[2]])
-        #else:
-        #    center = np.array([random_center[1], random_center[2], random_center[3]])
-        #    
-        #center = np.array(center)
 
         center = np.array([random_center[1], random_center[2], random_center[3]])
         if debug:

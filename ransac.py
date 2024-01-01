@@ -1,20 +1,23 @@
 from numba import jit, prange
 import numpy as np
+import random
 
+
+@jit(nopython=True)
 def centerest(point_list, radius_list):
     assert len(point_list) == len(radius_list), 'different number of points and radii'
     assert len(point_list) >= 4, 'less than 4 points'
 
-    A = []
-    b = []
-    for i in range(len(point_list)):
+    A = np.zeros((len(point_list), 5))
+    b = np.zeros((len(point_list), 5))
+    for i in prange(len(point_list)):
         p = point_list[i]
         r = radius_list[i]
         x = p[0]
         y = p[1]
         z = p[2]
-        A += [[-2*x, -2*y, -2*z, 1, x*x+y*y+z*z-r*r]]
-        b += [[0, 0, 0, 0, 0]]
+        A[i] = [-2*x, -2*y, -2*z, 1, x*x+y*y+z*z-r*r]
+        b[i] = [0, 0, 0, 0, 0]
 
     U, S, Vh = np.linalg.svd(A)
     X = Vh[-1]
@@ -23,36 +26,62 @@ def centerest(point_list, radius_list):
     return X[0], X[1], X[2]
 
 
-vote = np.dtype([
-    ('mse', np.float64),
-    ('x', np.float64),
-    ('y', np.float64),
-    ('z', np.float64)
-])
 
-def random_centerest(xyz, radial_list, iterations):
-    vote_list = np.zeros(iterations, dtype=vote)
-    for itr in range(iterations):
-        index = np.random.randint(0, len(xyz), 4)
+@jit(nopython=True, parallel=True)
+def random_centerest(xyz, radial_list, iterations, debug=False):
+    n = len(xyz)
+    votes = np.zeros((iterations, 4))
+
+    for itr in prange(iterations):
+        index = np.random.randint(0, n, 4)
+
         point_list = xyz[index]
+
         radius_list = radial_list[index]
+        
         x, y, z = centerest(point_list, radius_list)
+
         error = 0
-        for i in range (len(xyz)):
+
+        for i in prange(n):
             p = xyz[i]
             r = radial_list[i]
             dist = np.sqrt((p[0]-x)*(p[0]-x) + (p[1]-y)*(p[1]-y) + (p[2]-z)*(p[2]-z))
             error += abs(dist-r)
+
         error /= len(xyz)
-        vote_list[itr] = (error, x, y, z)
 
-    return vote_list
+        votes[itr] = (error, x, y, z)
+
     
+    sorted_votes = sorted(votes, key=lambda x: x[0])
 
-def RANSAC_3D(xyz, radial_list):
+    best_vote = sorted_votes[0]
+    
+    return best_vote
+
+
+def accumulate_inliers(xyz, radial_list, iterations, best_vote, error):
+    xyz_inliers = []
+    radial_list_inliers = []
+
+    for itr in range(iterations):
+        i = random.randint(0, len(xyz) - 1)
+        p = xyz[i]
+        r = radial_list[i]
+        dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
+        if abs(dist - r) < error:
+            xyz_inliers.append(p)
+            radial_list_inliers.append(r)
+    
+    return xyz_inliers, radial_list_inliers
+
+
+def RANSAC_3D(xyz, radial_list, iterations=2000, epsilon = 5, iteration_split = 0.66, debug=False):
     acc_unit = 5
 
-    print('Number of points: ' , len(xyz))
+    first_iteration = int(iterations*iteration_split)
+    second_iteration = iterations-first_iteration
 
     xyz_mm = xyz*1000/acc_unit 
 
@@ -64,7 +93,6 @@ def RANSAC_3D(xyz, radial_list):
     xyz_mm[:,1] -= y_mean_mm
     xyz_mm[:,2] -= z_mean_mm
 
-
     radial_list_mm = radial_list*100/acc_unit  
 
     xyz_mm_min = xyz_mm.min()
@@ -75,48 +103,60 @@ def RANSAC_3D(xyz, radial_list):
 
     if(zero_boundary<0):
         xyz_mm -= zero_boundary
-       
-    iterations = 100
-
-    random_center_list = random_centerest(xyz_mm, radial_list_mm, iterations)
     
-    best_vote = np.sort(random_center_list, order='mse')[0]
+    best_vote = random_centerest(xyz_mm, radial_list_mm, first_iteration, debug=debug)
 
-    xyz_mm_inliers = []
-    radial_list_inliers = []
-    xyz_mm_inliers = []
-    radial_list_inliers = []
-    for i in range(len(xyz_mm)):
-        p = xyz_mm[i]
-        r = radial_list_mm[i]
-        dist = np.sqrt((p[0]-best_vote[1])**2 + (p[1]-best_vote[2])**2 + (p[2]-best_vote[3])**2)
-        if abs(dist-r) < best_vote[0]:
-            xyz_mm_inliers += [p]
-            radial_list_inliers += [r]
+    if debug:
+        print('\tRandom centerest 1: ' + str(best_vote))
+
+    num_iterations = 300
+
+    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon)
+
+    if xyz_inliers == []:
+        xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon+1)
+        if xyz_inliers == []:
+            print ('\tERROR: No inliers found')
+            return np.array([0, 0, 0])
+
+    center = np.array([best_vote[1], best_vote[2], best_vote[3]])
+
+    if debug:
+        print('\tNumber of inliers 1: ' + str(len(xyz_inliers)))
+
+    if len(xyz_inliers) == 4:
+        center = centerest(xyz_inliers, radial_list_inliers)
+        center = np.array(center)
+        if debug:
+            print('\tCenterest output: ', center)
+
+    if len(xyz_inliers) > 4:
+        
+        random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), second_iteration)
 
 
-    print('Number of removed points: ', len(xyz_mm)-len(xyz_mm_inliers))
-    print('Number of remaining points: ', len(xyz_mm_inliers))
-
-    center = centerest(xyz_mm_inliers, radial_list_inliers)
-
-    center = np.array([center[0], center[1], center[2]])
-
+        center = np.array([random_center[1], random_center[2], random_center[3]])
+        if debug:
+            print('\tRefined centerest: ', center)
+            
+        
     center = center.astype("float64")
+
     if(zero_boundary<0):
         center = center+zero_boundary
 
     center[0] = (center[0]+x_mean_mm+0.5)*acc_unit
     center[1] = (center[1]+y_mean_mm+0.5)*acc_unit
     center[2] = (center[2]+z_mean_mm+0.5)*acc_unit
-    
 
+    if debug:
+        print('\tFinal center after data shift: ' + str(center))
+    
     return center
 
 
 def main():
     #   generate random point, within unit sphere
-    import random
     c = [random.random(), random.random(), random.random()]
     print('center = ', c)
 
