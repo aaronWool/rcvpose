@@ -46,7 +46,7 @@ def random_centerest(xyz, radial_list, iterations, debug=False):
         for i in prange(n):
             p = xyz[i]
             r = radial_list[i]
-            dist = np.sqrt((p[0]-x)*(p[0]-x) + (p[1]-y)*(p[1]-y) + (p[2]-z)*(p[2]-z))
+            dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
             error += abs(dist-r)
 
         error /= len(xyz)
@@ -109,7 +109,7 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, epsilon = 5, iteration_split = 
     if debug:
         print('\tRandom centerest 1: ' + str(best_vote))
 
-    num_iterations = 300
+    num_iterations = 200
 
     xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon)
 

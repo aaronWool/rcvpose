@@ -3,10 +3,11 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import os
 import time
-from ransac_3 import RANSAC_3D
+from ransac import RANSAC_3D
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
+import open3d as o3d
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -62,6 +63,7 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
     if opts.verbose:
         debug = True
 
+
     class_accuracies = []
     class_std = []
     frontend_times = []
@@ -81,6 +83,10 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
         classFrontendTimes = []
 
         keypoint_offsets = []
+
+        
+        pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "LINEMOD/"+class_name+"/"+class_name+".ply")
+        xyz_load = np.asarray(pcd_load.points)
         
         #keypoints = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/Outside9.npy")
         keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
@@ -93,7 +99,13 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
         dataPath = rootpvPath + 'JPEGImages/'
 
-        img_count = 0
+        max_radii_dm = np.zeros(3)
+        for i in range(3):
+            dsitances = ((xyz_load[:,0]-keypoints[i,0])**2+(xyz_load[:,1]-keypoints[i,1])**2+(xyz_load[:,2]-keypoints[i,2])**2)**0.5 
+            max_radii_dm[i] = dsitances.max()*10
+
+        if debug:
+            print ('max_radii_dm: ', max_radii_dm)
 
         for filename in (test_list if debug else tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, unit='image', leave=False)):
             if debug:
@@ -103,11 +115,7 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
             
             kpGT_mm = (np.dot(keypoints, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
 
-            img_kpt_offsets = []
-            
-            frontend_time = 0
-
-            imgStart = time.time_ns()
+            times_kpt = []
 
             keypoint_count = 0
             for keypoint in keypoints:
@@ -126,6 +134,18 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
                 semMask = np.where(radMap>0.8,1,0)
 
+            
+                num_zero1 = np.count_nonzero(semMask==0)
+
+                # if using accumulator space, remove all radial values outside of max radius
+                if opts.frontend == 'accumulator':
+                    newSemMask = np.where(radMap<=max_radii_dm[keypoint_count], semMask,0)
+                    if not newSemMask.sum() == 0:
+                        semMask = newSemMask
+                        radMap = np.where(radMap<=max_radii_dm[keypoint_count], radMap,0)
+
+                num_zero2 = np.count_nonzero(semMask==0)
+
                 depthMap = read_depth(rootPath+'data/depth'+str(int(os.path.splitext(filename)[0]))+'.dpt')
 
                 depthMap = depthMap*semMask
@@ -133,74 +153,61 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
                 pixelCoords = np.where(semMask==1)
 
                 radList = radMap[pixelCoords]
-               
 
                 xyz_mm = rgbd_to_point_cloud(linemod_K, depthMap)
 
+                if debug:
+                    print ('Number of removed radial val outside max radius: ', num_zero2 - num_zero1)
+                    print ('Number of points in depth map: ', xyz_mm.shape[0])
+
+                if xyz_mm.shape[0] == 0 and not debug:
+                    print ('Number of removed radial val outside max radius: ', num_zero2 - num_zero1)
+                    print ('Number of points in depth map: ', xyz_mm.shape[0])
+
                 xyz = xyz_mm / 1000
 
-                assert xyz.shape[0] == radList.shape[0]
+                assert xyz.shape[0] == radList.shape[0], "Number of points in depth map and radial map do not match"
+                assert xyz.shape[0] != 0, "No points found in depth map"
  
-                frontend_Start = time.time_ns()
-                
                 estKP = np.array([0,0,0])
 
                 if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-                    estKP = RANSAC_3D(xyz, radList, epsilon=epsilon, iterations=iterations, debug=debug)
+                    frontend_Start = time.time_ns()
+                    estKP = RANSAC_3D(xyz, radList, epsilon=epsilon, iterations=iterations, debug=False)
+                    frontend_End = time.time_ns()
                 elif opts.frontend == 'accumulator':
+                    frontend_Start = time.time_ns()
                     estKP = Accumulator_3D(xyz, radList)[0]
+                    frontend_End = time.time_ns()
 
                 if debug:
                     print ('Est Center: \n', estKP)
 
+                frontend_time = (frontend_End - frontend_Start)/1000000
 
-                frontend_End = time.time_ns()
-
-                frontend_time += (frontend_End - frontend_Start)/1000000
+                times_kpt.append(frontend_time)
 
                 offset = np.linalg.norm(CenterGT_mm - estKP)
-                if offset > 100000:
-                    print ('\tERROR: Offset: ', offset, 'mm, Count: ', img_count, ' Keypoint: ', keypoint_count + 1, 'GT Center: ', CenterGT_mm, 'Est Center: ', estKP)
-                    continue
 
                 if debug:
-                    print ('Offset: ', offset)
+                    print ('Offset: ', offset, 'mm')
+                    wait = input("PRESS ENTER TO CONTINUE.")
 
                 keypoint_offsets.append(offset)
-                img_kpt_offsets.append(offset)
                
                 keypoint_count+=1
                 
                 if (keypoint_count==3):
                     break
 
-            imgEnd = time.time_ns()
-            img_count += 1
-            classFrontendTimes.append(frontend_time)
-            img_acc = np.mean(img_kpt_offsets)
-            img_std = np.std(img_kpt_offsets)
-            total_acc = np.mean(keypoint_offsets)
-            total_std = np.std(keypoint_offsets)
-
-            imgTime = (imgEnd - imgStart)/1000000
-
-            if debug:
-                print('Frontend Time: ', frontend_time)
-                print('Image Time: ', imgTime)
-                print('Image Acc: ', img_acc)
-                print('Image Std: ', img_std)
-                print('Total Acc: ', total_acc)
-                print('Total Std: ', total_std)
-                wait = input("PRESS ENTER TO CONTINUE.")
-                
-
+      
         avg = np.mean(keypoint_offsets)
         std = np.std(keypoint_offsets)
         class_accuracies.append(avg)
         class_std.append(std)
-        class_time = np.mean(classFrontendTimes)
+        class_time = np.mean(times_kpt)
         frontend_times.append(class_time)
-
+      
         print('\tAverage' , class_name, 'Acc:\t\t', avg, 'mm')
         print('\tAverage' , class_name, 'Std:\t\t', std, 'mm')
         print('\tAverage', class_name, 'FPS:\t\t', (1 / class_time) * 1000, '\n')
@@ -233,21 +240,21 @@ if __name__ == "__main__":
 
     parser.add_argument('--frontend',
                     type=str,
-                    default='RANSAC')
+                    default='accumulator')
     # accumulator, ransac, RANSAC
     parser.add_argument('--verbose',
-                        type=bool,
+                    type=bool,
                     default=False)
     
     
     parser.add_argument('--out_plot',
                         type=str,
-                    default='graphs/RANSAC_3'
+                    default='graphs/ACC_FINAL'
                     )
     
     parser.add_argument('--out_file',
                         type=str,
-                    default='outputs/RANSAC_3'
+                    default='outputs/ACC_FINAL'
                     )
     
     opts = parser.parse_args()
@@ -259,10 +266,10 @@ if __name__ == "__main__":
 
    
     
-    iteration_list = [2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    iteration_list = [5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for epsilon in [8,7,6,5,4,3,2,1]:
+        for epsilon in [.7]:
             iterations = []
             means = []
             stds = []
@@ -302,7 +309,12 @@ if __name__ == "__main__":
                 plt.savefig(out_plot)
                 plt.close()
     else:
-        estimate_6d_pose_lm(opts)
+        mean, std, fps = estimate_6d_pose_lm(opts)
+        out_file = opts.out_file + '.txt'
+        with open(out_file, 'a') as file:
+            file.write(f"Mean: {mean}, Std: {std}, FPS: {fps}\n")
+        print('='*50)
+
         
 
 
