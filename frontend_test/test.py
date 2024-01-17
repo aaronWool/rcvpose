@@ -85,8 +85,8 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
         keypoint_offsets = []
 
         
-        pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "LINEMOD/"+class_name+"/"+class_name+".ply")
-        xyz_load = np.asarray(pcd_load.points)
+        #pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "LINEMOD/"+class_name+"/"+class_name+".ply")
+        #xyz_load = np.asarray(pcd_load.points)
         
         #keypoints = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/Outside9.npy")
         keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
@@ -99,13 +99,13 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
         dataPath = rootpvPath + 'JPEGImages/'
 
-        max_radii_dm = np.zeros(3)
-        for i in range(3):
-            dsitances = ((xyz_load[:,0]-keypoints[i,0])**2+(xyz_load[:,1]-keypoints[i,1])**2+(xyz_load[:,2]-keypoints[i,2])**2)**0.5 
-            max_radii_dm[i] = dsitances.max()*10
+        #max_radii_dm = np.zeros(3)
+        #for i in range(3):
+        #    dsitances = ((xyz_load[:,0]-keypoints[i,0])**2+(xyz_load[:,1]-keypoints[i,1])**2+(xyz_load[:,2]-keypoints[i,2])**2)**0.5 
+        #    max_radii_dm[i] = dsitances.max()*10
 
-        if debug:
-            print ('max_radii_dm: ', max_radii_dm)
+        #if debug:
+        #    print ('max_radii_dm: ', max_radii_dm)
 
 
         for filename in (test_list if debug else tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, unit='image', leave=False)):
@@ -251,7 +251,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../../datasets/test/')
+                    default='B:/datasets/')
 
     parser.add_argument('--frontend',
                     type=str,

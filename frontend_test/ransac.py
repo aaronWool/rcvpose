@@ -60,21 +60,30 @@ def random_centerest(xyz, radial_list, iterations, debug=False):
     
     return best_vote
 
-@njit
-def accumulate_inliers(xyz, radial_list, iterations, best_vote, error):
-    xyz_inliers = []
-    radial_list_inliers = []
 
-    for itr in range(iterations):
-        i = random.randint(0, len(xyz) - 1)
+
+@njit(parallel=True)
+def accumulate_inliers(xyz, radial_list, iterations, best_vote, error, max_inliers=200):
+    xyz_inliers = np.zeros((max_inliers, 3))  
+    radial_list_inliers = np.zeros(max_inliers)
+    inlier_count = 0
+
+    indexes = np.arange(len(xyz))
+    np.random.shuffle(indexes)
+
+    for itr in prange(iterations):
+        if inlier_count >= max_inliers:
+            break  
+        i = indexes[itr % len(xyz)]
         p = xyz[i]
         r = radial_list[i]
         dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
         if abs(dist - r) < error:
-            xyz_inliers.append(p)
-            radial_list_inliers.append(r)
-    
-    return xyz_inliers, radial_list_inliers
+            xyz_inliers[inlier_count] = p
+            radial_list_inliers[inlier_count] = r
+            inlier_count += 1
+
+    return xyz_inliers[:inlier_count], radial_list_inliers[:inlier_count]
 
 
 def RANSAC_3D(xyz, radial_list, iterations=2000, epsilon = 5, iteration_split = 0.66, debug=False):
@@ -109,15 +118,14 @@ def RANSAC_3D(xyz, radial_list, iterations=2000, epsilon = 5, iteration_split = 
     if debug:
         print('\tRandom centerest 1: ' + str(best_vote))
 
-    num_iterations = 200
+    num_iterations = 400
 
     xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon)
 
     if xyz_inliers == []:
-        xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon+1)
-        if xyz_inliers == []:
-            print ('\tERROR: No inliers found')
-            return np.array([0, 0, 0])
+        while xyz_inliers == []:
+            xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon+0.1)
+            
 
     center = np.array([best_vote[1], best_vote[2], best_vote[3]])
 
