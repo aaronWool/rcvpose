@@ -107,9 +107,13 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
         if debug:
             print ('max_radii_dm: ', max_radii_dm)
 
+
         for filename in (test_list if debug else tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, unit='image', leave=False)):
             if debug:
                 print("\nEvaluating ", filename)
+            
+            #if not filename == '000090':
+            #    continue
 
             RTGT = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
             
@@ -173,7 +177,7 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
                 if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
                     frontend_Start = time.time_ns()
-                    estKP = RANSAC_3D(xyz, radList, epsilon=epsilon, iterations=iterations, debug=False)
+                    estKP = RANSAC_3D(xyz, radList, epsilon=epsilon, iterations=iterations, debug=debug)
                     frontend_End = time.time_ns()
                 elif opts.frontend == 'accumulator':
                     frontend_Start = time.time_ns()
@@ -191,7 +195,16 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
                 if debug:
                     print ('Offset: ', offset, 'mm')
+                if offset > 1000000:
+                    print ('Offset: ', offset, 'mm')
+                    print ('GT Center: \n', CenterGT_mm)
+                    print ('Est Center: \n', estKP)
+                    print ('Filename: ', filename)
+                    print ('Keypoint: ', keypoint_count + 1)
+                    print ('Number of removed radial val outside max radius: ', num_zero2 - num_zero1)
+                    print ('Number of points in depth map: ', xyz_mm.shape[0])
                     wait = input("PRESS ENTER TO CONTINUE.")
+              
 
                 keypoint_offsets.append(offset)
                
@@ -211,6 +224,8 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
         print('\tAverage' , class_name, 'Acc:\t\t', avg, 'mm')
         print('\tAverage' , class_name, 'Std:\t\t', std, 'mm')
         print('\tAverage', class_name, 'FPS:\t\t', (1 / class_time) * 1000, '\n')
+        if debug:
+            wait = input("PRESS ENTER TO CONTINUE.")
 
 
     totalTimeEnd = time.time_ns()
@@ -240,7 +255,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--frontend',
                     type=str,
-                    default='accumulator')
+                    default='RANSAC')   
     # accumulator, ransac, RANSAC
     parser.add_argument('--verbose',
                     type=bool,
@@ -249,12 +264,12 @@ if __name__ == "__main__":
     
     parser.add_argument('--out_plot',
                         type=str,
-                    default='graphs/ACC_FINAL'
+                    default='graphs2/RANSAC_v4'
                     )
     
     parser.add_argument('--out_file',
                         type=str,
-                    default='outputs/ACC_FINAL'
+                    default='outputs2/RANSAC_v4'
                     )
     
     opts = parser.parse_args()
@@ -266,10 +281,10 @@ if __name__ == "__main__":
 
    
     
-    iteration_list = [5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000]
+    iteration_list = [50, 100, 200, 500, 1000, 2500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for epsilon in [.7]:
+        for epsilon in [0.7, 0.6, 0.5, 0.4]:
             iterations = []
             means = []
             stds = []
