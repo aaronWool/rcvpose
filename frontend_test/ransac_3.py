@@ -69,21 +69,28 @@ def random_centerest(xyz, radial_list, iterations, epsilon, debug=False):
     
     return best_vote
 
-@njit
-def accumulate_inliers(xyz, radial_list, iterations, best_vote, epsilon):
-    xyz_inliers = []
-    radial_list_inliers = []
+@njit(parallel=True)
+def accumulate_inliers(xyz, radial_list, iterations, best_vote, error, max_inliers=200):
+    xyz_inliers = np.zeros((max_inliers, 3))  
+    radial_list_inliers = np.zeros(max_inliers)
+    inlier_count = 0
 
-    for itr in range(iterations):
-        i = random.randint(0, len(xyz) - 1)
+    indexes = np.arange(len(xyz))
+    np.random.shuffle(indexes)
+
+    for itr in prange(iterations):
+        if inlier_count >= max_inliers:
+            break  
+        i = indexes[itr % len(xyz)]
         p = xyz[i]
         r = radial_list[i]
         dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
-        if abs(dist - r) <= epsilon:
-            xyz_inliers.append(p)
-            radial_list_inliers.append(r)
-    
-    return xyz_inliers, radial_list_inliers
+        if abs(dist - r) < error:
+            xyz_inliers[inlier_count] = p
+            radial_list_inliers[inlier_count] = r
+            inlier_count += 1
+
+    return xyz_inliers[:inlier_count], radial_list_inliers[:inlier_count]
 
 
 def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, iteration_split = 0.66, debug=False):
@@ -159,7 +166,7 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, iteration_split =
 
     # Significantly increases accuracy of centerest, high error when more than 4 points are utilized
     if len(xyz_inliers) > 4:
-        random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), iterations=int(iterations/2), epsilon=epsilon)
+        random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), iterations=int(iterations/2), epsilon=epsilon-.1)
         center = np.array([random_center[1], random_center[2], random_center[3]])
         if debug:
             print('\tRefined centerest: ', center)            
