@@ -1,4 +1,4 @@
-from numba import jit, prange
+from numba import jit, prange, njit
 import numpy as np
 import random
 
@@ -60,7 +60,7 @@ def random_centerest(xyz, radial_list, iterations, debug=False):
     
     return best_vote
 
-
+@njit
 def accumulate_inliers(xyz, radial_list, iterations, best_vote, error):
     xyz_inliers = []
     radial_list_inliers = []
