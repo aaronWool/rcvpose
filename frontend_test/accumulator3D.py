@@ -7,8 +7,7 @@ import math
 
 
 
-@jit(nopython=True,parallel=True)
-#@jit(parallel=True)     
+@jit(nopython=True,parallel=True)   
 def fast_for(xyz_mm,radial_list_mm,VoteMap_3D):  
     factor = (3**0.5)/4
     for count in prange(xyz_mm.shape[0]):
