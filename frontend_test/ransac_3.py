@@ -26,7 +26,7 @@ def centerest(point_list, radius_list):
     return X[0], X[1], X[2]
 
 
-
+# Random Consensus looks for a good first guess
 @jit(nopython=True, parallel=True)
 def random_centerest(xyz, radial_list, iterations, epsilon, debug=False):
     
@@ -69,6 +69,49 @@ def random_centerest(xyz, radial_list, iterations, epsilon, debug=False):
     
     return best_vote
 
+# Refine Consensus with only inliers
+@jit(nopython=True, parallel=True)
+def refine_consensus(xyz, radial_list, iterations):
+    
+    xyz_len = len(xyz)
+    n = xyz_len
+
+    votes = np.zeros((iterations, 4))
+
+    for itr in prange(iterations):
+        index = np.random.randint(0, xyz_len, 4)
+
+        point_list = xyz[index]
+
+        radius_list = radial_list[index]
+        
+        x, y, z = centerest(point_list, radius_list)
+
+        error = 0
+
+        for i in prange(n):
+            idx2 = np.random.randint(0, xyz_len)
+            p = xyz[idx2]
+            r = radial_list[idx2]
+            dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
+            error += abs(dist - r)
+        
+        error /= n
+
+        votes[itr, 0] = error
+        votes[itr, 1] = x
+        votes[itr, 2] = y
+        votes[itr, 3] = z
+
+    
+    sorted_votes = sorted(votes, key=lambda x: x[0], reverse=False)
+
+    best_vote = sorted_votes[0]
+    
+    return best_vote
+
+
+# Iterate through all the data points and accumulate inliers
 @njit(parallel=True)
 def accumulate_inliers(xyz, radial_list, iterations, best_vote, error, max_inliers=200):
     xyz_inliers = np.zeros((max_inliers, 3))  
@@ -93,17 +136,11 @@ def accumulate_inliers(xyz, radial_list, iterations, best_vote, error, max_inlie
     return xyz_inliers[:inlier_count], radial_list_inliers[:inlier_count]
 
 
-def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, iteration_split = 0.66, debug=False):
+def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
     acc_unit = 5
-
     current_epsilon = epsilon
 
-    #first_iteration = int(iterations*iteration_split)
-    #second_iteration = iterations-first_iteration
-#
-    #assert first_iteration > 0, 'first iteration must be greater than 0'
-    #assert second_iteration > 0, 'second iteration must be greater than 0'
-
+    # Shift Data 
     xyz_mm = xyz*1000/acc_unit 
 
     x_mean_mm = np.mean(xyz_mm[:,0])
@@ -127,7 +164,10 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, iteration_split =
     
     eps_increment = 0
 
+    # Random Consensus
     best_vote = random_centerest(xyz_mm, radial_list_mm, iterations, epsilon=current_epsilon,debug=debug)
+
+    # If no consensus, increase epsilon and try again
     if best_vote[0] == 0:
         while best_vote[0] == 0:
             current_epsilon += 0.1
@@ -140,37 +180,40 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, iteration_split =
 
     eps_increment = 0
     num_iterations = len(xyz_mm)
-
     current_epsilon = epsilon
 
+    # Accumulate Inliers with all the data points
     xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, current_epsilon)
     
+    # If no inliers, increase epsilon and try again
     if xyz_inliers == []:
         while xyz_inliers == []:
             current_epsilon += 0.1
             eps_increment += 1
             xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, current_epsilon)
      
-
+    # Final Center incase of less than 4 inliers
     center = np.array([best_vote[1], best_vote[2], best_vote[3]])
 
     if debug:
         print('\tNumber of inliers: ' + str(len(xyz_inliers)))
         print('\tEpsilon 2 Times Incremented: ' + str(eps_increment))
 
+    # Centerest if only 4 inliers
     if len(xyz_inliers) == 4:
         center = centerest(xyz_inliers, radial_list_inliers)
         center = np.array(center)
         if debug:
             print('\tCenterest output: ', center)
 
-    # Significantly increases accuracy of centerest, high error when more than 4 points are utilized
+    # Refine Consensus if more than 4 inliers
     if len(xyz_inliers) > 4:
-        random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), iterations=int(iterations/2), epsilon=epsilon-.1)
+        random_center = refine_consensus(np.array(xyz_inliers), np.array(radial_list_inliers), iterations=int(iterations/2))
         center = np.array([random_center[1], random_center[2], random_center[3]])
         if debug:
             print('\tRefined centerest: ', center)            
-        
+    
+    # Shift Center back to original data
     center = center.astype("float64")
 
     if(zero_boundary<0):
