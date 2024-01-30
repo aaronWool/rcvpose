@@ -8,3 +8,4 @@ frontend_test/ipconfig
 frontend_test/graphs/
 frontend_test/outputs/
 frontend_test/__pycache__/
+frontend_test/acc_current.txt
