@@ -90,9 +90,8 @@ def refine_consensus(xyz, radial_list, iterations):
         error = 0
 
         for i in prange(n):
-            idx2 = np.random.randint(0, xyz_len)
-            p = xyz[idx2]
-            r = radial_list[idx2]
+            p = xyz[i]
+            r = radial_list[i]
             dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
             error += abs(dist - r)
         
@@ -183,7 +182,7 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
     current_epsilon = epsilon
 
     # Accumulate Inliers with all the data points
-    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, current_epsilon)
+    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations , best_vote, current_epsilon)
     
     # If no inliers, increase epsilon and try again
     if xyz_inliers == []:

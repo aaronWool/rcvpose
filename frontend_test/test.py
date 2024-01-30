@@ -13,8 +13,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 #lm_cls_names = ['benchvise', 'can']
-#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
-lm_cls_names = ['cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+#lm_cls_names = ['cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
@@ -87,8 +87,8 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
         keypoint_offsets = []
 
         
-        pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "LINEMOD/"+class_name+"/"+class_name+".ply")
-        xyz_load = np.asarray(pcd_load.points)
+        #pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "LINEMOD/"+class_name+"/"+class_name+".ply")
+        #xyz_load = np.asarray(pcd_load.points)
         
         #keypoints_orig = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/Outside9.npy")
         keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
@@ -101,12 +101,12 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
         dataPath = rootpvPath + 'JPEGImages/'
 
-        max_radii_dm = np.zeros(3)
-        for i in range(3):
-            dsitances = ((xyz_load[:,0]-keypoints[i,0])**2+(xyz_load[:,1]-keypoints[i,1])**2+(xyz_load[:,2]-keypoints[i,2])**2)**0.5 
-            max_radii_dm[i] = dsitances.max()*10
-        if debug:
-            print ('max_radii_dm: ', max_radii_dm)
+        #max_radii_dm = np.zeros(3)
+        #for i in range(3):
+        #    dsitances = ((xyz_load[:,0]-keypoints[i,0])**2+(xyz_load[:,1]-keypoints[i,1])**2+(xyz_load[:,2]-keypoints[i,2])**2)**0.5 
+        #    max_radii_dm[i] = dsitances.max()*10
+        #if debug:
+        #    print ('max_radii_dm: ', max_radii_dm)
 
         #max_radii_orig = np.zeros(3)
         #for i in range(3):
@@ -206,13 +206,14 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
                 if debug:
                     print ('Offset: ', offset, 'mm')
                 if offset > 1000000:
-                    print ('Offset: ', offset, 'mm')
+                    print ('\nOffset: ', offset, 'mm')
                     print ('GT Center: \n', CenterGT_mm)
                     print ('Est Center: \n', estKP)
                     print ('Filename: ', filename)
                     print ('Keypoint: ', keypoint_count + 1)
                     print ('Number of removed radial val outside max radius: ', num_zero2 - num_zero1)
                     print ('Number of points in depth map: ', xyz_mm.shape[0])
+                    continue
                 
               
 
@@ -261,47 +262,49 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../../datasets/test/')
+                    default='B:/datasets/')
     # 'B:/datasets/' '../../datasets/test/'
     parser.add_argument('--frontend',
                     type=str,
-                    default='accumulator')   
+                    default='ransac')   
     # accumulator, ransac, RANSAC
     parser.add_argument('--verbose',
                     type=bool,
                     default=False)
     
-    
-    parser.add_argument('--out_plot',
-                        type=str,
-                    default='graphs2/RANSAC_v4'
-                    )
-    
-    parser.add_argument('--out_file',
-                        type=str,
-                    default='outputs2/RANSAC_v4'
-                    )
-    
+
+    out_dir = 'logs/' + parser.parse_args().frontend  + '/' 
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    num_logs = len(os.listdir(out_dir))
+
+    out_dir += str(num_logs) + '/'
+   
     opts = parser.parse_args()
     print ('Root Dataset: ' + opts.root_dataset)
+    print ('Out Dir: ' + out_dir)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
     if opts.verbose:
         print ('Verbose: ', opts.verbose)
     print ('Frontend: ' + opts.frontend)
     print()
 
-   
+
     
-    iteration_list = [50, 100, 200, 500, 1000, 2500, 5000]
+    iteration_list = [50, 100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for epsilon in [0.7, 0.6, 0.5, 0.4]:
+        for epsilon in [0.8, 0.7, 0.6, 0.5, 0.4]:
             iterations = []
             means = []
             stds = []
             fpss = []
             print ('Epsilon: ', epsilon)
-            out_file = opts.out_file + '_' + str(epsilon) + 'mm.txt'
-            out_plot = opts.out_plot + '_' + str(epsilon) + '.png'
+            out_file = out_dir + 'epsilon_' + str(epsilon) + '.txt'
+            out_plot = out_dir + 'epsilon_' + str(epsilon) + '.png'
             print ('Out File: ', out_file)
             print ('Out Plot: ', out_plot)
             print()
