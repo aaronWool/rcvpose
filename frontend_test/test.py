@@ -12,9 +12,11 @@ import open3d as o3d
 import warnings
 warnings.filterwarnings("ignore")
 
+#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+
 #lm_cls_names = ['benchvise', 'can']
-lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 #lm_cls_names = ['cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['ape']
 
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
@@ -278,15 +280,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../../datasets/test/')
-    # 'B:/datasets/' '../../datasets/test/'
+                    default='D:/')
+    # 'D:/' '../../datasets/test/'
     parser.add_argument('--frontend',
                     type=str,
                     default='ransac')   
     # accumulator, ransac, RANSAC
     parser.add_argument('--verbose',
                     type=bool,
-                    default=True)
+                    default=False)
     
 
     out_dir = 'logs/' + parser.parse_args().frontend  + '/' 
@@ -310,10 +312,10 @@ if __name__ == "__main__":
 
 
     
-    iteration_list = [200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    iteration_list = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for epsilon in [0.8, 0.7, 0.6, 0.5, 0.4]:
+        for epsilon in [0.7, 0.65, 0.6, 0.55, 0.5, 0.4]:
             iterations = []
             means = []
             stds = []

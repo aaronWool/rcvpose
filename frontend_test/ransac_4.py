@@ -202,18 +202,28 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
         print ('\tNumber of initial data points: ', len(xyz_mm))
 
     best_vote, xyz_inliers, radial_list_inliers = estimate_and_accumulate(xyz_mm, radial_list_mm, iterations, epsilon, max_inliers=max_inliers, debug=debug)
+    if len(xyz_inliers) > 200:
+        best_vote, xyz_inliers, radial_list_inliers = estimate_and_accumulate(xyz_inliers, radial_list_inliers, iterations, epsilon=(epsilon-0.1), max_inliers=int(max_inliers/2), debug=debug)
 
-    count = 0
-    while len(xyz_inliers) > 100:
-        count += 1
-        if debug:
-            print ('\tNumber of inliers after RANSAC number ' + str(count) + ': ' + str(len(xyz_inliers)))
-        current_epsilon -= 0.01
-        if current_epsilon < 0.02:
-            break
-        best_vote, xyz_inliers, radial_list_inliers = estimate_and_accumulate(xyz_inliers, radial_list_inliers, iterations, epsilon=current_epsilon, max_inliers=max_inliers, debug=debug)
-    if debug:
-        print ('Final epsilon: ' + str(current_epsilon))
+    #count = 0
+    #itr_w_out_improvement = 0
+    #while len(xyz_inliers) > 100:
+    #    inliers = len(xyz_inliers)
+    #    count += 1
+    #    if debug:
+    #        print ('\tNumber of inliers after RANSAC number ' + str(count) + ': ' + str(len(xyz_inliers)))
+    #    current_epsilon -= 0.01
+    #    if current_epsilon < 0.02:
+    #        break
+    #    if itr_w_out_improvement > 5:
+    #        break
+    #    best_vote, xyz_inliers, radial_list_inliers = estimate_and_accumulate(xyz_inliers, radial_list_inliers, iterations, epsilon=current_epsilon, max_inliers=max_inliers, debug=debug)
+    #    if inliers == len(xyz_inliers):
+    #        itr_w_out_improvement += 1
+    #    else:
+    #        itr_w_out_improvement = 0
+    #if debug:
+    #    print ('\tFinal epsilon: ' + str(current_epsilon))
     
     # Final Center incase of less than 4 inliers
     center = np.array([best_vote[1], best_vote[2], best_vote[3]])
@@ -221,14 +231,7 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
     if debug:
         print('\tNumber of inliers after estimation process: ' + str(len(xyz_inliers)))
 
-    # Centerest if only 4 inliers
-    #if len(xyz_inliers) == 4:
-    #    center = centerest(xyz_inliers, radial_list_inliers)
-    #    center = np.array(center)
-    #    if debug:
-    #        print('\tCenterest output: ', center)
 
-    # Refine Consensus if more than 4 inliers
     if len(xyz_inliers) > 4:
         best_vote = refine_consensus(xyz_inliers, radial_list_inliers, iterations)
         center = np.array([best_vote[1], best_vote[2], best_vote[3]])
