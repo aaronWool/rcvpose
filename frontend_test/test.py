@@ -3,7 +3,7 @@ from PIL import Image
 import matplotlib.pyplot  as plt
 import os
 import time
-from ransac_3 import RANSAC_3D
+from ransac_4 import RANSAC_3D
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
@@ -68,6 +68,7 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
     class_accuracies = []
     class_std = []
+    avg_point_count = []
     frontend_times = []
 
     totalTimeStart = time.time_ns()
@@ -86,9 +87,8 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
         keypoint_offsets = []
 
-        
-        #pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "LINEMOD/"+class_name+"/"+class_name+".ply")
-        #xyz_load = np.asarray(pcd_load.points)
+        pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "LINEMOD/"+class_name+"/"+class_name+".ply")
+        xyz_load = np.asarray(pcd_load.points)
         
         #keypoints_orig = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/Outside9.npy")
         keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
@@ -100,13 +100,13 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
             print('keypoints: \n', keypoints)
 
         dataPath = rootpvPath + 'JPEGImages/'
-
-        #max_radii_dm = np.zeros(3)
-        #for i in range(3):
-        #    dsitances = ((xyz_load[:,0]-keypoints[i,0])**2+(xyz_load[:,1]-keypoints[i,1])**2+(xyz_load[:,2]-keypoints[i,2])**2)**0.5 
-        #    max_radii_dm[i] = dsitances.max()*10
-        #if debug:
-        #    print ('max_radii_dm: ', max_radii_dm)
+        
+        max_radii_dm = np.zeros(3)
+        for i in range(3):
+            dsitances = ((xyz_load[:,0]-keypoints[i,0])**2+(xyz_load[:,1]-keypoints[i,1])**2+(xyz_load[:,2]-keypoints[i,2])**2)**0.5 
+            max_radii_dm[i] = dsitances.max()*10
+        if debug:
+            print ('max_radii_dm: ', max_radii_dm)
 
         #max_radii_orig = np.zeros(3)
         #for i in range(3):
@@ -115,9 +115,7 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
         #if debug:
         #    print ('max_radii_orig: ', max_radii_orig)
 
-       
-
-
+    
         for filename in (test_list if debug else tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, unit='image', leave=False)):
             if debug:
                 print("\nEvaluating ", filename)
@@ -170,7 +168,9 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
                 xyz_mm = rgbd_to_point_cloud(linemod_K, depthMap)
 
-                if debug:
+                avg_point_count = np.append(avg_point_count, xyz_mm.shape[0])
+
+                if debug and opts.frontend == 'accumulator':
                     print ('Number of removed radial val outside max radius: ', num_zero2 - num_zero1)
                     print ('Number of points in depth map: ', xyz_mm.shape[0])
 
@@ -193,9 +193,20 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
                     frontend_Start = time.time_ns()
                     estKP = Accumulator_3D(xyz, radList)[0]
                     frontend_End = time.time_ns()
+                    
+                    if debug and (frontend_End - frontend_Start)/1000000 > 100:
+                        print ('Filename: ', filename)
+                        print ('Keypoint: ', keypoint_count + 1)
+                        print ('Number of removed radial val outside max radius: ', num_zero2 - num_zero1)
+                        print ('Number of points in depth map: ', xyz_mm.shape[0])
+                        print ('Frontend Time: ', (frontend_End - frontend_Start)/1000000, 'ms')
+                
+             
 
                 if debug:
                     print ('Est Center: \n', estKP)
+                    print ('Frontend Time: ', (frontend_End - frontend_Start)/1000000, 'ms')
+                
 
                 frontend_time = (frontend_End - frontend_Start)/1000000
 
@@ -205,6 +216,8 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
                 if debug:
                     print ('Offset: ', offset, 'mm')
+                    if offset > 10:
+                        wait = input("PRESS ENTER TO CONTINUE.")
                 if offset > 1000000:
                     print ('\nOffset: ', offset, 'mm')
                     print ('GT Center: \n', CenterGT_mm)
@@ -213,9 +226,8 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
                     print ('Keypoint: ', keypoint_count + 1)
                     print ('Number of removed radial val outside max radius: ', num_zero2 - num_zero1)
                     print ('Number of points in depth map: ', xyz_mm.shape[0])
+                    wait = input("PRESS ENTER TO CONTINUE.")
                     continue
-                
-              
 
                 keypoint_offsets.append(offset)
                
@@ -231,10 +243,14 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
         class_std.append(std)
         class_time = np.mean(times_kpt)
         frontend_times.append(class_time)
+        avg_point_count = np.mean(avg_point_count)
       
         print('\tAverage' , class_name, 'Acc:\t\t', avg, 'mm')
         print('\tAverage' , class_name, 'Std:\t\t', std, 'mm')
-        print('\tAverage', class_name, 'FPS:\t\t', (1 / class_time) * 1000, '\n')
+        print('\tAverage', class_name, 'FPS:\t\t', (1 / class_time) * 1000)
+        print('\tAverage Number of Points: \t', avg_point_count)
+        print('\tPoint/ms: \t\t\t', avg_point_count / (class_time / 1000))
+        print()
         if debug:
             wait = input("PRESS ENTER TO CONTINUE.")
 
@@ -262,7 +278,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='B:/datasets/')
+                    default='../../datasets/test/')
     # 'B:/datasets/' '../../datasets/test/'
     parser.add_argument('--frontend',
                     type=str,
@@ -270,7 +286,7 @@ if __name__ == "__main__":
     # accumulator, ransac, RANSAC
     parser.add_argument('--verbose',
                     type=bool,
-                    default=False)
+                    default=True)
     
 
     out_dir = 'logs/' + parser.parse_args().frontend  + '/' 
@@ -294,7 +310,7 @@ if __name__ == "__main__":
 
 
     
-    iteration_list = [50, 100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    iteration_list = [200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
         for epsilon in [0.8, 0.7, 0.6, 0.5, 0.4]:
