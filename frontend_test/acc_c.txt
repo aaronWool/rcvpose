@@ -1,0 +1,5 @@
+        Average cam Acc:                 12.649618957388169 mm
+        Average cam Std:                 26.306643701542875 mm
+        Average cam FPS:                 0.34297478908936835
+        Average Number of Points:        2912.7107843137255
+        Point/ms:                        998.9863669283287
