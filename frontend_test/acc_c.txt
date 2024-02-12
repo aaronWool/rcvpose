@@ -3,3 +3,21 @@
         Average cam FPS:                 0.34297478908936835
         Average Number of Points:        2912.7107843137255
         Point/ms:                        998.9863669283287
+
+        Average can Acc:                 13.765708589398557 mm
+        Average can Std:           X      29.846290626894014 mm
+        Average can FPS:                 0.24570877608109595
+        Average Number of Points:        3938.504593175853
+        Point/ms:                        967.7251431790136
+
+        Average cat Acc:                 14.324961942383066 mm
+        Average cat Std:                 31.24280674853081 mm
+        Average cat FPS:                 1.9236889274453148
+        Average Number of Points:        1302.676589488918
+        Point/ms:                        2505.9445312420576
+
+        Average duck Acc:                18.338556575019748 mm
+        Average duck Std:                33.07841110192835 mm
+        Average duck FPS:                3.4944552895511483
+        Average Number of Points:        811.7198612607913
+        Point/ms:                        2836.5187628164963
