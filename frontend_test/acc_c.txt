@@ -5,7 +5,7 @@
         Point/ms:                        998.9863669283287
 
         Average can Acc:                 13.765708589398557 mm
-        Average can Std:           X      29.846290626894014 mm
+        Average can Std:                 29.846290626894014 mm
         Average can FPS:                 0.24570877608109595
         Average Number of Points:        3938.504593175853
         Point/ms:                        967.7251431790136
@@ -21,3 +21,39 @@
         Average duck FPS:                3.4944552895511483
         Average Number of Points:        811.7198612607913
         Point/ms:                        2836.5187628164963
+
+        Average driller Acc:             14.937879874664707 mm
+        Average driller Std:             30.133728086100913 mm
+        Average driller FPS:             0.13016934863036658
+        Average Number of Points:        6201.513379583746
+        Point/ms:                        807.2469571429197
+
+        Average eggbox Acc:              14.795990708077698 mm
+        Average eggbox Std:              28.35497435607173 mm
+        Average eggbox FPS:              0.4562737503795056
+        Average Number of Points:        2273.830260757066
+        Point/ms:                        1037.4890608020357
+
+        Average glue Acc:                18.55621984779689 mm
+        Average glue Std:                36.46712199694465 mm
+        Average glue FPS:                1.321556328166753
+        Average Number of Points:        1151.9745353042
+        Point/ms:                        1522.39923701822
+
+        Average holepuncher Acc:                 15.702787479648624 mm
+        Average holepuncher Std:                 31.55525443697273 mm
+        Average holepuncher FPS:                 0.5696984785347583
+        Average Number of Points:        2103.88363174867
+        Point/ms:                        1198.579304021399
+
+        Average iron Acc:                16.017322698082097 mm
+        Average iron Std:                32.93295870567205 mm
+        Average iron FPS:                0.10063421021064217
+        Average Number of Points:        5346.406359302841
+        Point/ms:                        538.0313814335962
+
+        Average lamp Acc:                15.479081564598022 mm
+        Average lamp Std:                32.872250578125346 mm
+        Average lamp FPS:                0.06381630719327268
+        Average Number of Points:        8464.19168735507
+        Point/ms:                        540.1534568629962
