@@ -57,3 +57,9 @@
         Average lamp FPS:                0.06381630719327268
         Average Number of Points:        8464.19168735507
         Point/ms:                        540.1534568629962
+
+        Average phone Acc:               17.795172196845474 mm
+        Average phone Std:               38.49152206086708 mm
+        Average phone FPS:               0.6220217727110464
+        Average Number of Points:        3107.5488312520015
+        Point/ms:                        1932.9630328015105
