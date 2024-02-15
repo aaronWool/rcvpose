@@ -28,13 +28,10 @@ def centerest(point_list, radius_list):
 
 # Random Consensus looks for a good first guess, uses epsilon to determine inliers
 @jit(nopython=True, parallel=True)
-def random_centerest(xyz, radial_list, iterations, epsilon, debug=False):
+def random_centerest(xyz, radial_list, iterations, epsilon, consensus_count = 400, debug=False):
     
     xyz_len = len(xyz)
-    n = xyz_len
-
-    if n > 200:
-        n = 200
+    n = consensus_count
 
     votes = np.zeros((iterations, 4))
 
@@ -168,9 +165,8 @@ def estimate_and_accumulate(xyz, radial_list, iterations=100, epsilon = 0.7, max
     return best_vote, xyz_inliers, radial_list_inliers
 
 
-def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
-    acc_unit = 5
-    current_epsilon = epsilon
+def ransac_4(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
+    acc_unit = 1
 
     # Shift Data 
     xyz_mm = xyz*1000/acc_unit 
@@ -203,27 +199,8 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
 
     best_vote, xyz_inliers, radial_list_inliers = estimate_and_accumulate(xyz_mm, radial_list_mm, iterations, epsilon, max_inliers=max_inliers, debug=debug)
     if len(xyz_inliers) > 200:
-        best_vote, xyz_inliers, radial_list_inliers = estimate_and_accumulate(xyz_inliers, radial_list_inliers, iterations, epsilon=(epsilon-0.1), max_inliers=int(max_inliers/2), debug=debug)
+        best_vote, xyz_inliers, radial_list_inliers = estimate_and_accumulate(xyz_inliers, radial_list_inliers, iterations, epsilon=epsilon, max_inliers=int(max_inliers/2), debug=debug)
 
-    #count = 0
-    #itr_w_out_improvement = 0
-    #while len(xyz_inliers) > 100:
-    #    inliers = len(xyz_inliers)
-    #    count += 1
-    #    if debug:
-    #        print ('\tNumber of inliers after RANSAC number ' + str(count) + ': ' + str(len(xyz_inliers)))
-    #    current_epsilon -= 0.01
-    #    if current_epsilon < 0.02:
-    #        break
-    #    if itr_w_out_improvement > 5:
-    #        break
-    #    best_vote, xyz_inliers, radial_list_inliers = estimate_and_accumulate(xyz_inliers, radial_list_inliers, iterations, epsilon=current_epsilon, max_inliers=max_inliers, debug=debug)
-    #    if inliers == len(xyz_inliers):
-    #        itr_w_out_improvement += 1
-    #    else:
-    #        itr_w_out_improvement = 0
-    #if debug:
-    #    print ('\tFinal epsilon: ' + str(current_epsilon))
     
     # Final Center incase of less than 4 inliers
     center = np.array([best_vote[1], best_vote[2], best_vote[3]])

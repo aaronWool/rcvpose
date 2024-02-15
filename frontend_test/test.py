@@ -3,7 +3,7 @@ from PIL import Image
 import matplotlib.pyplot  as plt
 import os
 import time
-from ransac_4 import RANSAC_3D
+from ransac_4 import ransac_4
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
@@ -12,11 +12,11 @@ import open3d as o3d
 import warnings
 warnings.filterwarnings("ignore")
 
-#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 
 #lm_cls_names = ['benchvise', 'can']
 #lm_cls_names = ['cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
-lm_cls_names = ['ape']
+#lm_cls_names = ['ape']
 
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
@@ -189,7 +189,7 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
                 if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
                     frontend_Start = time.time_ns()
-                    estKP = RANSAC_3D(xyz, radList, epsilon=epsilon, iterations=iterations, debug=debug)
+                    estKP = ransac_4(xyz, radList, epsilon=epsilon, iterations=iterations, debug=debug)
                     frontend_End = time.time_ns()
                 elif opts.frontend == 'accumulator':
                     frontend_Start = time.time_ns()
@@ -312,10 +312,10 @@ if __name__ == "__main__":
 
 
     
-    iteration_list = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    iteration_list = [50, 100, 150, 200, 300, 500, 1000, 1500, 2000]
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for epsilon in [0.7, 0.65, 0.6, 0.55, 0.5, 0.4]:
+        for epsilon in [1.0, 0.9, 0.8, 0.7]:
             iterations = []
             means = []
             stds = []
