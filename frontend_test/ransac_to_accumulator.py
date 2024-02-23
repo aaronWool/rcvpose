@@ -1,7 +1,7 @@
 from numba import jit, prange, njit
 import numpy as np
 import random
-
+import time
 
 @jit(nopython=True)
 def centerest(point_list, radius_list):
@@ -69,45 +69,25 @@ def random_centerest(xyz, radial_list, iterations, epsilon, debug=False):
     
     return best_vote
 
-# Refine Consensus with only inliers
-@jit(nopython=True, parallel=True)
-def refine_consensus(xyz, radial_list, iterations):
-    
-    xyz_len = len(xyz)
-    n = xyz_len
 
-    votes = np.zeros((iterations, 4))
-
-    for itr in prange(iterations):
-        index = np.random.randint(0, xyz_len, 4)
-
-        point_list = xyz[index]
-
-        radius_list = radial_list[index]
+@jit(nopython=True,parallel=True)   
+def fast_for(xyz_mm,radial_list_mm,VoteMap_3D):  
+    factor = (3**0.5)/4
+    for count in prange(xyz_mm.shape[0]):
+        xyz = xyz_mm[count]
+        radius = radial_list_mm[count]
+        radius = int(np.around(radial_list_mm[count]))
+        shape = VoteMap_3D.shape
+        for i in prange(VoteMap_3D.shape[0]):
+            for j in prange(VoteMap_3D.shape[1]):
+                for k in prange(VoteMap_3D.shape[2]):
+                    distance = ((i-xyz[0])**2+(j-xyz[1])**2+(k-xyz[2])**2)**0.5
+                    if radius - distance < factor and radius - distance>0:
+                        VoteMap_3D[i,j,k]+=1
         
-        x, y, z = centerest(point_list, radius_list)
+    return VoteMap_3D
 
-        error = 0
 
-        for i in prange(n):
-            p = xyz[i]
-            r = radial_list[i]
-            dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
-            error += abs(dist - r)
-        
-        error /= n
-
-        votes[itr, 0] = error
-        votes[itr, 1] = x
-        votes[itr, 2] = y
-        votes[itr, 3] = z
-
-    
-    sorted_votes = sorted(votes, key=lambda x: x[0], reverse=False)
-
-    best_vote = sorted_votes[0]
-    
-    return best_vote
 
 
 # Iterate through all the data points and accumulate inliers
@@ -135,7 +115,7 @@ def accumulate_inliers(xyz, radial_list, iterations, best_vote, error, max_inlie
     return xyz_inliers[:inlier_count], radial_list_inliers[:inlier_count]
 
 
-def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
+def RANSAC_Accumulator(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
     acc_unit = 5
     current_epsilon = epsilon
 
@@ -174,8 +154,8 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
             best_vote = random_centerest(xyz_mm, radial_list_mm, iterations, epsilon=current_epsilon,debug=debug)
 
     if debug:
-        print('\tRandom centerest 1: ' + str(best_vote))
-        print('\tEpsilon 1 Times Incremented: ' + str(eps_increment))
+        if eps_increment > 0:
+            print('\tEpsilon Times Incremented for RANSAC: ' + str(eps_increment))
 
     eps_increment = 0
     num_iterations = len(xyz_mm)
@@ -196,7 +176,8 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
 
     if debug:
         print('\tNumber of inliers: ' + str(len(xyz_inliers)))
-        print('\tEpsilon 2 Times Incremented: ' + str(eps_increment))
+        if eps_increment > 0:
+            print('\tEpsilon Times incremented for Inliers: ' + str(eps_increment))
 
     # Centerest if only 4 inliers
     if len(xyz_inliers) == 4:
@@ -207,13 +188,21 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
 
     # Refine Consensus if more than 4 inliers
     if len(xyz_inliers) > 4:
-        random_center = refine_consensus(np.array(xyz_inliers), np.array(radial_list_inliers), iterations=iterations)
-        center = np.array([random_center[1], random_center[2], random_center[3]])
+        length = int(xyz_inliers.max())
+        Vote_Map_3D = np.zeros((length+int(radius_max), length+int(radius_max), length+int(radius_max)))
+        tic = time.perf_counter()
+        Vote_Map_3D = fast_for(xyz_mm,radial_list_mm,Vote_Map_3D)
+        toc = time.perf_counter()
+        if debug:
+            print(f"Accumulator 3D Time: {toc - tic} seconds")
+        center = np.argwhere(Vote_Map_3D==Vote_Map_3D.max())
+        center = center[0]
         if debug:
             print('\tRefined centerest: ', center)            
     
     # Shift Center back to original data
     center = center.astype("float64")
+
 
     if(zero_boundary<0):
         center = center+zero_boundary
@@ -227,37 +216,3 @@ def RANSAC_3D(xyz, radial_list, iterations=100, epsilon = 0.7, debug=False):
     
     return center
 
-
-def main():
-    #   generate random point, within unit sphere
-    c = [random.random(), random.random(), random.random()]
-    print('center = ', c)
-
-    N = 100
-    point_list = []
-    radius_list = []
-    for i in range(N):
-        p = [random.random(), random.random(), random.random()]
-        r = np.sqrt((p[0]-c[0])*(p[0]-c[0]) \
-                    + (p[1]-c[1])*(p[1]-c[1]) \
-                    + (p[2]-c[2])*(p[2]-c[2]))
-        point_list += [p]
-        radius_list += [r]
-    # print(point_list)
-    # print(radius_list)
-
-    x, y, z = centerest(point_list, radius_list)
-    print('estimated center = ', x, y, z, ', mse = ', np.sqrt((x-c[0])*(x-c[0]) + (y-c[1])*(y-c[1]) + (z-c[2])*(z-c[2])))
-
-    eps = 5e-2
-    for i in range(len(radius_list)):
-        radius_list[i] += eps*random.random() * (-1)**random.randint(0,1)
-
-    x, y, z = centerest(point_list, radius_list)
-    print('estimated center = ', x, y, z, ', mse = ', np.sqrt((x-c[0])*(x-c[0]) + (y-c[1])*(y-c[1]) + (z-c[2])*(z-c[2])))
-
-
-if __name__ == '__main__':
-    print('running spherest ...')
-
-    main()

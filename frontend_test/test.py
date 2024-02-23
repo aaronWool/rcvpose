@@ -3,7 +3,9 @@ from PIL import Image
 import matplotlib.pyplot  as plt
 import os
 import time
-from ransac_4 import RANSAC_3D
+from ransac_vanilla import RANSAC_vanilla
+from ransac import RANSAC_3D
+from ransac_to_accumulator import RANSAC_Accumulator
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
@@ -12,11 +14,11 @@ import open3d as o3d
 import warnings
 warnings.filterwarnings("ignore")
 
-#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 
 #lm_cls_names = ['benchvise', 'can']
-#lm_cls_names = ['cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
-lm_cls_names = ['ape']
+#lm_cls_names = ['phone']
+#lm_cls_names = ['ape']
 
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
@@ -55,13 +57,16 @@ def read_depth(path):
 
 depthList=[]
 
-def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5): 
+def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5, out_dir=None): 
     start = 'Estimating 6D Pose on LINEMOD' 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
         start += ' with RANSAC Iterations: ' + str(iterations)
+    elif opts.frontend == 'ransac_to_accumulator':
+        start += ' with RANSAC to Accumulator'
     else:
-        start += 'with Accumulator'
+        start += ' with Accumulator'
     print(start)
+
 
     debug = False
     if opts.verbose:
@@ -72,6 +77,7 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
     class_std = []
     avg_point_count = []
     frontend_times = []
+    failure_count = 0
 
     totalTimeStart = time.time_ns()
 
@@ -85,7 +91,8 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
         test_list_size = len(test_list)
         
-        classFrontendTimes = []
+        too_few_points = 0
+        total_inaccurate = 0
 
         keypoint_offsets = []
 
@@ -109,13 +116,6 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
             max_radii_dm[i] = dsitances.max()*10
         if debug:
             print ('max_radii_dm: ', max_radii_dm)
-
-        #max_radii_orig = np.zeros(3)
-        #for i in range(3):
-        #    dsitances = ((xyz_load[:,0]-keypoints_orig[i+1,0])**2+(xyz_load[:,1]-keypoints_orig[i+1,1])**2+(xyz_load[:,2]-keypoints_orig[i+1,2])**2)**0.5 
-        #    max_radii_orig[i] = dsitances.max()*10
-        #if debug:
-        #    print ('max_radii_orig: ', max_radii_orig)
 
     
         for filename in (test_list if debug else tqdm(test_list, total=test_list_size, desc='Evaluating ' + class_name, unit='image', leave=False)):
@@ -148,7 +148,6 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
                 semMask = np.where(radMap>0.8,1,0)
 
-            
                 num_zero1 = np.count_nonzero(semMask==0)
 
                 # if using accumulator space, remove all radial values outside of max radius
@@ -184,13 +183,31 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
                 assert xyz.shape[0] == radList.shape[0], "Number of points in depth map and radial map do not match"
                 assert xyz.shape[0] != 0, "No points found in depth map"
+
+                if xyz.shape[0] < 200:
+                    too_few_points += 1
+                    #print ()
+                    #print ('Not enough points found in depth map')
+                    #print ('Filename: ', filename)
+                    #print ('Keypoint: ', keypoint_count + 1)
+                    #print ('Number of points in depth map: ', xyz_mm.shape[0])
+                    keypoint_count+=1
+                    if keypoint_count == 3:
+                        break
+                    continue
  
                 estKP = np.array([0,0,0])
 
                 if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
                     frontend_Start = time.time_ns()
-                    estKP = RANSAC_3D(xyz, radList, epsilon=epsilon, iterations=iterations, debug=debug)
+                    estKP = RANSAC_vanilla(xyz, radList, epsilon=epsilon, iterations=iterations, debug=debug)
                     frontend_End = time.time_ns()
+
+                elif opts.frontend == 'ransac_to_accumulator':
+                    frontend_Start = time.time_ns()
+                    estKP = RANSAC_Accumulator(xyz, radList, epsilon=epsilon, iterations=25, debug=debug)
+                    frontend_End = time.time_ns()
+
                 elif opts.frontend == 'accumulator':
                     frontend_Start = time.time_ns()
                     estKP = Accumulator_3D(xyz, radList)[0]
@@ -218,17 +235,19 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
 
                 if debug:
                     print ('Offset: ', offset, 'mm')
-                    if offset > 10:
-                        wait = input("PRESS ENTER TO CONTINUE.")
-                if offset > 1000000:
+                    #if offset > 10:
+                    #    wait = input("PRESS ENTER TO CONTINUE.")
+                if offset > 10000:
+                    print ()
+                    print ('Failed to estimate keypoint')
+                    print ('Filename: ', filename)
                     print ('\nOffset: ', offset, 'mm')
                     print ('GT Center: \n', CenterGT_mm)
                     print ('Est Center: \n', estKP)
-                    print ('Filename: ', filename)
                     print ('Keypoint: ', keypoint_count + 1)
-                    print ('Number of removed radial val outside max radius: ', num_zero2 - num_zero1)
                     print ('Number of points in depth map: ', xyz_mm.shape[0])
-                    wait = input("PRESS ENTER TO CONTINUE.")
+                    total_inaccurate += 1
+                    #wait = input("PRESS ENTER TO CONTINUE.")
                     continue
 
                 keypoint_offsets.append(offset)
@@ -246,15 +265,21 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
         class_time = np.mean(times_kpt)
         frontend_times.append(class_time)
         avg_point_count = np.mean(avg_point_count)
-      
+        failure_count += total_inaccurate
+
         print('\tAverage' , class_name, 'Acc:\t\t', avg, 'mm')
         print('\tAverage' , class_name, 'Std:\t\t', std, 'mm')
         print('\tAverage', class_name, 'FPS:\t\t', (1 / class_time) * 1000)
         print('\tAverage Number of Points: \t', avg_point_count)
-        print('\tPoint/ms: \t\t\t', avg_point_count / (class_time / 1000))
+        print ('\tNumber of Images with too few points: ', too_few_points)
+        print ('\tNumber of Inaccurate Estimations: ', total_inaccurate)
         print()
-        if debug:
-            wait = input("PRESS ENTER TO CONTINUE.")
+        
+        if opts.frontend == 'accumulator' or opts.frontend == 'ransac_to_accumulator':
+            with open(out_dir + 'results.txt', 'a') as file:
+                file.write(f"{class_name} Mean: {avg}, Std: {std}, FPS: {(1 / class_time) * 1000}\n")
+
+                
 
 
     totalTimeEnd = time.time_ns()
@@ -271,6 +296,8 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5):
     print ('Average Std: ', std, 'mm')
     print ('Average Frontend Time: ', avg_total_frontend_time, 'ms')
     print ('Average FPS', fps)
+    print ('Number of Inaccurate Estimations: ', failure_count)
+    print()
 
     return mean, std, fps
 
@@ -280,26 +307,28 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='D:/')
+                    default='../../datasets/test/')
     # 'D:/' '../../datasets/test/'
     parser.add_argument('--frontend',
                     type=str,
                     default='ransac')   
-    # accumulator, ransac, RANSAC
+    # accumulator, ransac, RANSAC, ransac_to_accumulator
     parser.add_argument('--verbose',
                     type=bool,
                     default=False)
+    parser.add_argument('--out_dir',
+                    type=str,
+                    default='vanilla_ransac_25_iterations_finetuned_epsilons_200_min_points')
     
 
-    out_dir = 'logs/' + parser.parse_args().frontend  + '/' 
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+    opts = parser.parse_args()
 
-    num_logs = len(os.listdir(out_dir))
+    out_dir = 'logs/' + opts.frontend + '/' + opts.out_dir
+
+    num_logs = len(os.listdir('logs/' + opts.frontend + '/')) + 1
 
     out_dir += str(num_logs) + '/'
    
-    opts = parser.parse_args()
     print ('Root Dataset: ' + opts.root_dataset)
     print ('Out Dir: ' + out_dir)
     if not os.path.exists(out_dir):
@@ -310,56 +339,42 @@ if __name__ == "__main__":
     print ('Frontend: ' + opts.frontend)
     print()
 
-
-    
-    iteration_list = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
-
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        for epsilon in [0.7, 0.65, 0.6, 0.55, 0.5, 0.4]:
-            iterations = []
-            means = []
-            stds = []
-            fpss = []
-            print ('Epsilon: ', epsilon)
-            out_file = out_dir + 'epsilon_' + str(epsilon) + '.txt'
-            out_plot = out_dir + 'epsilon_' + str(epsilon) + '.png'
-            print ('Out File: ', out_file)
-            print ('Out Plot: ', out_plot)
-            print()
-            for itr in iteration_list:
-                iterations.append(itr)
-                mean, std, fps = estimate_6d_pose_lm(opts, itr, epsilon) 
-                means.append(mean)
-                stds.append(std)
-                fpss.append(fps)
-                with open(out_file, 'a') as file:
-                    file.write(f"Iterations: {itr}, Mean: {mean}, Std: {std}, FPS: {fps}\n")
-
-                print('='*50)
-                print('\n')
-                fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
-
-                ax1.plot(iterations, means, label='Mean')
-                ax1.set_ylabel('Mean')
-                ax1.legend()
-
-                ax2.plot(iterations, stds, label='Std')
-                ax2.set_ylabel('Std')
-                ax2.legend()
-
-                ax3.plot(iterations, fpss, label='FPS')
-                ax3.set_ylabel('FPS')
-                ax3.set_xlabel('Iterations')
-                ax3.legend()
-
-                plt.savefig(out_plot)
-                plt.close()
-    else:
-        mean, std, fps = estimate_6d_pose_lm(opts)
-        out_file = opts.out_file + '.txt'
-        with open(out_file, 'a') as file:
+        eps_list = [0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
+        curr_eps = []
+        means, stds, fpss = [], [], []
+        print ('Epsilon List: ', eps_list)
+        for eps in eps_list:
+            mean, std, fps = estimate_6d_pose_lm(opts, iterations=200, epsilon=eps, out_dir=out_dir)
+            print(f"Epsilon: {eps} Mean: {mean}, Std: {std}, FPS: {fps}")
+            print ('='*50)
+            means.append(mean)
+            stds.append(std)
+            fpss.append(fps)
+            curr_eps.append(eps)
+            with open(out_dir + 'results.txt', 'a') as file:
+                file.write(f"Epsilon: {eps} Mean: {mean}, Std: {std}, FPS: {fps}\n")
+            # plot the mean on the left hand side and std on the right hand side for each epsilon
+            plt.figure(figsize=(15,5))
+            plt.subplot(1,2,1)
+            plt.plot(curr_eps, means, 'r')
+            plt.title('Mean vs Epsilon')
+            plt.xlabel('Epsilon')
+            plt.ylabel('Mean')
+            plt.subplot(1,2,2)
+            plt.plot(curr_eps, stds, 'b')
+            plt.title('Std vs Epsilon')
+            plt.xlabel('Epsilon')
+            plt.ylabel('Std')
+            plt.savefig(out_dir + 'mean_std_vs_epsilon.png')
+            plt.close()        
+    else: 
+        mean, std, fps = estimate_6d_pose_lm(opts, iterations=25, epsilon=0.7, out_dir=out_dir)
+        with open(out_dir + 'results.txt', 'a') as file:
             file.write(f"Mean: {mean}, Std: {std}, FPS: {fps}\n")
-        print('='*50)
+    print('='*50)
+
+
 
         
 
