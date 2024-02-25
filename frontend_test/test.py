@@ -3,13 +3,9 @@ from PIL import Image
 import matplotlib.pyplot  as plt
 import os
 import time
-<<<<<<< HEAD
 from ransac_vanilla import RANSAC_vanilla
 from ransac import RANSAC_3D
 from ransac_to_accumulator import RANSAC_Accumulator
-=======
-from ransac_4 import ransac_4
->>>>>>> 65ecd57d254d5628ff0700520e808b9165a276e9
 import datetime
 from accumulator3D import Accumulator_3D
 from tqdm import tqdm
@@ -21,11 +17,7 @@ warnings.filterwarnings("ignore")
 lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 
 #lm_cls_names = ['benchvise', 'can']
-<<<<<<< HEAD
 #lm_cls_names = ['phone']
-=======
-#lm_cls_names = ['cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
->>>>>>> 65ecd57d254d5628ff0700520e808b9165a276e9
 #lm_cls_names = ['ape']
 
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
@@ -68,7 +60,7 @@ depthList=[]
 def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5, out_dir=None): 
     start = 'Estimating 6D Pose on LINEMOD' 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        start += ' with RANSAC Iterations: ' + str(iterations)
+        start += ' with RANSAC Iterations: ' + str(iterations) + ' Epsilon: ' + str(epsilon) + 'mm'
     elif opts.frontend == 'ransac_to_accumulator':
         start += ' with RANSAC to Accumulator'
     else:
@@ -192,7 +184,7 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5, out_dir=None):
                 assert xyz.shape[0] == radList.shape[0], "Number of points in depth map and radial map do not match"
                 assert xyz.shape[0] != 0, "No points found in depth map"
 
-                if xyz.shape[0] < 200:
+                if xyz.shape[0] < 100:
                     too_few_points += 1
                     #print ()
                     #print ('Not enough points found in depth map')
@@ -208,11 +200,7 @@ def estimate_6d_pose_lm(opts, iterations=2000, epsilon=5, out_dir=None):
 
                 if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
                     frontend_Start = time.time_ns()
-<<<<<<< HEAD
                     estKP = RANSAC_vanilla(xyz, radList, epsilon=epsilon, iterations=iterations, debug=debug)
-=======
-                    estKP = ransac_4(xyz, radList, epsilon=epsilon, iterations=iterations, debug=debug)
->>>>>>> 65ecd57d254d5628ff0700520e808b9165a276e9
                     frontend_End = time.time_ns()
 
                 elif opts.frontend == 'ransac_to_accumulator':
@@ -330,7 +318,7 @@ if __name__ == "__main__":
                     default=False)
     parser.add_argument('--out_dir',
                     type=str,
-                    default='vanilla_ransac_25_iterations_finetuned_epsilons_200_min_points')
+                    default='final_test')
     
 
     opts = parser.parse_args()
@@ -339,7 +327,7 @@ if __name__ == "__main__":
 
     num_logs = len(os.listdir('logs/' + opts.frontend + '/')) + 1
 
-    out_dir += str(num_logs) + '/'
+    out_dir += '_' + str(num_logs) + '/'
    
     print ('Root Dataset: ' + opts.root_dataset)
     print ('Out Dir: ' + out_dir)
@@ -352,34 +340,29 @@ if __name__ == "__main__":
     print()
 
     if opts.frontend == 'ransac' or opts.frontend == 'RANSAC':
-        eps_list = [0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
-        curr_eps = []
+
+        eps = 20.0
         means, stds, fpss = [], [], []
-        print ('Epsilon List: ', eps_list)
-        for eps in eps_list:
+        epsilons = []
+        while eps > 0.5:
             mean, std, fps = estimate_6d_pose_lm(opts, iterations=200, epsilon=eps, out_dir=out_dir)
             print(f"Epsilon: {eps} Mean: {mean}, Std: {std}, FPS: {fps}")
             print ('='*50)
             means.append(mean)
             stds.append(std)
             fpss.append(fps)
-            curr_eps.append(eps)
+            epsilons.append(eps)
             with open(out_dir + 'results.txt', 'a') as file:
                 file.write(f"Epsilon: {eps} Mean: {mean}, Std: {std}, FPS: {fps}\n")
-            # plot the mean on the left hand side and std on the right hand side for each epsilon
-            plt.figure(figsize=(15,5))
-            plt.subplot(1,2,1)
-            plt.plot(curr_eps, means, 'r')
-            plt.title('Mean vs Epsilon')
-            plt.xlabel('Epsilon')
-            plt.ylabel('Mean')
-            plt.subplot(1,2,2)
-            plt.plot(curr_eps, stds, 'b')
-            plt.title('Std vs Epsilon')
-            plt.xlabel('Epsilon')
-            plt.ylabel('Std')
+            # plot the mean and std vs epsilon
+            plt.plot(epsilons, means, label='Mean')
+            plt.plot(epsilons, stds, label='Std')
+            plt.xlabel('Epsilon (mm)')
+            plt.ylabel('Mean and Std (mm)')
+            plt.legend()        
             plt.savefig(out_dir + 'mean_std_vs_epsilon.png')
             plt.close()        
+            eps -= 0.1
     else: 
         mean, std, fps = estimate_6d_pose_lm(opts, iterations=25, epsilon=0.7, out_dir=out_dir)
         with open(out_dir + 'results.txt', 'a') as file:
