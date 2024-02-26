@@ -1,0 +1,3 @@
+ADD of ape before ICP:  0.9314285714285714
+ADD of ape after ICP:  1.0
+Average offset:  12.73278004002664

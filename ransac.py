@@ -1,4 +1,4 @@
-from numba import jit, prange
+from numba import jit, prange, njit
 import numpy as np
 import random
 
@@ -26,14 +26,57 @@ def centerest(point_list, radius_list):
     return X[0], X[1], X[2]
 
 
-
+# Random Sample Consensus looks for a good first guess, uses epsilon to determine inliers
 @jit(nopython=True, parallel=True)
-def random_centerest(xyz, radial_list, iterations, debug=False):
-    n = len(xyz)
+def random_centerest(xyz, radial_list, epsilon, iterations=25, debug=False):
+    
+    xyz_len = len(xyz)
+    n = xyz_len
+
     votes = np.zeros((iterations, 4))
 
     for itr in prange(iterations):
-        index = np.random.randint(0, n, 4)
+        index = np.random.randint(0, xyz_len, 4)
+
+        point_list = xyz[index]
+
+        radius_list = radial_list[index]
+        
+        x, y, z = centerest(point_list, radius_list)
+
+        error = 0
+
+        for i in prange(n):
+            idx2 = np.random.randint(0, xyz_len)
+            p = xyz[idx2]
+            r = radial_list[idx2]
+            dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
+            if abs(dist - r) <= epsilon:
+                error += 1
+
+        votes[itr, 0] = error
+        votes[itr, 1] = x
+        votes[itr, 2] = y
+        votes[itr, 3] = z
+
+    
+    sorted_votes = sorted(votes, key=lambda x: x[0], reverse=True)
+
+    best_vote = sorted_votes[0]
+    
+    return best_vote
+
+# Refine Consensus with only inliers, uses best fitting point to determine center
+@jit(nopython=True, parallel=True)
+def refine_consensus(xyz, radial_list, iterations):
+    
+    xyz_len = len(xyz)
+    n = xyz_len
+
+    votes = np.zeros((iterations, 4))
+
+    for itr in prange(iterations):
+        index = np.random.randint(0, xyz_len, 4)
 
         point_list = xyz[index]
 
@@ -46,116 +89,64 @@ def random_centerest(xyz, radial_list, iterations, debug=False):
         for i in prange(n):
             p = xyz[i]
             r = radial_list[i]
-            dist = np.sqrt((p[0]-x)*(p[0]-x) + (p[1]-y)*(p[1]-y) + (p[2]-z)*(p[2]-z))
-            error += abs(dist-r)
+            dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
+            error += abs(dist - r)
+        
+        error /= n
 
-        error /= len(xyz)
-
-        votes[itr] = (error, x, y, z)
+        votes[itr, 0] = error
+        votes[itr, 1] = x
+        votes[itr, 2] = y
+        votes[itr, 3] = z
 
     
-    sorted_votes = sorted(votes, key=lambda x: x[0])
+    sorted_votes = sorted(votes, key=lambda x: x[0], reverse=False)
 
     best_vote = sorted_votes[0]
     
     return best_vote
 
 
-def accumulate_inliers(xyz, radial_list, iterations, best_vote, error):
-    xyz_inliers = []
-    radial_list_inliers = []
+# Iterate through all the data points and accumulate inliers
+@njit(parallel=True)
+def accumulate_inliers(xyz, radial_list, iterations, best_vote, error, max_inliers):
+    xyz_inliers = np.zeros((max_inliers, 3))  
+    radial_list_inliers = np.zeros(max_inliers)
+    inlier_count = 0
 
-    for itr in range(iterations):
-        i = random.randint(0, len(xyz) - 1)
+    indexes = np.arange(len(xyz))
+    np.random.shuffle(indexes)
+
+    for itr in prange(iterations):
+        if inlier_count >= max_inliers:
+            break  
+        i = indexes[itr % len(xyz)]
         p = xyz[i]
         r = radial_list[i]
         dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
         if abs(dist - r) < error:
-            xyz_inliers.append(p)
-            radial_list_inliers.append(r)
-    
-    return xyz_inliers, radial_list_inliers
+            xyz_inliers[inlier_count] = p
+            radial_list_inliers[inlier_count] = r
+            inlier_count += 1
+
+    return xyz_inliers[:inlier_count], radial_list_inliers[:inlier_count]
 
 
-def RANSAC_3D(xyz, radial_list, iterations=2000, epsilon = 5, iteration_split = 0.66, debug=False):
-    acc_unit = 5
+def RANSAC(xyz, radial_list, iterations, epsilon, debug=False):
+    xyz_mm = xyz*1000
+    radial_list_mm = radial_list*100    
 
-    first_iteration = int(iterations*iteration_split)
-    second_iteration = iterations-first_iteration
-
-    xyz_mm = xyz*1000/acc_unit 
-
-    x_mean_mm = np.mean(xyz_mm[:,0])
-    y_mean_mm = np.mean(xyz_mm[:,1])
-    z_mean_mm = np.mean(xyz_mm[:,2])
-
-    xyz_mm[:,0] -= x_mean_mm
-    xyz_mm[:,1] -= y_mean_mm
-    xyz_mm[:,2] -= z_mean_mm
-
-    radial_list_mm = radial_list*100/acc_unit  
-
-    xyz_mm_min = xyz_mm.min()
-    xyz_mm_max = xyz_mm.max()
-    radius_max = radial_list_mm.max()
-
-    zero_boundary = int(xyz_mm_min-radius_max)+1
-
-    if(zero_boundary<0):
-        xyz_mm -= zero_boundary
-    
-    best_vote = random_centerest(xyz_mm, radial_list_mm, first_iteration, debug=debug)
-
-    if debug:
-        print('\tRandom centerest 1: ' + str(best_vote))
-
-    num_iterations = 300
-
-    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon)
-
-    if xyz_inliers == []:
-        xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, num_iterations, best_vote, epsilon+1)
-        if xyz_inliers == []:
-            print ('\tERROR: No inliers found')
-            return np.array([0, 0, 0])
+    best_vote = random_centerest(xyz_mm, radial_list_mm, epsilon, iterations, debug)
 
     center = np.array([best_vote[1], best_vote[2], best_vote[3]])
 
-    if debug:
-        print('\tNumber of inliers 1: ' + str(len(xyz_inliers)))
-
-    if len(xyz_inliers) == 4:
-        center = centerest(xyz_inliers, radial_list_inliers)
-        center = np.array(center)
-        if debug:
-            print('\tCenterest output: ', center)
-
-    if len(xyz_inliers) > 4:
-        
-        random_center = random_centerest(np.array(xyz_inliers), np.array(radial_list_inliers), second_iteration)
-
-
-        center = np.array([random_center[1], random_center[2], random_center[3]])
-        if debug:
-            print('\tRefined centerest: ', center)
-            
-        
     center = center.astype("float64")
-
-    if(zero_boundary<0):
-        center = center+zero_boundary
-
-    center[0] = (center[0]+x_mean_mm+0.5)*acc_unit
-    center[1] = (center[1]+y_mean_mm+0.5)*acc_unit
-    center[2] = (center[2]+z_mean_mm+0.5)*acc_unit
-
-    if debug:
-        print('\tFinal center after data shift: ' + str(center))
     
     return center
 
 
 def main():
+
     #   generate random point, within unit sphere
     c = [random.random(), random.random(), random.random()]
     print('center = ', c)

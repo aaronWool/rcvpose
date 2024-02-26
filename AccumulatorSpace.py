@@ -9,7 +9,7 @@ from numba import jit,njit,cuda
 import os
 import open3d as o3d
 import time
-from ransac import RANSAC_3D
+from ransac import RANSAC
 from numba import prange
 import math
 import h5py
@@ -495,14 +495,22 @@ depthList=[]
 
 def estimate_6d_pose_lm(opts):
     horn = HornPoseFitting()
-    
+    if opts.frontend == 'accumulator_space':
+        print("Using accumulator space frontend")
+    else:
+        print("Using RANSAC frontend")
+
+    ADDs = []
+    ADDs_after_icp = []
+    total_offsets = []
     for class_name in lm_cls_names:
         print("Evaluation on ", class_name)
         rootPath = opts.root_dataset + "LINEMOD_ORIG/"+class_name+"/" 
         rootpvPath = opts.root_dataset + "LINEMOD/"+class_name+"/" 
-        
+        rootRadialMapPath = opts.root_dataset + "rkhs_estRadialMap/"+class_name+"/"
         test_list = open(opts.root_dataset + "LINEMOD/"+class_name+"/" +"Split/val.txt","r").readlines()
         test_list = [ s.replace('\n', '') for s in test_list]
+        test_list_len = len(test_list)
         #print(test_list)
         
         pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "LINEMOD/"+class_name+"/"+class_name+".ply")
@@ -516,6 +524,7 @@ def estimate_6d_pose_lm(opts):
         bf_icp = 0
         af_icp = 0
         model_list=[]
+        offsets = []
 
 
         if opts.using_ckpts:
@@ -537,9 +546,16 @@ def estimate_6d_pose_lm(opts):
         
         xyz_load = np.asarray(pcd_load.points)
         #print(xyz_load)
+
         
-        keypoints=np.load(opts.root_dataset + "LINEMOD/"+class_name+"/"+"Outside9.npy")
+        #keypoints=np.load(opts.root_dataset + "LINEMOD/"+class_name+"/"+"Outside9.npy")
         #print(keypoints)
+
+        keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
+        # add an empty row to match the index
+        keypoints = np.vstack((np.zeros(3),keypoints))  
+
+        keypoints = keypoints / 1000
 
         #threshold of radii maximum limits
         max_radii_dm = np.zeros(3)
@@ -609,8 +625,10 @@ def estimate_6d_pose_lm(opts):
                             pixel_coor = np.where(sem_out==1)
                             radial_list = radial_out[pixel_coor]
                         else:
-                            radial_est = np.load(os.path.join( opts.root_dataset + "LINEMOD_ORIG/", 'estRadialMap', class_name, "Out_pt"+str(keypoint_count)+"_dm", os.path.splitext(filename)[0]+'.npy'))
-                            radial_est = np.where(radial_est<=max_radii_dm[keypoint_count-1], radial_est,0)
+                            radialMapPath = rootRadialMapPath + 'Out_pt'+str(keypoint_count)+'_dm/'+str(filename[:-4])+'.npy'
+                            radial_est = np.load(radialMapPath)
+                            if opts.frontend == 'accumulator_space':
+                                radial_est = np.where(radial_est<=max_radii_dm[keypoint_count-1], radial_est,0)
                             sem_out = np.where(radial_est!=0,1,0)
                             #print(sem_out.shape)
                             depth_map = depth_map1*sem_out
@@ -618,13 +636,19 @@ def estimate_6d_pose_lm(opts):
                             radial_list = radial_est[depth_map.nonzero()]
                         xyz = xyz_mm/1000
 
-                        tic = time.time_ns()
-
-                        center_mm_s = RANSAC_3D(xyz, radial_list)
+                        if opts.frontend == 'accumulator_space':
+                            tic = time.time_ns()
+                            center_mm_s = Accumulator_3D(xyz, radial_list)[0]
+                            toc = time.time_ns()
+                        else: 
+                            tic = time.time_ns()
+                            center_mm_s = RANSAC(xyz, radial_list, 200, 20.0)
+                            toc = time.time_ns()
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
+                        offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
+                        offsets.append(offset)
                         
-                        toc = time.time_ns()
                         acc_time += toc-tic
                         #print("acc space: ", toc-tic)
                         
@@ -633,7 +657,7 @@ def estimate_6d_pose_lm(opts):
                         pre_center_off_mm = math.inf
                         
                         estimated_center_mm = center_mm_s
-                        
+                                               
                         # center_off_mm = ((transformed_gt_center_mm[0]-estimated_center_mm[0])**2+
                         #                 (transformed_gt_center_mm[1]-estimated_center_mm[1])**2+
                         #                 (transformed_gt_center_mm[2]-estimated_center_mm[2])**2)**0.5
@@ -723,15 +747,33 @@ def estimate_6d_pose_lm(opts):
                     general_counter += 1
                     print('Current ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
                     print('Currnet ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter) 
+                    print('Current offset: ', round(np.mean(offsets),2), 'mm')
+                    print('Processed: ', round((general_counter/test_list_len)*100, 2), '%\n')
             
         
         #os.system("pause")
+        print('='*20)   
         if class_name in lm_syms:    
             print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
             print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
+            print ('Average offset: ', np.mean(offsets))
         else:
             print('ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
             print('ADD of '+class_name+' after ICP: ', af_icp/general_counter)  
+            print ('Average offset: ', np.mean(offsets))
+        print('='*20,'\n')
+
+        ADDs.append(bf_icp/general_counter)
+        ADDs_after_icp.append(af_icp/general_counter)
+        total_offsets.append(np.mean(offsets))
+    
+    print ('\n\n')
+    print('='*20)
+    print ('Average ADDs before ICP: ', np.mean(ADDs))
+    print ('Average ADDs after ICP: ', np.mean(ADDs_after_icp))
+    print ('Average offset: ', np.mean(total_offsets))
+    print('='*20)
+    
 
 def estimate_6d_pose_lmo(opts):
     horn = HornPoseFitting()
@@ -1187,7 +1229,12 @@ if __name__ == "__main__":
     parser.add_argument('--dataset',
                         type=str,
                         default='lm',
-                        choices=['lm', 'lmo', 'ycb'])    
+                        choices=['lm', 'lmo', 'ycb']) 
+    parser.add_argument('--frontend',
+                        type=str,
+                        default='accumulator_space',
+                        choices=['accumulator_space', 'ransac', 'RANSAC'])
+    
     opts = parser.parse_args()   
     if opts.dataset == 'lm':
         estimate_6d_pose_lm(opts) 
