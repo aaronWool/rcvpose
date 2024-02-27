@@ -1,3 +1,12 @@
 ADD of ape before ICP:  0.9314285714285714
 ADD of ape after ICP:  1.0
 Average offset:  12.73278004002664
+
+ADDs of benchvise before ICP: 0.9806201550387597
+ADDs of benchvise after ICP: 1.0
+Average offset: 13.232580106967513
+
+ADDs of cam before ICP: 0.9480392156862745
+ADDs of cam after ICP: 1.0
+Average offset: 12.063256630031262
+
