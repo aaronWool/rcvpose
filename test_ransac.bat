@@ -2,4 +2,4 @@
 
 :: D:/
 
-python AccumulatorSpace.py --root_dataset "D:/" --dataset "lm" --frontend "RANSAC" 
+python AccumulatorSpace.py --root_dataset "../datasets/test/" --dataset "lm" 
