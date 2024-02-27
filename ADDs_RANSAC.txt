@@ -8,4 +8,7 @@ Average offset:  11.91278376784476
 
 ADD of cam before ICP:  0.95
 ADD of cam after ICP:  1.0
-Average offset:  12.047321554153413
+Average offset:  12.047321554153413ADDs of can before ICP: 0.969488188976378
+ADDs of can after ICP: 1.0
+Average offset: 12.36364874125806
+====================

@@ -12,12 +12,14 @@ import time
 from ransac import RANSAC
 from numba import prange
 import math
-import h5py
+#import h5py
 from sklearn import metrics
 import scipy
 
 
-lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 ycb_cls_names={1:'002_master_chef_can',
            2:'003_cracker_box',
@@ -762,6 +764,19 @@ def estimate_6d_pose_lm(opts):
             print('ADD of '+class_name+' after ICP: ', af_icp/general_counter)  
             print ('Average offset: ', np.mean(offsets))
         print('='*20,'\n')
+
+        if opts.frontend == 'RANSAC':
+            with open('ADDs_RANSAC.txt', 'a') as f:
+                f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
+                f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
+                f.write('Average offset: '+str(np.mean(offsets))+'\n')
+                f.write('\n')
+        else:
+            with open('ADDs_AccSpace.txt', 'a') as f:
+                f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
+                f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
+                f.write('Average offset: '+str(np.mean(offsets))+'\n')
+                f.write('\n')
 
         ADDs.append(bf_icp/general_counter)
         ADDs_after_icp.append(af_icp/general_counter)
