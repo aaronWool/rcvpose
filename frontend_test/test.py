@@ -307,7 +307,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../../datasets/test/')
+                    default='D:/')
     # 'D:/' '../../datasets/test/'
     parser.add_argument('--frontend',
                     type=str,
@@ -349,18 +349,24 @@ if __name__ == "__main__":
             print(f"Epsilon: {eps} Mean: {mean}, Std: {std}, FPS: {fps}")
             print ('='*50)
             means.append(mean)
-            stds.append(std)
+            stds.append(std)    
             fpss.append(fps)
             epsilons.append(eps)
             with open(out_dir + 'results.txt', 'a') as file:
                 file.write(f"Epsilon: {eps} Mean: {mean}, Std: {std}, FPS: {fps}\n")
-            # plot the mean and std vs epsilon
-            plt.plot(epsilons, means, label='Mean')
-            plt.plot(epsilons, stds, label='Std')
-            plt.xlabel('Epsilon (mm)')
-            plt.ylabel('Mean and Std (mm)')
-            plt.legend()        
-            plt.savefig(out_dir + 'mean_std_vs_epsilon.png')
+            # plot the mean and std vs epsilon on two subplots
+            plt.figure(figsize=(10, 5))
+            plt.subplot(1, 2, 1)
+            plt.plot(epsilons, means)
+            plt.xlabel('Epsilon(mm)')
+            plt.ylabel('Mean(mm)')
+            plt.title('Epsilon vs Mean')
+            plt.subplot(1, 2, 2)
+            plt.plot(epsilons, stds)
+            plt.xlabel('Epsilon(mm)')
+            plt.ylabel('Std(mm)')
+            plt.title('Epsilon vs Std')            
+            plt.savefig(out_dir + 'Epsilon_vs_Mean_Std.png')
             plt.close()        
             eps -= 0.1
     else: 
