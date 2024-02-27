@@ -10,3 +10,4 @@ frontend_test/outputs/
 frontend_test/__pycache__/
 frontend_test/acc_current.txt
 frontend_test/logs/
+test_ransac.bat

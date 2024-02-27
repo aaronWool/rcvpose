@@ -8,7 +8,29 @@ Average offset:  11.91278376784476
 
 ADD of cam before ICP:  0.95
 ADD of cam after ICP:  1.0
-Average offset:  12.047321554153413ADDs of can before ICP: 0.969488188976378
+Average offset:  12.047321554153413
+
+ADDs of can before ICP: 0.969488188976378
 ADDs of can after ICP: 1.0
 Average offset: 12.36364874125806
+====================
+ADDs of cat before ICP: 0.9231536926147704
+ADDs of cat after ICP: 1.0
+Average offset: 12.351679979650127
+====================
+ADDs of duck before ICP: 0.907981220657277
+ADDs of duck after ICP: 1.0
+Average offset: 13.119850322130752
+====================
+ADDs of driller before ICP: 0.9028741328047571
+ADDs of driller after ICP: 1.0
+Average offset: 12.345424120834192
+====================
+ADDs of eggbox before ICP: 1.0
+ADDs of eggbox after ICP: 1.0
+Average offset: 12.79620882321086
+====================
+ADDs of glue before ICP: 0.999034749034749
+ADDs of glue after ICP: 0.999034749034749
+Average offset: 13.952104818131453
 ====================
