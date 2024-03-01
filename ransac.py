@@ -135,13 +135,13 @@ def RANSAC_best_fit(xyz, radial_list, iterations):
 
 
 @jit(nopython=True, parallel=True)
-def random_center_est_and_inliers(xyz, radial_list, iterations, max_inliers, epsilon, debug=False):
+def random_center_est_and_inliers(xyz, radial_list, iterations, epsilon, debug=False):
     n = len(xyz)
 
     votes = np.zeros((iterations, 4))
   
-    all_inliers_xyz = np.zeros((iterations, max_inliers, 3))
-    all_inliers_radial = np.zeros((iterations, max_inliers))
+    all_inliers_xyz = np.zeros((iterations, n, 3))
+    all_inliers_radial = np.zeros((iterations, n))
     inliers_counts = np.zeros(iterations, dtype=np.int64)
 
     for itr in prange(iterations):
@@ -157,7 +157,7 @@ def random_center_est_and_inliers(xyz, radial_list, iterations, max_inliers, eps
             p = xyz[i]
             r = radial_list[i]
             dist = np.sqrt((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)
-            if abs(dist - r) <= epsilon and inlier_count < max_inliers:
+            if abs(dist - r) <= epsilon:
                 all_inliers_xyz[itr, inlier_count] = p
                 all_inliers_radial[itr, inlier_count] = r
                 inlier_count += 1
