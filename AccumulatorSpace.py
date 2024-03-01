@@ -17,8 +17,12 @@ from sklearn import metrics
 import scipy
 
 
-#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
-lm_cls_names = ['can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+
+
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+
+
 
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 ycb_cls_names={1:'002_master_chef_can',
@@ -629,8 +633,8 @@ def estimate_6d_pose_lm(opts):
                         else:
                             radialMapPath = rootRadialMapPath + 'Out_pt'+str(keypoint_count)+'_dm/'+str(filename[:-4])+'.npy'
                             radial_est = np.load(radialMapPath)
-                            if opts.frontend == 'accumulator_space':
-                                radial_est = np.where(radial_est<=max_radii_dm[keypoint_count-1], radial_est,0)
+                      
+                            radial_est = np.where(radial_est<=max_radii_dm[keypoint_count-1], radial_est,0)
                             sem_out = np.where(radial_est!=0,1,0)
                             #print(sem_out.shape)
                             depth_map = depth_map1*sem_out
@@ -644,7 +648,7 @@ def estimate_6d_pose_lm(opts):
                             toc = time.time_ns()
                         else: 
                             tic = time.time_ns()
-                            center_mm_s = RANSAC(xyz, radial_list, 200, 20.0)
+                            center_mm_s = RANSAC(xyz, radial_list, 400, 17.0)
                             toc = time.time_ns()
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
@@ -750,6 +754,7 @@ def estimate_6d_pose_lm(opts):
                     print('Current ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
                     print('Currnet ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter) 
                     print('Current offset: ', round(np.mean(offsets),2), 'mm')
+                    print('Current std: ', round(np.std(offsets),2), 'mm')
                     print('Processed: ', round((general_counter/test_list_len)*100, 2), '%\n')
             
         
@@ -759,6 +764,7 @@ def estimate_6d_pose_lm(opts):
             print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
             print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
             print ('Average offset: ', np.mean(offsets))
+            print ('Average std: ', np.std(offsets))
         else:
             print('ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
             print('ADD of '+class_name+' after ICP: ', af_icp/general_counter)  
@@ -766,16 +772,18 @@ def estimate_6d_pose_lm(opts):
         print('='*20,'\n')
 
         if opts.frontend == 'RANSAC':
-            with open('ADDs_RANSAC.txt', 'a') as f:
+            with open('ADDs_RANSAC2.txt', 'a') as f:
                 f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
                 f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
                 f.write('Average offset: '+str(np.mean(offsets))+'\n')
+                f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
                 f.write('\n')
         else:
             with open('ADDs_AccSpace.txt', 'a') as f:
                 f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
                 f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
                 f.write('Average offset: '+str(np.mean(offsets))+'\n')
+                f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
                 f.write('\n')
 
         ADDs.append(bf_icp/general_counter)
@@ -1247,10 +1255,16 @@ if __name__ == "__main__":
                         choices=['lm', 'lmo', 'ycb']) 
     parser.add_argument('--frontend',
                         type=str,
-                        default='accumulator_space',
+                        default='RANSAC',
                         choices=['accumulator_space', 'ransac', 'RANSAC'])
+
     
     opts = parser.parse_args()   
+
+    
+    if opts.frontend == 'ransac':
+        opts.frontend = 'RANSAC'
+
     if opts.dataset == 'lm':
         estimate_6d_pose_lm(opts) 
     if opts.dataset == 'lmo':
