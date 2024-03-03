@@ -39,3 +39,8 @@ ADDs of holepuncher after ICP: 1.0
 Average offset: 12.876965445693932
 Average Std of offset: 25.812425709285332
 
+ADDs of iron before ICP: 0.9591419816138917
+ADDs of iron after ICP: 1.0
+Average offset: 13.803608139819895
+Average Std of offset: 28.54477675519646
+
