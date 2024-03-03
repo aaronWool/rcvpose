@@ -1,3 +1,4 @@
+import numba
 from numba import jit, prange, njit
 import numpy as np
 import random
@@ -101,7 +102,7 @@ def RANSAC_best_fit(xyz, radial_list, iterations):
     votes = np.zeros((iterations, 4))
 
     for itr in prange(iterations):
-        index = np.random.randint(0, xyz_len, 4)
+        index = np.random.randint(0, n, 4)
 
         point_list = xyz[index]
 
@@ -133,42 +134,53 @@ def RANSAC_best_fit(xyz, radial_list, iterations):
 
 
 
-
+# Problematic function, not used
 @jit(nopython=True, parallel=True)
 def random_center_est_and_inliers(xyz, radial_list, iterations, epsilon, debug=False):
     n = len(xyz)
 
-    votes = np.zeros((iterations, 4))
-  
-    all_inliers_xyz = np.zeros((iterations, n, 3))
-    all_inliers_radial = np.zeros((iterations, n))
+    # Votes is a 2D array with the first column being the number of inliers and the next 3 columns being the center
+    # All inliers is a 3D array with the first dimension being the iteration, the second dimension being the number of inliers, and the third dimension being the 3D point
+    # Inliers counts is a 1D array with the number of inliers for each iteration
+    votes = np.zeros((iterations, 4), dtype=np.float64)
+    all_inliers_xyz = np.zeros((iterations, n, 3), dtype=np.float64)
+    all_inliers_radial = np.zeros((iterations, n), dtype=np.float64)
     inliers_counts = np.zeros(iterations, dtype=np.int64)
 
+    # Iterate through the data and accumulate inliers
     for itr in prange(iterations):
+        # Randomly select 4 points
         index = np.random.randint(0, n, 4)
+        # Get the points and radii
         point_list = xyz[index]
         radius_list = radial_list[index]
         
+        # Estimate the center
         x, y, z = center_est(point_list, radius_list)
 
         inlier_count = 0
 
+        # Iterate through all the data points and accumulate inliers
         for i in range(n):
             p = xyz[i]
             r = radial_list[i]
             dist = np.sqrt((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)
+            # If the distance between the point and the center is within epsilon of the radius, add it to the inliers
             if abs(dist - r) <= epsilon:
                 all_inliers_xyz[itr, inlier_count] = p
                 all_inliers_radial[itr, inlier_count] = r
                 inlier_count += 1
-
+        # Add the inlier count to the votes
         votes[itr, 0] = inlier_count
         votes[itr, 1] = x
         votes[itr, 2] = y
         votes[itr, 3] = z
         inliers_counts[itr] = inlier_count
 
+    # Find the best vote
     best_itr = np.argmax(votes[:, 0])
+
+    # Get the best vote and inliers
     best_vote = votes[best_itr]
     best_inliers_xyz = all_inliers_xyz[best_itr, :inliers_counts[best_itr]]
     best_inliers_radial = all_inliers_radial[best_itr, :inliers_counts[best_itr]]
@@ -188,16 +200,20 @@ def RANSAC(xyz, radial_list, iterations, epsilon, debug=False):
     
     return center
 
-def RANSAC_refine(xyz, radial_list, iterations, epsilon, max_inliers, debug=False):
+def RANSAC_refine(xyz, radial_list, iterations, epsilon, debug=False):
     xyz_mm = xyz*1000
     radial_list_mm = radial_list*100
 
-    best_vote, xyz_inliers, radial_list_inliers = random_center_est_and_inliers(xyz_mm, radial_list_mm, epsilon, iterations, debug)
+    # best_vote, xyz_inliers, radial_list_inliers = random_center_est_and_inliers(xyz_mm, radial_list_mm, epsilon, iterations, debug)
 
-    center = np.array([best_vote[1], best_vote[2], best_vote[3]])
+    best_vote = random_center_est(xyz_mm, radial_list_mm, epsilon, iterations, debug)
+
+    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, iterations, best_vote, epsilon, len(xyz))
 
     center = center_est(xyz_inliers, radial_list_inliers)
 
+    center = np.array([center[0], center[1], center[2]])
+    
     center = center.astype("float64")
 
     return center
