@@ -4,7 +4,7 @@ import random
 
 
 @jit(nopython=True)
-def centerest(point_list, radius_list):
+def center_est(point_list, radius_list):
     assert len(point_list) == len(radius_list), 'different number of points and radii'
     assert len(point_list) >= 4, 'less than 4 points'
 
@@ -28,26 +28,25 @@ def centerest(point_list, radius_list):
 
 # Random Sample Consensus looks for a good first guess, uses epsilon to determine inliers
 @jit(nopython=True, parallel=True)
-def random_centerest(xyz, radial_list, epsilon, iterations=25, debug=False):
-    
-    xyz_len = len(xyz)
-    n = xyz_len
+def random_center_est(xyz, radial_list, epsilon, iterations=25, debug=False):
+
+    n = len(xyz)
 
     votes = np.zeros((iterations, 4))
 
     for itr in prange(iterations):
-        index = np.random.randint(0, xyz_len, 4)
+        index = np.random.randint(0, n, 4)
 
         point_list = xyz[index]
 
         radius_list = radial_list[index]
         
-        x, y, z = centerest(point_list, radius_list)
+        x, y, z = center_est(point_list, radius_list)
 
         error = 0
 
         for i in prange(n):
-            idx2 = np.random.randint(0, xyz_len)
+            idx2 = np.random.randint(0, n)
             p = xyz[idx2]
             r = radial_list[idx2]
             dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
@@ -65,47 +64,7 @@ def random_centerest(xyz, radial_list, epsilon, iterations=25, debug=False):
     best_vote = sorted_votes[0]
     
     return best_vote
-
-# Refine Consensus with only inliers, uses best fitting point to determine center
-@jit(nopython=True, parallel=True)
-def refine_consensus(xyz, radial_list, iterations):
     
-    xyz_len = len(xyz)
-    n = xyz_len
-
-    votes = np.zeros((iterations, 4))
-
-    for itr in prange(iterations):
-        index = np.random.randint(0, xyz_len, 4)
-
-        point_list = xyz[index]
-
-        radius_list = radial_list[index]
-        
-        x, y, z = centerest(point_list, radius_list)
-
-        error = 0
-
-        for i in prange(n):
-            p = xyz[i]
-            r = radial_list[i]
-            dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
-            error += abs(dist - r)
-        
-        error /= n
-
-        votes[itr, 0] = error
-        votes[itr, 1] = x
-        votes[itr, 2] = y
-        votes[itr, 3] = z
-
-    
-    sorted_votes = sorted(votes, key=lambda x: x[0], reverse=False)
-
-    best_vote = sorted_votes[0]
-    
-    return best_vote
-
 
 # Iterate through all the data points and accumulate inliers
 @njit(parallel=True)
@@ -132,16 +91,115 @@ def accumulate_inliers(xyz, radial_list, iterations, best_vote, error, max_inlie
     return xyz_inliers[:inlier_count], radial_list_inliers[:inlier_count]
 
 
+# Refine Consensus with only inliers, uses best fitting point to determine center
+@jit(nopython=True, parallel=True)
+def RANSAC_best_fit(xyz, radial_list, iterations):
+    
+    xyz_len = len(xyz)
+    n = xyz_len
+
+    votes = np.zeros((iterations, 4))
+
+    for itr in prange(iterations):
+        index = np.random.randint(0, xyz_len, 4)
+
+        point_list = xyz[index]
+
+        radius_list = radial_list[index]
+        
+        x, y, z = center_est(point_list, radius_list)
+
+        error = 0
+
+        for i in prange(n):
+            p = xyz[i]
+            r = radial_list[i]
+            dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
+            error += abs(dist - r)
+        
+        error /= n
+
+        votes[itr, 0] = error
+        votes[itr, 1] = x
+        votes[itr, 2] = y
+        votes[itr, 3] = z
+
+    
+    sorted_votes = sorted(votes, key=lambda x: x[0], reverse=False)
+
+    best_vote = sorted_votes[0]
+    
+    return best_vote
+
+
+
+
+@jit(nopython=True, parallel=True)
+def random_center_est_and_inliers(xyz, radial_list, iterations, epsilon, debug=False):
+    n = len(xyz)
+
+    votes = np.zeros((iterations, 4))
+  
+    all_inliers_xyz = np.zeros((iterations, n, 3))
+    all_inliers_radial = np.zeros((iterations, n))
+    inliers_counts = np.zeros(iterations, dtype=np.int64)
+
+    for itr in prange(iterations):
+        index = np.random.randint(0, n, 4)
+        point_list = xyz[index]
+        radius_list = radial_list[index]
+        
+        x, y, z = center_est(point_list, radius_list)
+
+        inlier_count = 0
+
+        for i in range(n):
+            p = xyz[i]
+            r = radial_list[i]
+            dist = np.sqrt((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)
+            if abs(dist - r) <= epsilon:
+                all_inliers_xyz[itr, inlier_count] = p
+                all_inliers_radial[itr, inlier_count] = r
+                inlier_count += 1
+
+        votes[itr, 0] = inlier_count
+        votes[itr, 1] = x
+        votes[itr, 2] = y
+        votes[itr, 3] = z
+        inliers_counts[itr] = inlier_count
+
+    best_itr = np.argmax(votes[:, 0])
+    best_vote = votes[best_itr]
+    best_inliers_xyz = all_inliers_xyz[best_itr, :inliers_counts[best_itr]]
+    best_inliers_radial = all_inliers_radial[best_itr, :inliers_counts[best_itr]]
+
+    return best_vote, best_inliers_xyz, best_inliers_radial
+
+
 def RANSAC(xyz, radial_list, iterations, epsilon, debug=False):
     xyz_mm = xyz*1000
     radial_list_mm = radial_list*100    
 
-    best_vote = random_centerest(xyz_mm, radial_list_mm, epsilon, iterations, debug)
+    best_vote = random_center_est(xyz_mm, radial_list_mm, epsilon, iterations, debug)
 
     center = np.array([best_vote[1], best_vote[2], best_vote[3]])
 
     center = center.astype("float64")
     
+    return center
+
+def RANSAC_refine(xyz, radial_list, iterations, epsilon, max_inliers, debug=False):
+    xyz_mm = xyz*1000
+    radial_list_mm = radial_list*100
+
+    best_vote, xyz_inliers, radial_list_inliers = random_center_est_and_inliers(xyz_mm, radial_list_mm, epsilon, iterations, debug)
+
+    center = np.array([best_vote[1], best_vote[2], best_vote[3]])
+
+    center = center_est(xyz_inliers, radial_list_inliers)
+
+    center = center.astype("float64")
+
     return center
 
 
@@ -164,14 +222,14 @@ def main():
     # print(point_list)
     # print(radius_list)
 
-    x, y, z = centerest(point_list, radius_list)
+    x, y, z = center_est(point_list, radius_list)
     print('estimated center = ', x, y, z, ', mse = ', np.sqrt((x-c[0])*(x-c[0]) + (y-c[1])*(y-c[1]) + (z-c[2])*(z-c[2])))
 
     eps = 5e-2
     for i in range(len(radius_list)):
         radius_list[i] += eps*random.random() * (-1)**random.randint(0,1)
 
-    x, y, z = centerest(point_list, radius_list)
+    x, y, z = center_est(point_list, radius_list)
     print('estimated center = ', x, y, z, ', mse = ', np.sqrt((x-c[0])*(x-c[0]) + (y-c[1])*(y-c[1]) + (z-c[2])*(z-c[2])))
 
 
