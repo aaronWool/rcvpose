@@ -9,7 +9,7 @@ from numba import jit,njit,cuda
 import os
 import open3d as o3d
 import time
-from ransac import RANSAC
+from ransac import RANSAC, RANSAC_refine
 from numba import prange
 import math
 #import h5py
@@ -20,7 +20,7 @@ import scipy
 lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 
 
-lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+#lm_cls_names = ['holepuncher','iron','lamp','phone']
 
 
 
@@ -503,8 +503,10 @@ def estimate_6d_pose_lm(opts):
     horn = HornPoseFitting()
     if opts.frontend == 'accumulator_space':
         print("Using accumulator space frontend")
-    else:
+    if opts.frontend == 'RANSAC':
         print("Using RANSAC frontend")
+    if opts.frontend == 'RANSAC_REFINE':
+        print ("Using RANSAC with final refinement for frontend")
 
     ADDs = []
     ADDs_after_icp = []
@@ -646,9 +648,13 @@ def estimate_6d_pose_lm(opts):
                             tic = time.time_ns()
                             center_mm_s = Accumulator_3D(xyz, radial_list)[0]
                             toc = time.time_ns()
-                        else: 
+                        if opts.frontend == 'RANSAC':
                             tic = time.time_ns()
                             center_mm_s = RANSAC(xyz, radial_list, 400, 17.0)
+                            toc = time.time_ns()
+                        if opts.frontend == 'RANSAC_refine':
+                            tic = time.time_ns()
+                            center_mm_s = RANSAC_refine(xyz, radial_list, 400, 17.0)
                             toc = time.time_ns()
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
@@ -778,8 +784,15 @@ def estimate_6d_pose_lm(opts):
                 f.write('Average offset: '+str(np.mean(offsets))+'\n')
                 f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
                 f.write('\n')
-        else:
+        if opts.frontend == 'accumulator_space':
             with open('ADDs_AccSpace.txt', 'a') as f:
+                f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
+                f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
+                f.write('Average offset: '+str(np.mean(offsets))+'\n')
+                f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
+                f.write('\n')
+        if opts.frontend == 'RANSAC_refine':
+            with open('ADDs_RANSAC_refine.txt', 'a') as f:
                 f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
                 f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
                 f.write('Average offset: '+str(np.mean(offsets))+'\n')
@@ -1256,7 +1269,8 @@ if __name__ == "__main__":
     parser.add_argument('--frontend',
                         type=str,
                         default='RANSAC',
-                        choices=['accumulator_space', 'ransac', 'RANSAC'])
+                        choices=['accumulator_space', 'ransac', 'RANSAC', 'ransac_refine', 'RANSAC_refine'])
+
 
     
     opts = parser.parse_args()   
@@ -1264,6 +1278,9 @@ if __name__ == "__main__":
     
     if opts.frontend == 'ransac':
         opts.frontend = 'RANSAC'
+
+    if opts.frontend == 'ransac_refine':
+        opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
         estimate_6d_pose_lm(opts) 
