@@ -49,3 +49,8 @@ ADDs of lamp after ICP: 0.9980806142034548
 Average offset: 13.29357921882935
 Average Std of offset: 26.795004681601046
 
+ADDs of phone before ICP: 0.94716618635927
+ADDs of phone after ICP: 1.0
+Average offset: 13.875933260032522
+Average Std of offset: 29.413900223125847
+
