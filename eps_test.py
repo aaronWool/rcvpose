@@ -942,9 +942,9 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 100.0
+        eps = 80.0
         eps_list, offset_list, std_list, inliers, inlier_std = [], [], [], [], []
-        while eps > 0.6:
+        while eps > 1:
             print("Current eps: ", eps)
             offset, stds, mean_inliers, std_inliers = estimate_6d_pose_lm(opts, eps)
             eps_list.append(eps)
@@ -955,24 +955,22 @@ if __name__ == "__main__":
             print ('Average offset: ', offset)
             print ('Average std: ', stds)
             plt.plot(eps_list, offset_list)
-            plt.xlabel('eps')
-            plt.ylabel('offset')
-            plt.savefig('eps_offset2.png')
+            plt.title('Estimated Offset from Ground Truth [mm] vs Epsilon [mm]')
+            plt.xlabel('Epsilon [mm]')
+            plt.ylabel('Offset from Ground Truth [mm]')
+            plt.savefig('eps_offset.png')
             plt.close()
             plt.plot(eps_list, std_list)
-            plt.xlabel('eps')
-            plt.ylabel('std')
-            plt.savefig('eps_std2.png')
+            plt.title('Estimated Standard Deviation [mm] vs Epsilon [mm]')
+            plt.xlabel('Epsilon [mm]')
+            plt.ylabel('Standard Deviation [mm]')
+            plt.savefig('eps_std.png')
             plt.close()    
             plt.plot(eps_list, inliers)
-            plt.xlabel('eps')
-            plt.ylabel('inliers')
+            plt.title('Number of Inlier Points vs Epsilon [mm]')
+            plt.xlabel('Epsilon [mm]')
+            plt.ylabel('# of Inlier Points')
             plt.savefig('eps_inliers2.png')
-            plt.close()
-            plt.plot(eps_list, inlier_std)
-            plt.xlabel('eps')
-            plt.ylabel('inliers_std')
-            plt.savefig('eps_inliers_std2.png')
             plt.close()
             eps -= 2.0
     if opts.dataset == 'lmo':

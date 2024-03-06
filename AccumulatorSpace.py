@@ -506,15 +506,16 @@ def estimate_6d_pose_lm(opts):
     if opts.frontend == 'RANSAC':
         print("Using RANSAC frontend")
  
-    auc_threshold = [0, 0.02, 0.04, 0.06, 0.08, 0.1]
+    auc_threshold = [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
 
-    auc_adds_count = np.zeros((2,6))
+    auc_adds_count = np.zeros((2,11))
 
 
     ADDs = []
     ADDs_after_icp = []
     total_offsets = []
     for class_name in lm_cls_names:
+        
         print("Evaluation on ", class_name)
         rootPath = opts.root_dataset + "LINEMOD_ORIG/"+class_name+"/" 
         rootpvPath = opts.root_dataset + "LINEMOD/"+class_name+"/" 
@@ -537,6 +538,7 @@ def estimate_6d_pose_lm(opts):
         model_list=[]
         offsets = []
 
+        class_auc_adds_count = np.zeros((2,11))
 
         if opts.using_ckpts:
             for i in range(1,4):
@@ -735,9 +737,11 @@ def estimate_6d_pose_lm(opts):
                         if class_name in lm_syms:
                             if min_distance <= threshold*1000:
                                 auc_adds_count[0, i] += 1
+                                class_auc_adds_count [0, i] += 1
                         else:
                             if distance <= threshold*1000:
                                 auc_adds_count[0, i] += 1
+                                class_auc_adds_count [0, i] += 1
                         i += 1
                     
                     
@@ -774,9 +778,11 @@ def estimate_6d_pose_lm(opts):
                         if class_name in lm_syms:
                             if min_distance <= threshold*1000:
                                 auc_adds_count[1, i] += 1
+                                class_auc_adds_count [1, i] += 1
                         else:
                             if distance <= threshold*1000:
                                 auc_adds_count[1, i] += 1
+                                class_auc_adds_count[1, i] += 1
                         i += 1
 
                     general_counter += 1
@@ -784,8 +790,8 @@ def estimate_6d_pose_lm(opts):
 
                     print('Current ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
                     print('Currnet ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter) 
-                    print('Current AUC of ' + class_name + ' before ICP: ', metrics.auc(auc_threshold, auc_adds_count[0]/general_counter)/0.1)
-                    print('Current AUC of ' + class_name + ' after ICP: ', metrics.auc(auc_threshold, auc_adds_count[1]/general_counter)/0.1)
+                    print('Current AUC of ' + class_name + ' before ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)
+                    print('Current AUC of ' + class_name + ' after ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1)
                     print('Current offset: ', round(np.mean(offsets),2), 'mm')
                     print('Current std: ', round(np.std(offsets),2), 'mm')
                     print('Processed: ', round((general_counter/test_list_len)*100, 2), '%\n')
@@ -796,8 +802,8 @@ def estimate_6d_pose_lm(opts):
         if class_name in lm_syms:    
             print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
             print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
-            print('AUC of ' + class_name + ' before ICP: ', metrics.auc(auc_threshold, auc_adds_count[0]/general_counter)/0.1)
-            print('AUC of ' + class_name + ' after ICP: ', metrics.auc(auc_threshold, auc_adds_count[1]/general_counter)/0.1)
+            print('AUC of ' + class_name + ' before ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)
+            print('AUC of ' + class_name + ' after ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1)
             print ('Average offset: ', np.mean(offsets))
             print ('Average std: ', np.std(offsets))
         else:
@@ -810,14 +816,14 @@ def estimate_6d_pose_lm(opts):
             with open('AUCs_RANSAC.txt', 'a') as f:
                 f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
                 f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
-                f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, auc_adds_count[0]/general_counter)/0.1)+'\n')
-                f.write('AUC of ' + class_name + ' after ICP: '+str(metrics.auc(auc_threshold, auc_adds_count[1]/general_counter)/0.1)+'\n')
+                f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)+'\n')
+                f.write('AUC of ' + class_name + ' after ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1)+'\n')
                 f.write('Average offset: '+str(np.mean(offsets))+'\n')
                 f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
                 f.write('\n')
             # plot area under the curve before and after ICP
-            plt.plot(auc_threshold, auc_adds_count[0]/general_counter, label='Before ICP')
-            plt.plot(auc_threshold, auc_adds_count[1]/general_counter, label='After ICP')
+            plt.plot(auc_threshold, class_auc_adds_count[0]/general_counter, label='Before ICP')
+            plt.plot(auc_threshold, class_auc_adds_count[1]/general_counter, label='After ICP')
             plt.xlabel('Threshold')
             plt.ylabel('ADDs')
             plt.title('Area under the curve of '+class_name)
@@ -831,14 +837,14 @@ def estimate_6d_pose_lm(opts):
             with open('AUCs_AccSpace.txt', 'a') as f:
                 f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
                 f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
-                f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, auc_adds_count[0]/general_counter)/0.1)+'\n')
-                f.write('AUC of ' + class_name + ' after ICP: '+str(metrics.auc(auc_threshold, auc_adds_count[1]/general_counter)/0.1)+'\n')
+                f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)+'\n')
+                f.write('AUC of ' + class_name + ' after ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1)+'\n')
                 f.write('Average offset: '+str(np.mean(offsets))+'\n')
                 f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
                 f.write('\n')
             # plot area under the curve before and after ICP
-            plt.plot(auc_threshold, auc_adds_count[0]/general_counter, label='Before ICP')
-            plt.plot(auc_threshold, auc_adds_count[1]/general_counter, label='After ICP')
+            plt.plot(auc_threshold, class_auc_adds_count[0]/general_counter, label='Before ICP')
+            plt.plot(auc_threshold, class_auc_adds_count[1]/general_counter, label='After ICP')
             plt.xlabel('Threshold')
             plt.ylabel('ADDs')
             plt.title('Area under the curve of '+class_name)
@@ -859,6 +865,7 @@ def estimate_6d_pose_lm(opts):
     print ('Average offset: ', np.mean(total_offsets))
     print ('Average std: ', np.std(total_offsets))
     print('='*20)
+    
     
 
 def estimate_6d_pose_lmo(opts):
