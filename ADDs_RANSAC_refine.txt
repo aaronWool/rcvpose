@@ -43,3 +43,23 @@ ADDs of glue after ICP: 0.9951737451737451
 Average offset: 12.378141130136612
 Average Std of offset: 27.05999304660701
 
+ADDs of holepuncher before ICP: 0.978116079923882
+ADDs of holepuncher after ICP: 1.0
+Average offset: 10.896214166095978
+Average Std of offset: 22.107975868936347
+
+ADDs of iron before ICP: 0.9703779366700716
+ADDs of iron after ICP: 1.0
+Average offset: 11.692483367899431
+Average Std of offset: 24.575572905304945
+
+ADDs of lamp before ICP: 0.918426103646833
+ADDs of lamp after ICP: 0.9980806142034548
+Average offset: 11.072144657676793
+Average Std of offset: 22.97363606426647
+
+ADDs of phone before ICP: 0.9567723342939481
+ADDs of phone after ICP: 1.0
+Average offset: 11.452570285393907
+Average Std of offset: 24.55146402177741
+
