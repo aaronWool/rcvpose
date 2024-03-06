@@ -942,7 +942,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 200.0
+        eps = 100.0
         eps_list, offset_list, std_list, inliers, inlier_std = [], [], [], [], []
         while eps > 0.6:
             print("Current eps: ", eps)
@@ -974,7 +974,7 @@ if __name__ == "__main__":
             plt.ylabel('inliers_std')
             plt.savefig('eps_inliers_std2.png')
             plt.close()
-            eps -= 5.0
+            eps -= 2.0
     if opts.dataset == 'lmo':
         estimate_6d_pose_lmo(opts)
 
