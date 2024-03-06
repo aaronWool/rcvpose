@@ -505,8 +505,11 @@ def estimate_6d_pose_lm(opts):
         print("Using accumulator space frontend")
     if opts.frontend == 'RANSAC':
         print("Using RANSAC frontend")
-    if opts.frontend == 'RANSAC_REFINE':
-        print ("Using RANSAC with final refinement for frontend")
+ 
+    auc_threshold = [0, 0.02, 0.04, 0.06, 0.08, 0.1]
+
+    auc_adds_count = np.zeros((2,6))
+
 
     ADDs = []
     ADDs_after_icp = []
@@ -650,12 +653,10 @@ def estimate_6d_pose_lm(opts):
                             toc = time.time_ns()
                         if opts.frontend == 'RANSAC':
                             tic = time.time_ns()
-                            center_mm_s = RANSAC(xyz, radial_list, 400, 17.0)
+                            center_mm_s, _ = RANSAC_refine(xyz, radial_list, 400, 30)
                             toc = time.time_ns()
-                        if opts.frontend == 'RANSAC_refine':
-                            tic = time.time_ns()
-                            center_mm_s = RANSAC_refine(xyz, radial_list, 400, 17.0)
-                            toc = time.time_ns()
+                    
+                            
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
                         offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
@@ -718,16 +719,27 @@ def estimate_6d_pose_lm(opts):
                         o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est before icp')
                     
                     
-                    
+                    min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                    distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+
                     if class_name in lm_syms:
-                        min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
                         if min_distance <= add_threshold[class_name]*1000:
                             bf_icp+=1
                     else:
-                        distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
                         #print('ADD(s) point distance before ICP: ', distance)
                         if distance <= add_threshold[class_name]*1000:
                             bf_icp+=1
+
+                    i = 0
+                    for threshold in auc_threshold:
+                        if class_name in lm_syms:
+                            if min_distance <= threshold*1000:
+                                auc_adds_count[0, i] += 1
+                        else:
+                            if distance <= threshold*1000:
+                                auc_adds_count[0, i] += 1
+                        i += 1
+                    
                     
                     trans_init = np.asarray([[1, 0, 0, 0],
                                             [0, 1, 0, 0],
@@ -748,17 +760,32 @@ def estimate_6d_pose_lm(opts):
                     
                     
                     #print('ADD(s) point distance after ICP: ', distance)
+                    min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                    distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
                     if class_name in lm_syms:
-                        min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
                         if min_distance <= add_threshold[class_name]*1000:
                             af_icp+=1
                     else:
-                        distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
                         if distance <= add_threshold[class_name]*1000:
-                            af_icp+=1                   
+                            af_icp+=1      
+
+                    i = 0
+                    for threshold in auc_threshold:
+                        if class_name in lm_syms:
+                            if min_distance <= threshold*1000:
+                                auc_adds_count[1, i] += 1
+                        else:
+                            if distance <= threshold*1000:
+                                auc_adds_count[1, i] += 1
+                        i += 1
+
                     general_counter += 1
+
+
                     print('Current ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
                     print('Currnet ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter) 
+                    print('Current AUC of ' + class_name + ' before ICP: ', metrics.auc(auc_threshold, auc_adds_count[0]/general_counter)/0.1)
+                    print('Current AUC of ' + class_name + ' after ICP: ', metrics.auc(auc_threshold, auc_adds_count[1]/general_counter)/0.1)
                     print('Current offset: ', round(np.mean(offsets),2), 'mm')
                     print('Current std: ', round(np.std(offsets),2), 'mm')
                     print('Processed: ', round((general_counter/test_list_len)*100, 2), '%\n')
@@ -769,6 +796,8 @@ def estimate_6d_pose_lm(opts):
         if class_name in lm_syms:    
             print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
             print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
+            print('AUC of ' + class_name + ' before ICP: ', metrics.auc(auc_threshold, auc_adds_count[0]/general_counter)/0.1)
+            print('AUC of ' + class_name + ' after ICP: ', metrics.auc(auc_threshold, auc_adds_count[1]/general_counter)/0.1)
             print ('Average offset: ', np.mean(offsets))
             print ('Average std: ', np.std(offsets))
         else:
@@ -778,27 +807,47 @@ def estimate_6d_pose_lm(opts):
         print('='*20,'\n')
 
         if opts.frontend == 'RANSAC':
-            with open('ADDs_RANSAC2.txt', 'a') as f:
+            with open('AUCs_RANSAC.txt', 'a') as f:
                 f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
                 f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
+                f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, auc_adds_count[0]/general_counter)/0.1)+'\n')
+                f.write('AUC of ' + class_name + ' after ICP: '+str(metrics.auc(auc_threshold, auc_adds_count[1]/general_counter)/0.1)+'\n')
                 f.write('Average offset: '+str(np.mean(offsets))+'\n')
                 f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
                 f.write('\n')
-        if opts.frontend == 'accumulator_space':
-            with open('ADDs_AccSpace.txt', 'a') as f:
-                f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
-                f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
-                f.write('Average offset: '+str(np.mean(offsets))+'\n')
-                f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
-                f.write('\n')
-        if opts.frontend == 'RANSAC_refine':
-            with open('ADDs_RANSAC_refine.txt', 'a') as f:
-                f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
-                f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
-                f.write('Average offset: '+str(np.mean(offsets))+'\n')
-                f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
-                f.write('\n')
+            # plot area under the curve before and after ICP
+            plt.plot(auc_threshold, auc_adds_count[0]/general_counter, label='Before ICP')
+            plt.plot(auc_threshold, auc_adds_count[1]/general_counter, label='After ICP')
+            plt.xlabel('Threshold')
+            plt.ylabel('ADDs')
+            plt.title('Area under the curve of '+class_name)
+            plt.legend()
+            if os.path.exists('AUC_graphs') == False:
+                os.makedirs('AUC_graphs')
+            plt.savefig('AUC_graphs/'+ class_name+'_RANSAC.png')
+            plt.close()
 
+        if opts.frontend == 'accumulator_space':
+            with open('AUCs_AccSpace.txt', 'a') as f:
+                f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
+                f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
+                f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, auc_adds_count[0]/general_counter)/0.1)+'\n')
+                f.write('AUC of ' + class_name + ' after ICP: '+str(metrics.auc(auc_threshold, auc_adds_count[1]/general_counter)/0.1)+'\n')
+                f.write('Average offset: '+str(np.mean(offsets))+'\n')
+                f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
+                f.write('\n')
+            # plot area under the curve before and after ICP
+            plt.plot(auc_threshold, auc_adds_count[0]/general_counter, label='Before ICP')
+            plt.plot(auc_threshold, auc_adds_count[1]/general_counter, label='After ICP')
+            plt.xlabel('Threshold')
+            plt.ylabel('ADDs')
+            plt.title('Area under the curve of '+class_name)
+            plt.legend()
+            if os.path.exists('AUC_graphs') == False:
+                os.makedirs('AUC_graphs')
+            plt.savefig('AUC_graphs/'+ class_name+'_AccSpace.png')
+            plt.close()
+            
         ADDs.append(bf_icp/general_counter)
         ADDs_after_icp.append(af_icp/general_counter)
         total_offsets.append(np.mean(offsets))
@@ -808,6 +857,7 @@ def estimate_6d_pose_lm(opts):
     print ('Average ADDs before ICP: ', np.mean(ADDs))
     print ('Average ADDs after ICP: ', np.mean(ADDs_after_icp))
     print ('Average offset: ', np.mean(total_offsets))
+    print ('Average std: ', np.std(total_offsets))
     print('='*20)
     
 
@@ -1268,8 +1318,8 @@ if __name__ == "__main__":
                         choices=['lm', 'lmo', 'ycb']) 
     parser.add_argument('--frontend',
                         type=str,
-                        default='RANSAC',
-                        choices=['accumulator_space', 'ransac', 'RANSAC', 'ransac_refine', 'RANSAC_refine'])
+                        default='ransac',
+                        choices=['accumulator_space', 'ransac', 'RANSAC', ])
 
 
     
@@ -1279,8 +1329,6 @@ if __name__ == "__main__":
     if opts.frontend == 'ransac':
         opts.frontend = 'RANSAC'
 
-    if opts.frontend == 'ransac_refine':
-        opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
         estimate_6d_pose_lm(opts) 

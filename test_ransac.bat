@@ -3,4 +3,4 @@
 :: D:/ 
 :: ../datasets/test/
 
-python AccumulatorSpace.py --root_dataset "D:/" --dataset "lm" --frontend "ransac_refine"
+python AccumulatorSpace.py --root_dataset "../datasets/test/" --dataset "lm" --frontend "RANSAC"

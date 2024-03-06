@@ -1,0 +1,7 @@
+ADDs of ape before ICP: 0.9447619047619048
+ADDs of ape after ICP: 1.0
+AUC of ape before ICP: 0.8963809523809524
+AUC of ape after ICP: 0.9
+Average offset: 9.990801495837005
+Average Std of offset: 20.777064188447145
+
