@@ -1,5 +1,6 @@
 @echo off
 
-:: D:/
+:: D:/ 
+:: ../datasets/test/
 
-python AccumulatorSpace.py --root_dataset "../datasets/test/" --dataset "lm" 
+python AccumulatorSpace.py --root_dataset "D:/" --dataset "lm" --frontend "ransac_refine"

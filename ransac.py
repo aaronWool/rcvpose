@@ -8,9 +8,10 @@ import random
 def center_est(point_list, radius_list):
     assert len(point_list) == len(radius_list), 'different number of points and radii'
     assert len(point_list) >= 4, 'less than 4 points'
-
+ 
     A = np.zeros((len(point_list), 5))
     b = np.zeros((len(point_list), 5))
+
     for i in prange(len(point_list)):
         p = point_list[i]
         r = radius_list[i]
@@ -19,7 +20,7 @@ def center_est(point_list, radius_list):
         z = p[2]
         A[i] = [-2*x, -2*y, -2*z, 1, x*x+y*y+z*z-r*r]
         b[i] = [0, 0, 0, 0, 0]
-
+    
     U, S, Vh = np.linalg.svd(A)
     X = Vh[-1]
     X /= X[-1]
@@ -44,7 +45,7 @@ def random_center_est(xyz, radial_list, epsilon, iterations=25, debug=False):
         
         x, y, z = center_est(point_list, radius_list)
 
-        error = 0
+        consensus = 0
 
         for i in prange(n):
             idx2 = np.random.randint(0, n)
@@ -52,9 +53,9 @@ def random_center_est(xyz, radial_list, epsilon, iterations=25, debug=False):
             r = radial_list[idx2]
             dist = ((p[0]-x)**2 + (p[1]-y)**2 + (p[2]-z)**2)**0.5
             if abs(dist - r) <= epsilon:
-                error += 1
+                consensus += 1
 
-        votes[itr, 0] = error
+        votes[itr, 0] = consensus
         votes[itr, 1] = x
         votes[itr, 2] = y
         votes[itr, 3] = z
@@ -69,7 +70,7 @@ def random_center_est(xyz, radial_list, epsilon, iterations=25, debug=False):
 
 # Iterate through all the data points and accumulate inliers
 @njit(parallel=True)
-def accumulate_inliers(xyz, radial_list, iterations, best_vote, error, max_inliers):
+def accumulate_inliers(xyz, radial_list, iterations, best_vote, epsilon, max_inliers):
     xyz_inliers = np.zeros((max_inliers, 3))  
     radial_list_inliers = np.zeros(max_inliers)
     inlier_count = 0
@@ -84,7 +85,7 @@ def accumulate_inliers(xyz, radial_list, iterations, best_vote, error, max_inlie
         p = xyz[i]
         r = radial_list[i]
         dist = np.sqrt((p[0] - best_vote[1]) ** 2 + (p[1] - best_vote[2]) ** 2 + (p[2] - best_vote[3]) ** 2)
-        if abs(dist - r) < error:
+        if abs(dist - r) < epsilon:
             xyz_inliers[inlier_count] = p
             radial_list_inliers[inlier_count] = r
             inlier_count += 1
@@ -216,7 +217,7 @@ def RANSAC_refine(xyz, radial_list, iterations, epsilon, debug=False):
     
     center = center.astype("float64")
 
-    return center
+    return center, len(xyz_inliers)
 
 
 def main():
