@@ -499,7 +499,7 @@ def read_depth(path):
 
 depthList=[]
 
-def estimate_6d_pose_lm(opts, eps):
+def estimate_6d_pose_lm(opts, itr):
     horn = HornPoseFitting()
     if opts.frontend == 'accumulator_space':
         print("Using accumulator space frontend")
@@ -511,7 +511,7 @@ def estimate_6d_pose_lm(opts, eps):
     ADDs = []
     ADDs_after_icp = []
     offsets = []
-    inliers = []
+    fps = []
 
     for class_name in lm_cls_names:
 
@@ -535,7 +535,6 @@ def estimate_6d_pose_lm(opts, eps):
         bf_icp = 0
         af_icp = 0
         model_list=[]
-      
 
 
         if opts.using_ckpts:
@@ -649,30 +648,34 @@ def estimate_6d_pose_lm(opts, eps):
 
                      
                         tic = time.time_ns()
-                        center_mm_s, inlier_count = RANSAC_refine(xyz, radial_list, 400, eps)
+                        center_mm_s, _ = RANSAC_refine(xyz, radial_list, itr, 50)
                         toc = time.time_ns()
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
                         offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
                         offsets.append(offset)
-                        inliers.append(inlier_count)
+                        epsilon = 1e-9 
+                        fps.append(1/((toc-tic+epsilon)/1e9))
                         
                         acc_time += toc-tic
+                    
+                    
                            
                     general_counter += 1
          
                     print('Current ', class_name, ' offset: ', round(np.mean(offsets),2), 'mm')
                     print('Current ', class_name, ' std: ', round(np.std(offsets),2), 'mm')
+                    print ('Current ', class_name, ' FPS: ', round(np.mean(fps),2))
                     print('Processed: ', round((general_counter/test_list_len)*100, 2), '%\n')
             
-        
         #os.system("pause")
         print('='*20)   
         print ('Average ', class_name, ' offset: ', np.mean(offsets))
         print ('Average ', class_name, ' std: ', np.std(offsets))
+        print ('Average ', class_name, ' FPS: ', np.mean(fps))
         print('='*20,'\n')
 
-    return np.mean(offsets), np.std(offsets), np.mean(inliers)
+    return np.mean(offsets), np.std(offsets), np.mean(fps)
 
     
   
@@ -938,36 +941,33 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 80.0
-        eps_list, offset_list, std_list, inliers, inlier_std = [], [], [], [], []
-        while eps > 1:
-            print("Current eps: ", eps)
-            offset, stds, mean_inliers = estimate_6d_pose_lm(opts, eps)
-            eps_list.append(eps)
+        itr = 10
+        itr_list, offset_list, std_list = [], [], []
+        while itr <= 1000:
+            print("Current Iterations: ", itr)
+            offset, stds, fps = estimate_6d_pose_lm(opts, itr)
+            itr += 10
             offset_list.append(offset)
             std_list.append(stds)
-            inliers.append(mean_inliers)
-            print ('Average offset: ', offset)
-            print ('Average std: ', stds)
-            plt.plot(eps_list, offset_list)
-            plt.title('Estimated Offset from Ground Truth [mm] vs Epsilon [mm]')
-            plt.xlabel('Epsilon [mm]')
-            plt.ylabel('Offset from Ground Truth [mm]')
-            plt.savefig('eps_vs_offset.png')
+            itr_list.append(itr)
+            plt.plot(itr_list, offset_list)
+            plt.title('Offset [mm] vs Iterations')
+            plt.xlabel('Iterations')
+            plt.ylabel('Offset [mm]')
+            plt.savefig('offset_vs_itr.png')
             plt.close()
-            plt.plot(eps_list, std_list)
-            plt.title('Estimated Standard Deviation [mm] vs Epsilon [mm]')
-            plt.xlabel('Epsilon [mm]')
-            plt.ylabel('Standard Deviation [mm]')
-            plt.savefig('eps_vs_std.png')
-            plt.close()    
-            plt.plot(eps_list, inliers)
-            plt.title('Number of Inlier Points vs Epsilon [mm]')
-            plt.xlabel('Epsilon [mm]')
-            plt.ylabel('# of Inlier Points')
-            plt.savefig('eps_vs_inliers.png')
+            plt.plot(itr_list, std_list)
+            plt.title('Std [mm] vs Iterations')
+            plt.xlabel('Iterations')
+            plt.ylabel('Std [mm]')
+            plt.savefig('std_vs_itr.png')
             plt.close()
-            eps -= 2.0
+            plt.plot(itr_list, fps)
+            plt.title('FPS vs Iterations')
+            plt.xlabel('Iterations')
+            plt.ylabel('FPS')
+            plt.savefig('fps_vs_itr.png')
+            plt.close()            
     if opts.dataset == 'lmo':
         estimate_6d_pose_lmo(opts)
 
