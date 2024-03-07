@@ -5,3 +5,66 @@ AUC of ape after ICP: 0.9
 Average offset: 9.990801495837005
 Average Std of offset: 20.777064188447145
 
+ADDs of ape before ICP: 0.9495238095238095
+ADDs of ape after ICP: 1.0
+AUC of ape before ICP: 0.9374285714285714
+AUC of ape after ICP: 0.9500000000000001
+Average offset: 10.113354562700634
+Average Std of offset: 21.08000426144405
+
+ADDs of benchvise before ICP: 0.9941860465116279
+ADDs of benchvise after ICP: 1.0
+AUC of benchvise before ICP: 0.925484496124031
+AUC of benchvise after ICP: 0.9437984496124031
+Average offset: 10.631764428896952
+Average Std of offset: 21.36304638266944
+
+ADDs of cam before ICP: 0.9794117647058823
+ADDs of cam after ICP: 1.0
+AUC of cam before ICP: 0.9330882352941176
+AUC of cam after ICP: 0.9492156862745097
+Average offset: 9.74941235748829
+Average Std of offset: 22.81586840795136
+
+ADDs of can before ICP: 0.9980314960629921
+ADDs of can after ICP: 1.0
+AUC of can before ICP: 0.9327755905511811
+AUC of can after ICP: 0.9435039370078742
+Average offset: 10.210262579836826
+Average Std of offset: 20.268645608506265
+
+ADDs of cat before ICP: 0.9610778443113772
+ADDs of cat after ICP: 1.0
+AUC of cat before ICP: 0.9349301397205587
+AUC of cat after ICP: 0.9495009980039921
+Average offset: 9.805876121020022
+Average Std of offset: 20.670261903010022
+
+ADDs of duck before ICP: 0.9352112676056338
+ADDs of duck after ICP: 1.0
+AUC of duck before ICP: 0.9346009389671363
+AUC of duck after ICP: 0.9499061032863849
+Average offset: 10.501852251828486
+Average Std of offset: 20.697863452407223
+
+ADDs of driller before ICP: 0.9058473736372646
+ADDs of driller after ICP: 0.9990089197224975
+AUC of driller before ICP: 0.9069871159563925
+AUC of driller after ICP: 0.9421704658077305
+Average offset: 10.1106998155711
+Average Std of offset: 21.341362557283187
+
+ADDs of eggbox before ICP: 1.0
+ADDs of eggbox after ICP: 1.0
+AUC of eggbox before ICP: 0.9500000000000001
+AUC of eggbox after ICP: 0.9507042253521126
+Average offset: 10.630705759018786
+Average Std of offset: 21.55877756030966
+
+ADDs of glue before ICP: 0.9845559845559846
+ADDs of glue after ICP: 0.9855212355212355
+AUC of glue before ICP: 0.9410714285714286
+AUC of glue after ICP: 0.9453667953667952
+Average offset: 13.579477262605462
+Average Std of offset: 35.690364015843805
+
