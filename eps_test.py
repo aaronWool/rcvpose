@@ -685,19 +685,19 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                            
                     general_counter += 1
 
-                    if general_counter > 50:
-                        break
+                    #if general_counter > 50:
+                    #    break
 
          
                     print('Processed: ', round((general_counter/test_list_len)*100, 2), '%')
-                    print('\tCurrent ', class_name, ' error: ', round(np.mean(offsets),2), 'mm')
-                    print('\tCurrent ', class_name, ' std: ', round(np.std(offsets),2), 'mm')
-                    print('\tCurrent ', class_name, ' fps: ', round(np.mean(fps),2), 'fps')
-                    print('\tCurrent ', class_name, ' error w/ R: ', round(np.std(offsets_w_refinement),2), 'mm')
-                    print('\tCurrent ', class_name, ' std w/ R: ', round(np.std(offsets_w_refinement),2), 'mm')
-                    print('\tCurrent ', class_name, ' fps w/ R: ', round(np.mean(fps_w_refinement),2), 'fps')
-                    print ('\tCurrent ', class_name, ' inliers: ', round(np.mean(inliers),2))
-                    print ('\tCurrent ', class_name, ' object size: ', round(np.mean(object_sizes),2), '\n\n')
+                    print('\tCurrent ', class_name, ' error:\t ', round(np.mean(offsets),2), 'mm')
+                    print('\tCurrent ', class_name, ' std:\t ', round(np.std(offsets),2), 'mm')
+                    print('\tCurrent ', class_name, ' fps:\t ', round(np.mean(fps),2), 'fps')
+                    print('\tCurrent ', class_name, ' error w/ R:', round(np.mean(offsets_w_refinement),2), 'mm')
+                    print('\tCurrent ', class_name, ' std w/ R:\t ', round(np.std(offsets_w_refinement),2), 'mm')
+                    print('\tCurrent ', class_name, ' fps w/ R:\t ', round(np.mean(fps_w_refinement),2), 'fps')
+                    print ('\tCurrent ', class_name, ' inliers:\t ', round(np.mean(inliers),2))
+                    print ('\tCurrent ', class_name, ' size:\t ', round(np.mean(object_sizes),2), '\n\n')
             
         
         #os.system("pause")
@@ -936,9 +936,10 @@ def estimate_6d_pose_lmo(opts):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
+    # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='D:/')
+                    default='../datasets/test/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
@@ -969,7 +970,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 80.0
+        eps = 30.0
         iterations = 400
         eps_list = []
         offset_list = []
