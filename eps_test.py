@@ -970,7 +970,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 30.0
+        eps = 0.05
         iterations = 400
         eps_list = []
         offset_list = []
@@ -981,7 +981,7 @@ if __name__ == "__main__":
         fps_list = []
         fps_list_w_refinement = []
         iteration_list = []
-        while eps > 1:
+        while eps > 0.001:
             print("Current eps: ", eps)
             offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, inlier = estimate_6d_pose_lm(opts, eps, iterations)
             iteration_list.append(iterations)
@@ -994,26 +994,26 @@ if __name__ == "__main__":
             fps_list.append(fps)
             fps_list_w_refinement.append(fps_w_refinement)
 
-            plt.plot(eps_list, offset_list, 'ro')
-            plt.plot(eps_list, offset_list_w_refinement, 'bo')
-            plt.plot (eps_list, std_list, 'go')
-            plt.plot (eps_list, std_list_w_refinement, 'yo')
+            plt.plot(eps_list, offset_list)
+            plt.plot(eps_list, offset_list_w_refinement)
+            plt.plot (eps_list, std_list)
+            plt.plot (eps_list, std_list_w_refinement)
             plt.legend(['error', 'error w/ refinement', 'std', 'std w/ refinement'])
             plt.title('Error [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
             plt.ylabel('Error [mm]')
             plt.savefig('graphs/error_and_std_vs_epsilon.png')
             plt.close()
-            plt.plot(eps_list, offset_list, 'ro')
-            plt.plot(eps_list, offset_list_w_refinement, 'bo')
+            plt.plot(eps_list, offset_list)
+            plt.plot(eps_list, offset_list_w_refinement)
             plt.legend(['error', 'error w/ refinement'])
             plt.title('Error [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
             plt.ylabel('Error [mm]')
             plt.savefig('graphs/error_vs_epsilon.png')
             plt.close()
-            plt.plot(eps_list, std_list, 'go')
-            plt.plot(eps_list, std_list_w_refinement, 'yo')
+            plt.plot(eps_list, std_list)
+            plt.plot(eps_list, std_list_w_refinement)
             plt.legend(['std', 'std w/ refinement'])
             plt.title('Std [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
@@ -1026,41 +1026,41 @@ if __name__ == "__main__":
             plt.ylabel('Inlier')
             plt.savefig('graphs/inlier_vs_epsilon.png')
             plt.close()
-            plt.plot(iteration_list, fps_list, 'ro')
-            plt.plot(iteration_list, fps_list_w_refinement, 'bo')
+            plt.plot(iteration_list, fps_list)
+            plt.plot(iteration_list, fps_list_w_refinement)
             plt.legend(['fps', 'fps w/ refinement'])
             plt.title('FPS vs Iterations')
             plt.xlabel('Iterations')
             plt.ylabel('FPS')
             plt.savefig('graphs/fps_vs_iterations.png')
             plt.close()
-            plt.plot(iteration_list, offset_list, 'ro')
-            plt.plot(iteration_list, offset_list_w_refinement, 'bo')
+            plt.plot(iteration_list, offset_list)
+            plt.plot(iteration_list, offset_list_w_refinement)
             plt.legend(['error', 'error w/ refinement'])
             plt.title('Error [mm] vs Iterations')
             plt.xlabel('Iterations')
             plt.ylabel('Error [mm]')
             plt.savefig('graphs/error_vs_iterations.png')
             plt.close()
-            plt.plot(iteration_list, offset_list, 'ro')
-            plt.plot(iteration_list, offset_list_w_refinement, 'bo')
-            plt.plot (iteration_list, std_list, 'go')
-            plt.plot (iteration_list, std_list_w_refinement, 'yo')
+            plt.plot(iteration_list, offset_list)
+            plt.plot(iteration_list, offset_list_w_refinement)
+            plt.plot (iteration_list, std_list)
+            plt.plot (iteration_list, std_list_w_refinement)
             plt.legend(['error', 'error w/ refinement', 'std', 'std w/ refinement'])
             plt.title('Error [mm] vs Iterations')
             plt.xlabel('Iterations')
             plt.ylabel('Error [mm]')
             plt.savefig('graphs/error_and_std_vs_iterations.png')
             plt.close()
-            plt.plot(iteration_list, std_list, 'go')
-            plt.plot(iteration_list, std_list_w_refinement, 'yo')
+            plt.plot(iteration_list, std_list)
+            plt.plot(iteration_list, std_list_w_refinement)
             plt.legend(['std', 'std w/ refinement'])
             plt.title('Std [mm] vs Iterations')
             plt.xlabel('Iterations')
             plt.ylabel('Std [mm]')
             plt.savefig('graphs/std_vs_iterations.png')
             plt.close()          
-            eps -= 2.0
+            eps -= 0.003
     if opts.dataset == 'lmo':
         estimate_6d_pose_lmo(opts)
 
