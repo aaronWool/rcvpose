@@ -499,7 +499,7 @@ def read_depth(path):
 
 depthList=[]
 
-def estimate_6d_pose_lm(opts, eps):
+def estimate_6d_pose_lm(opts, eps=45, itr=400):
     horn = HornPoseFitting()
     if opts.frontend == 'accumulator_space':
         print("Using accumulator space frontend")
@@ -508,17 +508,21 @@ def estimate_6d_pose_lm(opts, eps):
     if opts.frontend == 'RANSAC_REFINE':
         print ("Using RANSAC with final refinement for frontend")
 
-    ADDs = []
-    ADDs_after_icp = []
+ 
     offsets = []
+    offsets_w_refinement = []
     inliers = []
+    fps = []
+    fps_w_refinement = []
+    object_sizes = []
 
     for class_name in lm_cls_names:
+
 
         print("Evaluation on ", class_name)
         rootPath = opts.root_dataset + "LINEMOD_ORIG/"+class_name+"/" 
         rootpvPath = opts.root_dataset + "LINEMOD/"+class_name+"/" 
-        rootRadialMapPath = opts.root_dataset + "rkhs_estRadialMap/"+class_name+"/"
+        rootRadialMapPath = opts.root_dataset + "estRadialMap/"+class_name+"/"
         test_list = open(opts.root_dataset + "LINEMOD/"+class_name+"/" +"Split/val.txt","r").readlines()
         test_list = [ s.replace('\n', '') for s in test_list]
         test_list_len = len(test_list)
@@ -562,11 +566,7 @@ def estimate_6d_pose_lm(opts, eps):
         #keypoints=np.load(opts.root_dataset + "LINEMOD/"+class_name+"/"+"Outside9.npy")
         #print(keypoints)
 
-        keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
-        # add an empty row to match the index
-        keypoints = np.vstack((np.zeros(3),keypoints))  
-
-        keypoints = keypoints / 1000
+        keypoints=np.load(rootpvPath + 'Outside9.npy')
 
         #threshold of radii maximum limits
         max_radii_dm = np.zeros(3)
@@ -637,8 +637,7 @@ def estimate_6d_pose_lm(opts, eps):
                             radial_list = radial_out[pixel_coor]
                         else:
                             radialMapPath = rootRadialMapPath + 'Out_pt'+str(keypoint_count)+'_dm/'+str(filename[:-4])+'.npy'
-                            radial_est = np.load(radialMapPath)
-                      
+                            radial_est = np.load(radialMapPath)                    
                             radial_est = np.where(radial_est<=max_radii_dm[keypoint_count-1], radial_est,0)
                             sem_out = np.where(radial_est!=0,1,0)
                             #print(sem_out.shape)
@@ -646,24 +645,59 @@ def estimate_6d_pose_lm(opts, eps):
                             xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
                             radial_list = radial_est[depth_map.nonzero()]
                         xyz = xyz_mm/1000
-
-                     
+ 
+                        object_sizes.append(xyz.shape[0])
+                       
                         tic = time.time_ns()
-                        center_mm_s, inlier_count = RANSAC_refine(xyz, radial_list, 400, eps)
+                        center_mm_s, inlier_count = RANSAC_refine(xyz, radial_list, itr, eps)
                         toc = time.time_ns()
+
+                        try:
+                            cur_fps = 1/((toc-tic)/10**9)
+                        except:
+                            cur_fps = 0
+
+                        fps_w_refinement.append(cur_fps)
+
+                        #center_mm_s = Accumulator_3D(xyz, radial_list)
+                        offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
+                        offsets_w_refinement.append(offset)
+                        inliers.append(inlier_count)
+
+                        tic = time.time_ns()
+                        center_mm_s = RANSAC(xyz, radial_list, itr, eps)
+                        toc = time.time_ns()
+
+                        cur_fps = 1/((toc-tic)/10**9)
+
+                        try:
+                            cur_fps = 1/((toc-tic)/10**9)
+                        except:
+                            cur_fps = 0
+
+                        fps.append(cur_fps)
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
                         offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
                         offsets.append(offset)
-                        inliers.append(inlier_count)
+                       
                         
-                        acc_time += toc-tic
                            
                     general_counter += 1
+
+                    if general_counter > 50:
+                        break
+
          
-                    print('Current ', class_name, ' offset: ', round(np.mean(offsets),2), 'mm')
-                    print('Current ', class_name, ' std: ', round(np.std(offsets),2), 'mm')
-                    print('Processed: ', round((general_counter/test_list_len)*100, 2), '%\n')
+                    print('Processed: ', round((general_counter/test_list_len)*100, 2), '%')
+                    print('\tCurrent ', class_name, ' error: ', round(np.mean(offsets),2), 'mm')
+                    print('\tCurrent ', class_name, ' std: ', round(np.std(offsets),2), 'mm')
+                    print('\tCurrent ', class_name, ' fps: ', round(np.mean(fps),2), 'fps')
+                    print('\tCurrent ', class_name, ' error w/ R: ', round(np.std(offsets_w_refinement),2), 'mm')
+                    print('\tCurrent ', class_name, ' std w/ R: ', round(np.std(offsets_w_refinement),2), 'mm')
+                    print('\tCurrent ', class_name, ' fps w/ R: ', round(np.mean(fps_w_refinement),2), 'fps')
+                    print ('\tCurrent ', class_name, ' inliers: ', round(np.mean(inliers),2))
+                    print ('\tCurrent ', class_name, ' object size: ', round(np.mean(object_sizes),2), '\n\n')
             
         
         #os.system("pause")
@@ -672,10 +706,7 @@ def estimate_6d_pose_lm(opts, eps):
         print ('Average ', class_name, ' std: ', np.std(offsets))
         print('='*20,'\n')
 
-    return np.mean(offsets), np.std(offsets), np.mean(inliers)
-
-    
-  
+    return np.mean(offsets), np.std(offsets), np.mean(fps), np.mean(offsets_w_refinement), np.std(offsets_w_refinement) , np.mean(fps_w_refinement), np.mean(inliers)
     
 
 def estimate_6d_pose_lmo(opts):
@@ -939,34 +970,95 @@ if __name__ == "__main__":
 
     if opts.dataset == 'lm':
         eps = 80.0
-        eps_list, offset_list, std_list, inliers, inlier_std = [], [], [], [], []
+        iterations = 400
+        eps_list = []
+        offset_list = []
+        offset_list_w_refinement = []
+        std_list = []
+        std_list_w_refinement = []
+        inlier_list = []
+        fps_list = []
+        fps_list_w_refinement = []
+        iteration_list = []
         while eps > 1:
             print("Current eps: ", eps)
-            offset, stds, mean_inliers = estimate_6d_pose_lm(opts, eps)
+            offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, inlier = estimate_6d_pose_lm(opts, eps, iterations)
+            iteration_list.append(iterations)
             eps_list.append(eps)
             offset_list.append(offset)
+            offset_list_w_refinement.append(offset_w_refinement)
             std_list.append(stds)
-            inliers.append(mean_inliers)
-            print ('Average offset: ', offset)
-            print ('Average std: ', stds)
-            plt.plot(eps_list, offset_list)
-            plt.title('Estimated Offset from Ground Truth [mm] vs Epsilon [mm]')
+            std_list_w_refinement.append(std_w_refinement)
+            inlier_list.append(inlier)
+            fps_list.append(fps)
+            fps_list_w_refinement.append(fps_w_refinement)
+
+            plt.plot(eps_list, offset_list, 'ro')
+            plt.plot(eps_list, offset_list_w_refinement, 'bo')
+            plt.plot (eps_list, std_list, 'go')
+            plt.plot (eps_list, std_list_w_refinement, 'yo')
+            plt.legend(['error', 'error w/ refinement', 'std', 'std w/ refinement'])
+            plt.title('Error [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
-            plt.ylabel('Offset from Ground Truth [mm]')
-            plt.savefig('eps_vs_offset.png')
+            plt.ylabel('Error [mm]')
+            plt.savefig('graphs/error_and_std_vs_epsilon.png')
             plt.close()
-            plt.plot(eps_list, std_list)
-            plt.title('Estimated Standard Deviation [mm] vs Epsilon [mm]')
+            plt.plot(eps_list, offset_list, 'ro')
+            plt.plot(eps_list, offset_list_w_refinement, 'bo')
+            plt.legend(['error', 'error w/ refinement'])
+            plt.title('Error [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
-            plt.ylabel('Standard Deviation [mm]')
-            plt.savefig('eps_vs_std.png')
-            plt.close()    
-            plt.plot(eps_list, inliers)
-            plt.title('Number of Inlier Points vs Epsilon [mm]')
-            plt.xlabel('Epsilon [mm]')
-            plt.ylabel('# of Inlier Points')
-            plt.savefig('eps_vs_inliers.png')
+            plt.ylabel('Error [mm]')
+            plt.savefig('graphs/error_vs_epsilon.png')
             plt.close()
+            plt.plot(eps_list, std_list, 'go')
+            plt.plot(eps_list, std_list_w_refinement, 'yo')
+            plt.legend(['std', 'std w/ refinement'])
+            plt.title('Std [mm] vs Epsilon [mm]')
+            plt.xlabel('Epsilon [mm]')
+            plt.ylabel('Std [mm]')
+            plt.savefig('graphs/std_vs_epsilon.png')
+            plt.close()
+            plt.plot(eps_list, inlier_list)
+            plt.title('Inlier vs Epsilon [mm]')
+            plt.xlabel('Epsilon [mm]')
+            plt.ylabel('Inlier')
+            plt.savefig('graphs/inlier_vs_epsilon.png')
+            plt.close()
+            plt.plot(iteration_list, fps_list, 'ro')
+            plt.plot(iteration_list, fps_list_w_refinement, 'bo')
+            plt.legend(['fps', 'fps w/ refinement'])
+            plt.title('FPS vs Iterations')
+            plt.xlabel('Iterations')
+            plt.ylabel('FPS')
+            plt.savefig('graphs/fps_vs_iterations.png')
+            plt.close()
+            plt.plot(iteration_list, offset_list, 'ro')
+            plt.plot(iteration_list, offset_list_w_refinement, 'bo')
+            plt.legend(['error', 'error w/ refinement'])
+            plt.title('Error [mm] vs Iterations')
+            plt.xlabel('Iterations')
+            plt.ylabel('Error [mm]')
+            plt.savefig('graphs/error_vs_iterations.png')
+            plt.close()
+            plt.plot(iteration_list, offset_list, 'ro')
+            plt.plot(iteration_list, offset_list_w_refinement, 'bo')
+            plt.plot (iteration_list, std_list, 'go')
+            plt.plot (iteration_list, std_list_w_refinement, 'yo')
+            plt.legend(['error', 'error w/ refinement', 'std', 'std w/ refinement'])
+            plt.title('Error [mm] vs Iterations')
+            plt.xlabel('Iterations')
+            plt.ylabel('Error [mm]')
+            plt.savefig('graphs/error_and_std_vs_iterations.png')
+            plt.close()
+            plt.plot(iteration_list, std_list, 'go')
+            plt.plot(iteration_list, std_list_w_refinement, 'yo')
+            plt.legend(['std', 'std w/ refinement'])
+            plt.title('Std [mm] vs Iterations')
+            plt.xlabel('Iterations')
+            plt.ylabel('Std [mm]')
+            plt.savefig('graphs/std_vs_iterations.png')
+            plt.close()          
             eps -= 2.0
     if opts.dataset == 'lmo':
         estimate_6d_pose_lmo(opts)
