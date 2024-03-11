@@ -997,11 +997,13 @@ if __name__ == "__main__":
             fps_list.append(fps)
             fps_list_w_refinement.append(fps_w_refinement)
 
-            plt.plot(eps_list, offset_list)
-            plt.plot(eps_list, offset_list_w_refinement)
-            plt.plot (eps_list, std_list)
-            plt.plot (eps_list, std_list_w_refinement)
-            plt.legend(['error', 'error w/ refinement', 'std', 'std w/ refinement'])
+            plt.plot(eps_list, offset_list, 'o--', color='blue')
+            plt.plot(eps_list, offset_list_w_refinement, '-', color='blue')
+
+            plt.errorbar(eps_list, offset_list, yerr=std_list, fmt='o', color='blue')
+            plt.errorbar(eps_list, offset_list_w_refinement, yerr=std_list_w_refinement, fmt='o', color='blue')
+
+            plt.legend(['error', 'error w/ refinement'])
             plt.title('Error [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
             plt.ylabel('Error [mm]')

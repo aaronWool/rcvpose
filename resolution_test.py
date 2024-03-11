@@ -944,7 +944,8 @@ if __name__ == "__main__":
         os.makedirs(out_dir)
 
     if opts.dataset == 'lm':
-        resolutions = [20, 16, 8, 5, 4, 2, 1, 0.5, 0.25]
+        resolutions = [20, 16, 8, 5, 4, 2, 1, 0.5]
+        resolutions = reversed(resolutions)
         offsets, std_offsets, fps = [], [], []
         for resolution in resolutions:
             print("Resolution: ", resolution)
