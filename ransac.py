@@ -70,7 +70,7 @@ def random_center_est(xyz, radial_list, epsilon, iterations=25, debug=False):
 
 # Iterate through all the data points and accumulate inliers
 @njit(parallel=True)
-def accumulate_inliers(xyz, radial_list, iterations, best_vote, epsilon):
+def accumulate_inliers(xyz, radial_list, iterations, best_vote, epsilon, max_inliers=400):
    
     xyz_inliers = np.zeros((iterations, 3))  
     radial_list_inliers = np.zeros(iterations)
@@ -80,6 +80,8 @@ def accumulate_inliers(xyz, radial_list, iterations, best_vote, epsilon):
     np.random.shuffle(indexes)
 
     for itr in prange(iterations):
+        if inlier_count >= max_inliers:
+            break
         i = indexes[itr]
         p = xyz[i]
         r = radial_list[i]
@@ -202,7 +204,7 @@ def RANSAC(xyz, radial_list, iterations, epsilon, debug=False):
 
 def RANSAC_refine(xyz, radial_list, iterations, epsilon, debug=False):
 
-    pc_size = xyz.shape[0]
+    inlier_count = 400
 
     xyz_mm = xyz*1000
     radial_list_mm = radial_list*100
@@ -211,7 +213,7 @@ def RANSAC_refine(xyz, radial_list, iterations, epsilon, debug=False):
 
     best_vote = random_center_est(xyz_mm, radial_list_mm, epsilon, iterations, debug)
 
-    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, pc_size, best_vote, epsilon)
+    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, inlier_count, best_vote, epsilon)
     
     if len(xyz_inliers) >= 4:
         center = center_est(xyz_inliers, radial_list_inliers)
