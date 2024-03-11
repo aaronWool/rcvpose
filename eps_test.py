@@ -661,7 +661,8 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
                         offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
-                        offsets_w_refinement.append(offset)
+                        if offset < 100:
+                            offsets_w_refinement.append(offset)
                         inliers.append(inlier_count)
 
                         tic = time.time_ns()
@@ -678,7 +679,8 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
                         offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
-                        offsets.append(offset)
+                        if offset < 100:
+                            offsets.append(offset)
                        
                         
                            
@@ -961,7 +963,7 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    output_dir = 'results1'
+    output_dir = 'itr_results'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -973,8 +975,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 0.04
-        iterations = 400
+        eps = 0.85
         eps_list = []
         offset_list = []
         offset_list_w_refinement = []
@@ -984,10 +985,11 @@ if __name__ == "__main__":
         fps_list = []
         fps_list_w_refinement = []
         iteration_list = []
-        while eps < 0.1:
+        iterations = [5, 10, 15, 20, 30, 40, 50, 60, 100, 200, 400]
+        for itr in iterations:
             print("Current eps: ", eps)
-            offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, inlier = estimate_6d_pose_lm(opts, eps, iterations)
-            iteration_list.append(iterations)
+            offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, inlier = estimate_6d_pose_lm(opts, eps, itr)
+            iteration_list.append(itr)
             eps_list.append(eps)
             offset_list.append(offset)
             offset_list_w_refinement.append(offset_w_refinement)
@@ -1082,9 +1084,8 @@ if __name__ == "__main__":
             plt.close()     
 
             with open(os.path.join(output_dir, 'results.txt'), 'a') as f:
-                f.write(f"Epsilon: {eps}, Iterations {iterations}, Offset: {offset}, Offset with Refinement: {offset_w_refinement}, Std: {stds}, Std with Refinement: {std_w_refinement}, Inlier: {inlier}, FPS: {fps}, FPS with Refinement: {fps_w_refinement}\n")
-                
-            eps += 0.01 
+                f.write(f"Epsilon: {eps}, Iterations {itr}, Offset: {offset}, Offset with Refinement: {offset_w_refinement}, Std: {stds}, Std with Refinement: {std_w_refinement}, Inlier: {inlier}, FPS: {fps}, FPS with Refinement: {fps_w_refinement}\n")
+
     if opts.dataset == 'lmo':
         estimate_6d_pose_lmo(opts)
 
