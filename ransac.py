@@ -30,7 +30,7 @@ def center_est(point_list, radius_list):
 
 # Random Sample Consensus looks for a good first guess, uses epsilon to determine inliers
 @jit(nopython=True, parallel=True)
-def random_center_est(xyz, radial_list, epsilon, iterations=25, debug=False):
+def random_center_est(xyz, radial_list, epsilon, iterations=25):
 
     n = len(xyz)
 
@@ -190,11 +190,11 @@ def random_center_est_and_inliers(xyz, radial_list, iterations, epsilon, debug=F
     return best_vote, best_inliers_xyz, best_inliers_radial
 
 
-def RANSAC(xyz, radial_list, iterations, epsilon, debug=False):
+def RANSAC(xyz, radial_list, iterations, epsilon):
     xyz_mm = xyz*1000
     radial_list_mm = radial_list*100    
 
-    best_vote = random_center_est(xyz_mm, radial_list_mm, epsilon, iterations, debug)
+    best_vote = random_center_est(xyz_mm, radial_list_mm, epsilon, iterations)
 
     center = np.array([best_vote[1], best_vote[2], best_vote[3]])
 
@@ -202,20 +202,22 @@ def RANSAC(xyz, radial_list, iterations, epsilon, debug=False):
     
     return center
 
-def RANSAC_refine(xyz, radial_list, iterations, epsilon, debug=False):
-
-    inlier_count = 400
+def RANSAC_refine(xyz, radial_list, iterations, epsilon, max_inliers=None):
+    if max_inliers is None:
+        max_inlier_count = len(xyz)
+    else:
+        max_inlier_count = max_inliers
 
     xyz_mm = xyz*1000
     radial_list_mm = radial_list*100
 
     # best_vote, xyz_inliers, radial_list_inliers = random_center_est_and_inliers(xyz_mm, radial_list_mm, epsilon, iterations, debug)
 
-    best_vote = random_center_est(xyz_mm, radial_list_mm, epsilon, iterations, debug)
+    best_vote = random_center_est(xyz_mm, radial_list_mm, epsilon, iterations)
 
-    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, inlier_count, best_vote, epsilon)
+    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, max_inlier_count, best_vote, epsilon)
 
-    inlier_ratio = len(xyz_inliers) / inlier_count
+    inlier_ratio = len(xyz_inliers) / max_inlier_count
     
     if len(xyz_inliers) >= 4:
         center = center_est(xyz_inliers, radial_list_inliers)
