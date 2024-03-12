@@ -1013,9 +1013,10 @@ if __name__ == "__main__":
             plt.savefig(os.path.join(output_dir, 'error_and_std_vs_epsilon.png'))
             plt.close()
 
-            plt.plot(eps_list, offset_list_w_refinement)
-            plt.legend(['error w/ refinement'])
-            plt.title('Error [mm] vs Epsilon [mm]')
+
+            plt.plot(eps_list, offset_list_w_refinement, '-', color='blue')
+            plt.errorbar(eps_list, offset_list_w_refinement, yerr=std_list_w_refinement, fmt='o', color='blue')
+            plt.title('RANSAC with Refinement Error [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
             plt.ylabel('Error [mm]')
             plt.savefig(os.path.join(output_dir, 'error_w_refinement_vs_epsilon.png'))
