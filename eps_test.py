@@ -697,7 +697,7 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                     print('\tCurrent ', class_name, ' std w/ R:\t ', round(np.std(offsets_w_refinement),2), 'mm')
                     print('\tCurrent ', class_name, ' fps:\t ', round(np.mean(fps),2), 'fps')
                     print('\tCurrent ', class_name, ' fps w/ R:\t ', round(np.mean(fps_w_refinement),2), 'fps')
-                    print ('\tCurrent ', class_name, ' inliers:\t ', round(np.mean(inliers),2))
+                    print ('\tCurrent ', class_name, ' inlier ratio:\t ', round(np.mean(inliers),2))
                     print ('\tCurrent ', class_name, ' size:\t ', round(np.mean(object_sizes),2), '\n\n')
             
         

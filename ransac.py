@@ -214,6 +214,8 @@ def RANSAC_refine(xyz, radial_list, iterations, epsilon, debug=False):
     best_vote = random_center_est(xyz_mm, radial_list_mm, epsilon, iterations, debug)
 
     xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, inlier_count, best_vote, epsilon)
+
+    inlier_ratio = len(xyz_inliers) / inlier_count
     
     if len(xyz_inliers) >= 4:
         center = center_est(xyz_inliers, radial_list_inliers)
@@ -222,7 +224,7 @@ def RANSAC_refine(xyz, radial_list, iterations, epsilon, debug=False):
 
         center = center.astype("float64")
 
-        return center, len(xyz_inliers)
+        return center, inlier_ratio
     else:
         center = np.array([best_vote[1], best_vote[2], best_vote[3]])
 

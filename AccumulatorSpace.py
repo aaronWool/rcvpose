@@ -992,15 +992,18 @@ def estimate_6d_pose_lmo(opts):
                             xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
                             xyz = xyz_mm/1000
                            # dump, xyz_load_transformed=project(xyz_load, linemod_K, RT)
+                            if opts.frontend == 'accumulator_space':
+                                center_mm_s = Accumulator_3D(xyz, radial_list)[0]
+                            if opts.frontend == 'RANSAC':
+                                center_mm_s, _ = RANSAC_refine(xyz, radial_list, 400, 30)
 
-                            center_mm_s = Accumulator_3D(xyz, radial_list)
 
                             #pre_center_off_mm = math.inf
                             transformed_gt_center_mm = (np.dot(keypoints, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
 
                             transformed_gt_center_mm = transformed_gt_center_mm[keypoint_count]
 
-                            estimated_center_mm = center_mm_s[0]
+                            estimated_center_mm = center_mm_s
                             #estimated_center_mm = transformed_gt_center_mm[0]
                             center_off_mm = ((transformed_gt_center_mm[0]-estimated_center_mm[0])**2+
                                             (transformed_gt_center_mm[1]-estimated_center_mm[1])**2+
