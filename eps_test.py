@@ -940,7 +940,7 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../datasets/test/')
+                    default='D:/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
@@ -963,7 +963,7 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    output_dir = 'logs/eps_test2/'
+    output_dir = 'logs/eps_test3/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -975,7 +975,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 0.02
+        eps = 0.01
         eps_list = []
         offset_list = []
         offset_list_w_refinement = []
