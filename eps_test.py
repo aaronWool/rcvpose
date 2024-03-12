@@ -963,7 +963,7 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    output_dir = 'itr_results'
+    output_dir = 'eps_test2/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -975,7 +975,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 0.85
+        eps = 0.02
         eps_list = []
         offset_list = []
         offset_list_w_refinement = []
@@ -986,7 +986,8 @@ if __name__ == "__main__":
         fps_list_w_refinement = []
         iteration_list = []
         iterations = [5, 10, 15, 20, 30, 40, 50, 60, 100, 200, 400]
-        for itr in iterations:
+        while eps < 0.2:
+            itr = 200
             print("Current eps: ", eps)
             offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, inlier = estimate_6d_pose_lm(opts, eps, itr)
             iteration_list.append(itr)
@@ -1085,6 +1086,7 @@ if __name__ == "__main__":
 
             with open(os.path.join(output_dir, 'results.txt'), 'a') as f:
                 f.write(f"Epsilon: {eps}, Iterations {itr}, Offset: {offset}, Offset with Refinement: {offset_w_refinement}, Std: {stds}, Std with Refinement: {std_w_refinement}, Inlier: {inlier}, FPS: {fps}, FPS with Refinement: {fps_w_refinement}\n")
+            eps += 0.01
 
     if opts.dataset == 'lmo':
         estimate_6d_pose_lmo(opts)
