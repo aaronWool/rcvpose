@@ -11,3 +11,4 @@ frontend_test/acc_current.txt
 frontend_test/logs/
 test_ransac.bat
 ~$adds.xlsx
+logs/lm/
