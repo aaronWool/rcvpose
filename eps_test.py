@@ -963,7 +963,7 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    output_dir = 'eps_test2/'
+    output_dir = 'logs/eps_test2/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
