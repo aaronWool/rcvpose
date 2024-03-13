@@ -8,3 +8,13 @@ ADDs of can after ICP: 0.9447650453421269
 Average offset: 389307360313.32166
 Average Std of offset: 23345460972082.133
 
+ADDs of cat before ICP: 0.48474855729596045
+ADDs of cat after ICP: 0.6990931574608409
+Average offset: 53572382921982.94
+Average Std of offset: 1739797160065353.0
+
+ADDs of duck before ICP: 0.7741137675185491
+ADDs of duck after ICP: 0.8466611706512778
+Average offset: 35263716618809.17
+Average Std of offset: 1890037604266907.2
+
