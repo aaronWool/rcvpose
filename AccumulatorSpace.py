@@ -882,6 +882,7 @@ def estimate_6d_pose_lmo(opts):
         #h5 save keypoints
         filenameList=[]
         model_list=[]
+        offsets = []
 
         if opts.using_ckpts:
             for i in range(1,4):
@@ -1008,6 +1009,9 @@ def estimate_6d_pose_lmo(opts):
                             center_off_mm = ((transformed_gt_center_mm[0]-estimated_center_mm[0])**2+
                                             (transformed_gt_center_mm[1]-estimated_center_mm[1])**2+
                                             (transformed_gt_center_mm[2]-estimated_center_mm[2])**2)**0.5
+                            
+                            offsets.append(center_off_mm)
+
                             estimated_kpts[keypoint_count-1] = estimated_center_mm
 
                         keypoint_count+=1   
@@ -1087,14 +1091,24 @@ def estimate_6d_pose_lmo(opts):
             else:
                 print('Current ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
                 print('Current ADD of '+class_name+' after ICP: ', af_icp/general_counter)    
+            print ('Current offset: ', np.mean(offsets))
+            print ('Current std: ', np.std(offsets))
         if class_name in lm_syms:    
             print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
             print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
         else:
             print('ADD of '+class_name+' before ICP: ', bf_icp/general_counter)
-            print('ADD of '+class_name+' after ICP: ', af_icp/general_counter)         
+            print('ADD of '+class_name+' after ICP: ', af_icp/general_counter)  
+
+        with open(opts.out_dir + 'ADDs.txt', 'a') as f:
+            f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
+            f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
+            f.write('Average offset: '+str(np.mean(offsets))+'\n')
+            f.write('Average Std of offset: '+str(np.std(offsets))+'\n')
+            f.write('\n')       
 
 def estimate_6d_pose_ycb(opts):
+
     horn = HornPoseFitting()
     auc_threshold = [0, 0.02, 0.04, 0.06, 0.08, 0.1]
     auc_adds_count = np.zeros((2,6))
@@ -1330,10 +1344,17 @@ if __name__ == "__main__":
                         type=str,
                         default='ransac',
                         choices=['accumulator_space', 'ransac', 'RANSAC', ])
+    
+    parser.add_argument('--out_dir',
+                        type=str,
+                        default='logs/lmo/')
 
 
     
     opts = parser.parse_args()   
+
+    if os.path.exists(opts.out_dir) == False:
+        os.makedirs(opts.out_dir)
 
     
     if opts.frontend == 'ransac':
