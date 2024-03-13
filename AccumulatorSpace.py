@@ -996,7 +996,7 @@ def estimate_6d_pose_lmo(opts):
                             if opts.frontend == 'accumulator_space':
                                 center_mm_s = Accumulator_3D(xyz, radial_list)[0]
                             if opts.frontend == 'RANSAC':
-                                center_mm_s, _ = RANSAC_refine(xyz, radial_list, 400, 30)
+                                center_mm_s, _ = RANSAC_refine(xyz, radial_list, 200, 0.14)
 
 
                             #pre_center_off_mm = math.inf
@@ -1093,6 +1093,7 @@ def estimate_6d_pose_lmo(opts):
                 print('Current ADD of '+class_name+' after ICP: ', af_icp/general_counter)    
             print ('Current offset: ', np.mean(offsets))
             print ('Current std: ', np.std(offsets))
+            print('Processed: ', round((general_counter/len(os.listdir(jpgPath)))*100, 2), '%\n')
         if class_name in lm_syms:    
             print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
             print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter) 
@@ -1338,7 +1339,7 @@ if __name__ == "__main__":
                     default=False)
     parser.add_argument('--dataset',
                         type=str,
-                        default='lm',
+                        default='lmo',
                         choices=['lm', 'lmo', 'ycb']) 
     parser.add_argument('--frontend',
                         type=str,

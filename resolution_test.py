@@ -916,7 +916,7 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='D:/')
+                    default='../datasets/test/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
@@ -939,13 +939,12 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    out_dir = 'results_acc/'
+    out_dir = 'logs/results_acc/'
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
     if opts.dataset == 'lm':
-        resolutions = [20, 16, 8, 5, 4, 2, 1, 0.5]
-        resolutions = reversed(resolutions)
+        resolutions = [16, 8, 5, 4, 2, 1]
         offsets, std_offsets, fps = [], [], []
         for resolution in resolutions:
             print("Resolution: ", resolution)
@@ -957,18 +956,12 @@ if __name__ == "__main__":
             std_offsets.append(std_offset)
             fps.append(mean_fps)
 
-            plt.plot(resolutions, offsets)
+            plt.plot(resolutions, offsets, label='Mean error', color='blue')
+            plt.errorbar(resolutions, offsets, yerr=std_offsets, fmt='o', color='blue')
             plt.title('Mean error vs resolution')
             plt.xlabel('Resolution [mm]')
             plt.ylabel('Mean error [mm]')
             plt.savefig(out_dir+'mean_error_vs_resolution.png')
-            plt.close()
-
-            plt.plot(resolutions, std_offsets)
-            plt.title('Std error vs resolution')
-            plt.xlabel('Resolution [mm]')
-            plt.ylabel('Std error [mm]')
-            plt.savefig(out_dir+'std_error_vs_resolution.png')
             plt.close()
 
             plt.plot(resolutions, fps)
