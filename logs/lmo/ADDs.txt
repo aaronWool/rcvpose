@@ -18,3 +18,18 @@ ADDs of duck after ICP: 0.8466611706512778
 Average offset: 35263716618809.17
 Average Std of offset: 1890037604266907.2
 
+ADDs of driller before ICP: 0.5292662819455894
+ADDs of driller after ICP: 0.6826051112943117
+Average offset: 192.60189065415187
+Average Std of offset: 2552.4522087760542
+
+ADDs of eggbox before ICP: 0.8779884583676835
+ADDs of eggbox after ICP: 0.9010717230008244
+Average offset: 414809204354.1521
+Average Std of offset: 18311964132349.254
+
+ADDs of glue before ICP: 0.7040395713107996
+ADDs of glue after ICP: 0.7106347897774113
+Average offset: 550175958.8786328
+Average Std of offset: 22164414705.799088
+
