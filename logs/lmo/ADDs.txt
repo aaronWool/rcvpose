@@ -33,3 +33,8 @@ ADDs of glue after ICP: 0.7106347897774113
 Average offset: 550175958.8786328
 Average Std of offset: 22164414705.799088
 
+ADDs of holepuncher before ICP: 0.7625721352019785
+ADDs of holepuncher after ICP: 0.8375927452596867
+Average offset: 63.42933684649643
+Average Std of offset: 129.62689494970147
+
