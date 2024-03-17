@@ -519,7 +519,8 @@ def estimate_6d_pose_lm(opts):
         print("Evaluation on ", class_name)
         rootPath = opts.root_dataset + "LINEMOD_ORIG/"+class_name+"/" 
         rootpvPath = opts.root_dataset + "LINEMOD/"+class_name+"/" 
-        rootRadialMapPath = opts.root_dataset + "rkhs_estRadialMap/"+class_name+"/"
+        rootRadialMapPath = opts.root_dataset + "estRadialMap/"+class_name+"/"
+        # rootRadialMapPath = opts.root_dataset + "rkhs_estRadialMap/"+class_name+"/"
         test_list = open(opts.root_dataset + "LINEMOD/"+class_name+"/" +"Split/val.txt","r").readlines()
         test_list = [ s.replace('\n', '') for s in test_list]
         test_list_len = len(test_list)
@@ -564,11 +565,12 @@ def estimate_6d_pose_lm(opts):
         #keypoints=np.load(opts.root_dataset + "LINEMOD/"+class_name+"/"+"Outside9.npy")
         #print(keypoints)
 
-        keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
-        # add an empty row to match the index
-        keypoints = np.vstack((np.zeros(3),keypoints))  
+        # keypoints=np.load(opts.root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
+        # # add an empty row to match the index
+        # keypoints = np.vstack((np.zeros(3),keypoints))  
 
-        keypoints = keypoints / 1000
+        # keypoints = keypoints / 1000
+        keypoints=np.load(rootpvPath + 'Outside9.npy')
 
         #threshold of radii maximum limits
         max_radii_dm = np.zeros(3)
@@ -628,6 +630,7 @@ def estimate_6d_pose_lm(opts):
                         net_time += toc-tic
                         #print("Network time consumption: ", network_time_single)
                         depth_map1 = read_depth(rootPath+'data/depth'+str(int(os.path.splitext(filename)[0]))+'.dpt')
+
                         if opts.using_ckpts:
                             sem_out = np.where(sem_out>0.8,1,0)
                             sem_out = np.where(radial_out<=max_radii_dm[keypoint_count-1], sem_out,0)
@@ -640,14 +643,14 @@ def estimate_6d_pose_lm(opts):
                         else:
                             radialMapPath = rootRadialMapPath + 'Out_pt'+str(keypoint_count)+'_dm/'+str(filename[:-4])+'.npy'
                             radial_est = np.load(radialMapPath)
-                      
                             radial_est = np.where(radial_est<=max_radii_dm[keypoint_count-1], radial_est,0)
-                            sem_out = np.where(radial_est!=0,1,0)
+                            sem_out = np.where(radial_est!=0,1,0)                         
                             #print(sem_out.shape)
-                            depth_map = depth_map1*sem_out
+                            depth_map = depth_map1*sem_out                           
                             xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
                             radial_list = radial_est[depth_map.nonzero()]
                         xyz = xyz_mm/1000
+                      
 
                         if opts.frontend == 'accumulator_space':
                             tic = time.time_ns()
@@ -655,7 +658,7 @@ def estimate_6d_pose_lm(opts):
                             toc = time.time_ns()
                         if opts.frontend == 'RANSAC':
                             tic = time.time_ns()
-                            center_mm_s, _ = RANSAC_refine(xyz, radial_list, 400, 30)
+                            center_mm_s, _ = RANSAC_refine(xyz, radial_list, 100, 0.08)
                             toc = time.time_ns()
                     
                             
@@ -813,7 +816,7 @@ def estimate_6d_pose_lm(opts):
         print('='*20,'\n')
 
         if opts.frontend == 'RANSAC':
-            with open('AUCs_RANSAC.txt', 'a') as f:
+            with open(opts.out_dir + 'results_RANSAC.txt', 'a') as f:
                 f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
                 f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
                 f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)+'\n')
@@ -830,11 +833,11 @@ def estimate_6d_pose_lm(opts):
             plt.legend()
             if os.path.exists('AUC_graphs') == False:
                 os.makedirs('AUC_graphs')
-            plt.savefig('AUC_graphs/'+ class_name+'_RANSAC.png')
+            plt.savefig(opts.out_dir + class_name+'_RANSAC.png')
             plt.close()
 
         if opts.frontend == 'accumulator_space':
-            with open('AUCs_AccSpace.txt', 'a') as f:
+            with open(opts.out_dir + 'results_AccSpace.txt', 'a') as f:
                 f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
                 f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
                 f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)+'\n')
@@ -851,7 +854,7 @@ def estimate_6d_pose_lm(opts):
             plt.legend()
             if os.path.exists('AUC_graphs') == False:
                 os.makedirs('AUC_graphs')
-            plt.savefig('AUC_graphs/'+ class_name+'_AccSpace.png')
+            plt.savefig(opts.out_dir + class_name+'_AccSpace.png')
             plt.close()
             
         ADDs.append(bf_icp/general_counter)
@@ -1356,6 +1359,8 @@ if __name__ == "__main__":
 
     if os.path.exists(opts.out_dir) == False:
         os.makedirs(opts.out_dir)
+
+    print ('out_dir: ', opts.out_dir)
 
     
     if opts.frontend == 'ransac':

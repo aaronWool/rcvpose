@@ -56,7 +56,8 @@ def test_epsilon(root_dataset, out_dir):
         # Root paths for dataset and file list
         rootPath = root_dataset + "LINEMOD_ORIG/"+class_name+"/" 
         rootpvPath = root_dataset + "LINEMOD/"+class_name+"/" 
-        rootRadialMapPath = root_dataset + "rkhs_estRadialMap/"+class_name+"/"
+        # rootRadialMapPath = root_dataset + "rkhs_estRadialMap/"+class_name+"/"
+        rootRadialMapPath = root_dataset + "estRadialMap/"+class_name+"/"
         test_list = open(root_dataset + "LINEMOD/"+class_name+"/" +"Split/val.txt","r").readlines()
         test_list = [ s.replace('\n', '') for s in test_list]
         test_list_size = len(test_list)
@@ -66,10 +67,11 @@ def test_epsilon(root_dataset, out_dir):
         #xyz_load = np.asarray(pcd_load.points)
 
         # Load KeyGNet keypoints
-        keypoints=np.load(root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
-        keypoints = keypoints[0:3]
-        keypoints = keypoints / 1000
-
+        # keypoints=np.load(root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
+        # keypoints = keypoints[0:3]
+        # keypoints = keypoints / 1000
+        keypoints=np.load(rootpvPath + 'Outside9.npy')
+        keypoints = keypoints[1:4]
         #random_files = random.sample(test_list, 5)
         for filename in tqdm(test_list, total=len(test_list), unit='image', leave=False):
             epsilons = []
@@ -145,6 +147,13 @@ def test_epsilon(root_dataset, out_dir):
         plt.savefig(out_dir + class_name + '/class_epsilon_with_cutoff_at_2mm.png')
         #plt.show()
         plt.close()
+    plt.hist (epsilons, bins=2000)
+    plt.title('Epsilon Histogram')
+    plt.xlabel('Epsilon')
+    plt.ylabel('Frequency')
+    plt.savefig(out_dir + 'all_classes_epsilon.png')
+    plt.show()
+    plt.close()
 
 
 
@@ -153,7 +162,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                         type=str,
-                        default='../../datasets/test/')
+                        default='../datasets/test/')
     
     out_dir = 'logs/epsilon_test/'
     if not os.path.exists(out_dir):
