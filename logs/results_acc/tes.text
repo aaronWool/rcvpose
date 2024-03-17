@@ -1,0 +1,10 @@
+Average  ape  offset:  6.9930589289249045
+Average  ape  std:  2.6997733132836528
+
+Current  benchvise  error:        7.02 mm
+Current  benchvise  std:          2.19 mm
+Current  benchvise  fps:          0.02 fps
+
+Current  cam  error:      6.5 mm
+Current  cam  std:        1.72 mm
+Current  cam  fps:        0.06 fps
