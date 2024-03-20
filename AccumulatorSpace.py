@@ -9,7 +9,7 @@ from numba import jit,njit,cuda
 import os
 import open3d as o3d
 import time
-from ransac import RANSAC, RANSAC_refine
+from ransac import RANSAC, RANSAC_refine, center_est
 from numba import prange
 import math
 #import h5py
@@ -658,7 +658,9 @@ def estimate_6d_pose_lm(opts):
                             toc = time.time_ns()
                         if opts.frontend == 'RANSAC':
                             tic = time.time_ns()
-                            center_mm_s, _ = RANSAC_refine(xyz, radial_list, 100, 0.08)
+                            center_mm_s, _ = RANSAC_refine(xyz, radial_list, 100, 0.1)
+                            # x, y, z = center_est(xyz, radial_list)
+                            center_mm_s = np.array([x, y, z])
                             toc = time.time_ns()
                     
                             

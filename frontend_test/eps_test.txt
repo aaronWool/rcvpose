@@ -43,7 +43,6 @@ def read_depth(path):
 
 
 def test_epsilon(root_dataset, out_dir):
-    epsilons = []
     
     for class_name in lm_cls_names:
         print ('class_name:', class_name)
@@ -72,13 +71,11 @@ def test_epsilon(root_dataset, out_dir):
         # keypoints=np.load(root_dataset + "rkhs_estRadialMap/KeyGNet_kpts 1.npy")
         # keypoints = keypoints[0:3]
         # keypoints = keypoints / 1000
-
-        # load outside 9
         keypoints=np.load(rootpvPath + 'Outside9.npy')
         keypoints = keypoints[1:4]
         #random_files = random.sample(test_list, 5)
         for filename in tqdm(test_list, total=len(test_list), unit='image', leave=False):
-            
+            epsilons = []
             # Read in rotation and translation matrix
             RTGT = np.load(root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
             
@@ -96,7 +93,7 @@ def test_epsilon(root_dataset, out_dir):
                 radMap = np.load(radialMapPath)
 
                 # create mask for radial map
-                semMask = np.where(radMap!=0,1,0)
+                semMask = np.where(radMap>0.8,1,0)
 
                 # load depth map and mask it with semMask
                 depthMap = read_depth(rootPath+'data/depth'+str(int(os.path.splitext(filename)[0]))+'.dpt')
@@ -160,12 +157,11 @@ def test_epsilon(root_dataset, out_dir):
 
 
 if __name__ == "__main__":
-
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                         type=str,
-                        default='D:/')
+                        default='../datasets/test/')
     
     out_dir = 'logs/epsilon_test/'
     if not os.path.exists(out_dir):

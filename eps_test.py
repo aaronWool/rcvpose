@@ -378,7 +378,7 @@ def fast_for_cuda(xyz_mm,radial_list_mm,VoteMap_3D):
     cuda_internal1[blockspergrid, threadsperblock](VoteMap_3D,xyz_mm,radial_list_mm)
 
 def Accumulator_3D(xyz, radial_list):
-    acc_unit = 5
+    acc_unit = 2
     # unit 5mm 
     xyz_mm = xyz*1000/acc_unit #point cloud is in meter
 
@@ -647,6 +647,10 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                         xyz = xyz_mm/1000
  
                         object_sizes.append(xyz.shape[0])
+
+                        # center_acc = Accumulator_3D(xyz, radial_list)[0]
+
+
                        
                         tic = time.time_ns()
                         center_mm_s, inlier_count = RANSAC_refine(xyz, radial_list, itr, eps)
@@ -661,15 +665,28 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
                         offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
-                        if offset < 100:
-                            offsets_w_refinement.append(offset)
+
+                        # delete the file if it exists
+                        # if os.path.exists("RANSAC_results.txt"):
+                            # os.remove("RANSAC_results.txt")
+# 
+                        # with open("RANSAC_results.txt", "a") as file:
+                            # file.write("GT keypoint location for " + class_name +", file "+filename+" is "+str(transformed_gt_center_mm)+"\n")
+                            # file.write("\tTotal input point count: "+str(xyz.shape[0])+"\n\n")
+                            # file.write("Accumulator Space estimated center with a resolution of 2mm: "+str(center_acc)+"\n\tOffset from GT: "+ str(np.linalg.norm(center_acc-transformed_gt_center_mm)) + "\n\n")
+                            # file.write("Estimated keypoint location for RANSAC with refinement with and an epsilon of "+ str(eps) + " is "+str(center_mm_s)+"\n\tOffset from GT: "+ str(offset) + "\n")
+                            # file.write("\tTotal inlier count: "+str(inlier_count)+"\n")
+                            # file.write("\tInlier ratio: "+str(inlier_count/xyz.shape[0])+"\n\n")
+
+        
+                        offsets_w_refinement.append(offset)
                         inliers.append(inlier_count)
 
                         tic = time.time_ns()
                         center_mm_s = RANSAC(xyz, radial_list, itr, eps)
                         toc = time.time_ns()
-
-
+                      
+                        
                         try:
                             cur_fps = 1/((toc-tic)/10**9)
                         except:
@@ -679,8 +696,13 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
                         offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
-                        if offset < 100:
-                            offsets.append(offset)
+
+                        # with open("RANSAC_results.txt", "a") as file:
+                        #     file.write("Estimated keypoint location for RANSAC without refinement and an epsilon of "+ str(eps) + " is "+str(center_mm_s)+"\n\tOffset from GT: "+ str(offset)  + "\n\n Object Point cloud and corresponding radial values:\n")
+                        #     for i in range(xyz.shape[0]):
+                        #         file.write(str(xyz[i][0]) + ", " + str(xyz[i][1]) + ", " + str(xyz[i][2]) + ", r=" + str(radial_list[i]) + "\n")
+                        # exit()
+                        offsets.append(offset)
                        
                         
                            
@@ -707,7 +729,7 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
         print ('Average ', class_name, ' std: ', np.std(offsets))
         print('='*20,'\n')
 
-    return np.mean(offsets), np.std(offsets), np.mean(fps), np.mean(offsets_w_refinement), np.std(offsets_w_refinement) , np.mean(fps_w_refinement), np.mean(inliers)
+    return np.mean(offsets), np.std(offsets), np.mean(fps), np.mean(offsets_w_refinement), np.std(offsets_w_refinement) , np.mean(fps_w_refinement), np.mean(object_sizes), np.mean(inliers)
     
 
 def estimate_6d_pose_lmo(opts):
@@ -940,7 +962,7 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../datasets/test/')
+                    default='D:/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
@@ -975,7 +997,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 0.08
+        eps = 0.01
         eps_list = []
         offset_list = []
         offset_list_w_refinement = []
@@ -986,10 +1008,10 @@ if __name__ == "__main__":
         fps_list_w_refinement = []
         iteration_list = []
         iterations = [5, 10, 15, 20, 30, 40, 50, 60, 100, 200, 400]
-        while eps < 0.8:
+        while eps < 0.06:
             print("Current eps: ", eps)
             itr = 400
-            offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, inlier = estimate_6d_pose_lm(opts, eps, itr)
+            offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, obj_size, inlier  = estimate_6d_pose_lm(opts, eps, itr)
             iteration_list.append(itr)
             eps_list.append(eps)
             offset_list.append(offset)
@@ -1087,7 +1109,7 @@ if __name__ == "__main__":
             plt.close()     
 
             with open(os.path.join(output_dir, 'results.txt'), 'a') as f:
-                f.write(f"Epsilon: {eps}, Iterations {itr}, Offset: {offset}, Offset with Refinement: {offset_w_refinement}, Std: {stds}, Std with Refinement: {std_w_refinement}, Inlier: {inlier}, FPS: {fps}, FPS with Refinement: {fps_w_refinement}\n")
+                f.write(f"Epsilon: {eps}, Iterations {itr}, Offset: {offset}, Offset with Refinement: {offset_w_refinement}, Std: {stds}, Std with Refinement: {std_w_refinement}, Average Object Size {obj_size}, Inlier Count: {inlier}, Inlier Ratio: {inlier/obj_size}, FPS: {fps}, FPS with Refinement: {fps_w_refinement}\n")
             eps += 0.01
 
     if opts.dataset == 'lmo':

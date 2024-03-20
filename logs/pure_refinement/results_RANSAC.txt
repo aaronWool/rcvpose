@@ -1,0 +1,14 @@
+ADDs of ape before ICP: 0.0
+ADDs of ape after ICP: 1.0
+AUC of ape before ICP: 0.0
+AUC of ape after ICP: 0.9500000000000001
+Average offset: 868.4968924439434
+Average Std of offset: 146.47424816814703
+
+ADDs of benchvise before ICP: 0.0
+ADDs of benchvise after ICP: 1.0
+AUC of benchvise before ICP: 0.0
+AUC of benchvise after ICP: 0.9194767441860465
+Average offset: 842.3813409818962
+Average Std of offset: 213.7171053589529
+
