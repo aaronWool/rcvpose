@@ -19,12 +19,8 @@ import scipy
 
 lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 
-
-#lm_cls_names = ['holepuncher','iron','lamp','phone']
-
-
-
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
+
 ycb_cls_names={1:'002_master_chef_can',
            2:'003_cracker_box',
            3:'004_sugar_box',
@@ -1001,7 +997,7 @@ def estimate_6d_pose_lmo(opts):
                             if opts.frontend == 'accumulator_space':
                                 center_mm_s = Accumulator_3D(xyz, radial_list)[0]
                             if opts.frontend == 'RANSAC':
-                                center_mm_s, _ = RANSAC_refine(xyz, radial_list, 200, 0.14)
+                                center_mm_s, _ = RANSAC_refine(xyz, radial_list, 200, 0.04)
 
 
                             #pre_center_off_mm = math.inf
@@ -1014,8 +1010,12 @@ def estimate_6d_pose_lmo(opts):
                             center_off_mm = ((transformed_gt_center_mm[0]-estimated_center_mm[0])**2+
                                             (transformed_gt_center_mm[1]-estimated_center_mm[1])**2+
                                             (transformed_gt_center_mm[2]-estimated_center_mm[2])**2)**0.5
-                            
+                            if center_off_mm > 100000:
+                                print (filename)
+                                print (center_off_mm)
+                                wait = input("PRESS ENTER TO CONTINUE.")
                             offsets.append(center_off_mm)
+                            
 
                             estimated_kpts[keypoint_count-1] = estimated_center_mm
 
