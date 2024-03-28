@@ -523,7 +523,7 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
         rootPath = opts.root_dataset + "LINEMOD_ORIG/"+class_name+"/" 
         rootpvPath = opts.root_dataset + "LINEMOD/"+class_name+"/" 
         rootRadialMapPath = opts.root_dataset + "estRadialMap/"+class_name+"/"
-        test_list = open(opts.root_dataset + "LINEMOD/"+class_name+"/" +"Split/val.txt","r").readlines()
+        test_list = open(opts.root_dataset + "LINEMOD/"+class_name+"/" +"Split/train.txt","r").readlines()
         test_list = [ s.replace('\n', '') for s in test_list]
         test_list_len = len(test_list)
         #print(test_list)
@@ -661,10 +661,12 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                         except:
                             cur_fps = 0
 
-                        fps_w_refinement.append(cur_fps)
+                        if general_counter > 0:
+                            fps_w_refinement.append(cur_fps)
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
                         offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
+                        
 
                         # delete the file if it exists
                         # if os.path.exists("RANSAC_results.txt"):
@@ -678,8 +680,8 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                             # file.write("\tTotal inlier count: "+str(inlier_count)+"\n")
                             # file.write("\tInlier ratio: "+str(inlier_count/xyz.shape[0])+"\n\n")
 
-        
-                        offsets_w_refinement.append(offset)
+                        if offset < 100:
+                            offsets_w_refinement.append(offset)
                         inliers.append(inlier_count)
 
                         tic = time.time_ns()
@@ -692,7 +694,8 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                         except:
                             cur_fps = 0
 
-                        fps.append(cur_fps)
+                        if general_counter > 0:
+                            fps.append(cur_fps) 
 
                         #center_mm_s = Accumulator_3D(xyz, radial_list)
                         offset = np.linalg.norm(center_mm_s-transformed_gt_center_mm)
@@ -702,9 +705,9 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                         #     for i in range(xyz.shape[0]):
                         #         file.write(str(xyz[i][0]) + ", " + str(xyz[i][1]) + ", " + str(xyz[i][2]) + ", r=" + str(radial_list[i]) + "\n")
                         # exit()
-                        offsets.append(offset)
-                       
                         
+                        if offset < 100:
+                            offsets.append(offset)                        
                            
                     general_counter += 1
 
@@ -717,8 +720,9 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                     print('\tCurrent ', class_name, ' error w/ R:', round(np.mean(offsets_w_refinement),2), 'mm')
                     print('\tCurrent ', class_name, ' std:\t ', round(np.std(offsets),2), 'mm')
                     print('\tCurrent ', class_name, ' std w/ R:\t ', round(np.std(offsets_w_refinement),2), 'mm')
-                    print('\tCurrent ', class_name, ' fps:\t ', round(np.mean(fps),2), 'fps')
-                    print('\tCurrent ', class_name, ' fps w/ R:\t ', round(np.mean(fps_w_refinement),2), 'fps')
+                    if general_counter > 1:
+                        print('\tCurrent ', class_name, ' fps:\t ', round(np.mean(fps),2), 'fps')
+                        print('\tCurrent ', class_name, ' fps w/ R:\t ', round(np.mean(fps_w_refinement),2), 'fps')
                     print ('\tCurrent ', class_name, ' inlier ratio:\t ', round(np.mean(inliers),2))
                     print ('\tCurrent ', class_name, ' size:\t ', round(np.mean(object_sizes),2), '\n\n')
             
@@ -985,7 +989,7 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    output_dir = 'logs/eps_test5/'
+    output_dir = 'logs/itr_test_on_train_set/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -997,7 +1001,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 0.01
+        eps = 0.03
         eps_list = []
         offset_list = []
         offset_list_w_refinement = []
@@ -1008,9 +1012,8 @@ if __name__ == "__main__":
         fps_list_w_refinement = []
         iteration_list = []
         iterations = [5, 10, 15, 20, 30, 40, 50, 60, 100, 200, 400]
-        while eps < 0.06:
+        for itr in iterations:
             print("Current eps: ", eps)
-            itr = 400
             offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, obj_size, inlier  = estimate_6d_pose_lm(opts, eps, itr)
             iteration_list.append(itr)
             eps_list.append(eps)
@@ -1110,7 +1113,6 @@ if __name__ == "__main__":
 
             with open(os.path.join(output_dir, 'results.txt'), 'a') as f:
                 f.write(f"Epsilon: {eps}, Iterations {itr}, Offset: {offset}, Offset with Refinement: {offset_w_refinement}, Std: {stds}, Std with Refinement: {std_w_refinement}, Average Object Size {obj_size}, Inlier Count: {inlier}, Inlier Ratio: {inlier/obj_size}, FPS: {fps}, FPS with Refinement: {fps_w_refinement}\n")
-            eps += 0.01
 
     if opts.dataset == 'lmo':
         estimate_6d_pose_lmo(opts)

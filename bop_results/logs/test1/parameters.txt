@@ -1,0 +1,3 @@
+Iterations: 100
+Epsilon: 0.05
+Early Stop: None

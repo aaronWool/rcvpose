@@ -69,7 +69,6 @@ def random_center_est(xyz, radial_list, epsilon, iterations=25):
     
 
 # Iterate through all the data points and accumulate inliers
-@njit(parallel=True)
 def accumulate_inliers(xyz, radial_list, iterations, best_vote, epsilon, early_stop=None):
 
     if early_stop is None:
@@ -212,7 +211,7 @@ def RANSAC(xyz, radial_list, iterations, epsilon):
     
     return center
 
-def RANSAC_refine(xyz, radial_list, iterations, epsilon):
+def RANSAC_refine(xyz, radial_list, iterations, epsilon, early_stop=None):
    
     len_xyz = len(xyz)
 
@@ -223,13 +222,18 @@ def RANSAC_refine(xyz, radial_list, iterations, epsilon):
 
     best_vote = random_center_est(xyz_mm, radial_list_mm, epsilon, iterations)
 
+    if early_stop is None:    
+        early_stop = best_vote[0]
+    else:
+        early_stop = min(early_stop, best_vote[0])
+
     # if best_vote[0] == len_xyz:
         # center = center_est(xyz_mm, radial_list_mm)
         # center = np.array([center[0], center[1], center[2]])
         # center = center.astype("float64")
         # return center, len_xyz
 
-    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, len_xyz, best_vote, epsilon)
+    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, len_xyz, best_vote, epsilon, early_stop)
 
     
     if len(xyz_inliers) >= 4:
