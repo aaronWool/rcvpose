@@ -229,7 +229,7 @@ def RANSAC_refine(xyz, radial_list, iterations, epsilon):
         # center = center.astype("float64")
         # return center, len_xyz
 
-    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, len_xyz, best_vote, epsilon)
+    xyz_inliers, radial_list_inliers = accumulate_inliers(xyz_mm, radial_list_mm, len_xyz, best_vote, epsilon, early_stop=best_vote[0])
 
     
     if len(xyz_inliers) >= 4:

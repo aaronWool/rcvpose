@@ -966,7 +966,7 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='D:/')
+                    default='../datasets/test/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
@@ -989,7 +989,7 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    output_dir = 'logs/eps_test_on_train_set/'
+    output_dir = 'logs/eps_test_on_train_set2/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
