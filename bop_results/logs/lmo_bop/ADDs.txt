@@ -1,0 +1,40 @@
+ADDs of ape before ICP: 0.77
+ADDs of ape after ICP: 0.77
+Average offset: 4.968254425846017
+Average Std of offset: 31.44619957783884
+
+ADDs of can before ICP: 0.945
+ADDs of can after ICP: 0.955
+Average offset: 16.71310944227059
+Average Std of offset: 76.45541466939129
+
+ADDs of cat before ICP: 0.485
+ADDs of cat after ICP: 0.68
+Average offset: 115.25331798786296
+Average Std of offset: 139.6804871822741
+
+ADDs of duck before ICP: 0.795
+ADDs of duck after ICP: 0.855
+Average offset: 30.648655466633763
+Average Std of offset: 77.92471471044097
+
+ADDs of driller before ICP: 0.57
+ADDs of driller after ICP: 0.71
+Average offset: 141.1738461353743
+Average Std of offset: 196.14730413116203
+
+ADDs of eggbox before ICP: 0.88
+ADDs of eggbox after ICP: 0.89
+Average offset: 36.857804462865204
+Average Std of offset: 97.45975703719252
+
+ADDs of glue before ICP: 0.715
+ADDs of glue after ICP: 0.725
+Average offset: 17.236844494965233
+Average Std of offset: 91.38188758181893
+
+ADDs of holepuncher before ICP: 0.71
+ADDs of holepuncher after ICP: 0.77
+Average offset: 79.43111077104594
+Average Std of offset: 146.10450534992418
+

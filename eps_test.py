@@ -966,7 +966,7 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../datasets/test/')
+                    default='D:/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
