@@ -283,8 +283,13 @@ def estimate_6d_pose_lmo(opts):
     jpg_path = occ_path + 'RGB-D/rgb_noseg/'
     depth_path = occ_path + 'RGB-D/depth_noseg/'
 
-    file_count = len(os.listdir(jpg_path))
+    test_list = open('test.txt', 'r').readlines()
+    for i in range(len(test_list)):
+        test_list[i] = int(test_list[i].split('/')[1].split('_')[0])
+    test_list = list(set(test_list))
 
+    file_count = len(test_list)
+    
     csv_path = opts.out_dir + 'estimated_data.csv'
     if os.path.exists(csv_path):
         os.remove(csv_path)
@@ -298,8 +303,13 @@ def estimate_6d_pose_lmo(opts):
 
     for filename in tqdm(os.listdir(jpg_path), disable=debug, total=file_count, desc='Processing images', position=0, leave=True, unit='image'):
 
+
         stripped_filename = filename.split('_')[1].split('.')[0]
         img_id = int(stripped_filename)
+
+        if img_id not in test_list:
+            continue
+
         if debug:
             print ('Processing image: ', img_id, ' ', general_counter, '/', file_count)
 
@@ -445,15 +455,15 @@ if __name__ == "__main__":
     
     parser.add_argument('--out_dir',
                         type=str,
-                        default='logs/test2_w_bf_af_icp/')
+                        default='logs/test5_mxitr/')
     
     parser.add_argument('--verbose',
                         type=bool,
-                        default=True)
+                        default=False)
     
     parser.add_argument('--iterations',
                         type=int,
-                        default=100)
+                        default=5000)
     
     parser.add_argument('--epsilon',
                         type=float,

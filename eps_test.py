@@ -1012,8 +1012,8 @@ if __name__ == "__main__":
         fps_list_w_refinement = []
         iteration_list = []
         iterations = [5, 10, 15, 20, 30, 40, 50, 60, 100, 200, 400]
-        while eps < 0.1:
-            itr = 200
+        while eps < 0.2:
+            itr = 50
             print("Current eps: ", eps)
             offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, obj_size, inlier  = estimate_6d_pose_lm(opts, eps, itr)
             iteration_list.append(itr)
