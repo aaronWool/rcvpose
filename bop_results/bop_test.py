@@ -283,12 +283,7 @@ def estimate_6d_pose_lmo(opts):
     jpg_path = occ_path + 'RGB-D/rgb_noseg/'
     depth_path = occ_path + 'RGB-D/depth_noseg/'
 
-    test_list = open('test.txt', 'r').readlines()
-    for i in range(len(test_list)):
-        test_list[i] = int(test_list[i].split('/')[1].split('_')[0])
-    test_list = list(set(test_list))
-
-    file_count = len(test_list)
+    file_count = len(os.listdir(jpg_path))
     
     csv_path = opts.out_dir + 'estimated_data.csv'
     if os.path.exists(csv_path):
@@ -306,9 +301,6 @@ def estimate_6d_pose_lmo(opts):
 
         stripped_filename = filename.split('_')[1].split('.')[0]
         img_id = int(stripped_filename)
-
-        if img_id not in test_list:
-            continue
 
         if debug:
             print ('Processing image: ', img_id, ' ', general_counter, '/', file_count)

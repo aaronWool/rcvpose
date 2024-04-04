@@ -35,7 +35,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Strip and Modify')
     parser.add_argument('--file_name', type=str, help='input file', default='test.txt')
-    parser.add_argument('--file_dir', type=str, help='input file', default='logs/test1/')
-    parser.add_argument('--output_dir', type=str, help='output file', default='logs/test4/')
+    parser.add_argument('--file_dir', type=str, help='input file', default='logs/test5_mxitr/')
+    parser.add_argument('--output_dir', type=str, help='output file', default='logs/test5_mxitr/')
     args = parser.parse_args()
     main(args)
