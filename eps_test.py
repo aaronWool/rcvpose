@@ -17,7 +17,9 @@ from sklearn import metrics
 import scipy
 
 
-lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+
+lm_cls_names = ['ape']
 
 
 #lm_cls_names = ['holepuncher','iron','lamp','phone']
@@ -544,7 +546,7 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
 
         if opts.using_ckpts:
             for i in range(1,4):
-                model_path = opts.model_dir + class_name+"_pt"+str(i)+".pth.tar"
+                model_path = rootpvPath + 'models/'+class_name+"_pt"+str(i)+".pth.tar"
                 model = DenseFCNResNet152(3,2)
                 #model = torch.nn.DataParallel(model)
                 #checkpoint = torch.load(model_path)
@@ -682,7 +684,8 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
 
                         if offset < 100:
                             offsets_w_refinement.append(offset)
-                        inliers.append(inlier_count)
+                        inlier_ratio = inlier_count/xyz.shape[0]
+                        inliers.append(inlier_ratio)
 
                         tic = time.time_ns()
                         center_mm_s = RANSAC(xyz, radial_list, itr, eps)
@@ -975,7 +978,7 @@ if __name__ == "__main__":
                     default=False)  
     parser.add_argument('--using_ckpts',
                     type=bool,
-                    default=False)
+                    default=True)
     parser.add_argument('--dataset',
                         type=str,
                         default='lm',
@@ -989,7 +992,7 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    output_dir = 'logs/eps_test_on_train_set2/'
+    output_dir = 'logs/eps_test_ape_w_model/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -1001,7 +1004,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 0.01
+        eps = 0.1
         eps_list = []
         offset_list = []
         offset_list_w_refinement = []
@@ -1012,8 +1015,8 @@ if __name__ == "__main__":
         fps_list_w_refinement = []
         iteration_list = []
         iterations = [5, 10, 15, 20, 30, 40, 50, 60, 100, 200, 400]
-        while eps < 0.2:
-            itr = 50
+        while eps < 1.0:
+            itr = 5000
             print("Current eps: ", eps)
             offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, obj_size, inlier  = estimate_6d_pose_lm(opts, eps, itr)
             iteration_list.append(itr)
@@ -1033,7 +1036,7 @@ if __name__ == "__main__":
             plt.errorbar(eps_list, offset_list_w_refinement, yerr=std_list_w_refinement, fmt='o', color='blue')
 
             plt.legend(['error', 'error w/ refinement'])
-            plt.title('Error [mm] vs Epsilon [mm]')
+            plt.title('Mean Keypoint Error [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
             plt.ylabel('Error [mm]')
             plt.savefig(os.path.join(output_dir, 'error_and_std_vs_epsilon.png'))
@@ -1042,7 +1045,7 @@ if __name__ == "__main__":
 
             plt.plot(eps_list, offset_list_w_refinement, '-', color='blue')
             plt.errorbar(eps_list, offset_list_w_refinement, yerr=std_list_w_refinement, fmt='o', color='red')
-            plt.title('RANSAC with Refinement Error [mm] vs Epsilon [mm]')
+            plt.title('RANSAC with Refinement Mean Keypoint Error [mm] vs Epsilon [mm]')
             plt.legend(['error w/ refinement'])
             plt.xlabel('Epsilon [mm]')
             plt.ylabel('Error [mm]')
@@ -1052,7 +1055,7 @@ if __name__ == "__main__":
             plt.plot(eps_list, offset_list)
             plt.plot(eps_list, offset_list_w_refinement)
             plt.legend(['error', 'error w/ refinement'])
-            plt.title('Error [mm] vs Epsilon [mm]')
+            plt.title('Mean Keypoint Error [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
             plt.ylabel('Error [mm]')
             plt.savefig(os.path.join(output_dir, 'error_vs_epsilon.png'))
@@ -1061,14 +1064,14 @@ if __name__ == "__main__":
             plt.plot(eps_list, std_list)
             plt.plot(eps_list, std_list_w_refinement)
             plt.legend(['std', 'std w/ refinement'])
-            plt.title('Std [mm] vs Epsilon [mm]')
+            plt.title('Keypoint Error Std [mm] vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
             plt.ylabel('Std [mm]')
             plt.savefig(os.path.join(output_dir, 'std_vs_epsilon.png'))
             plt.close()
 
             plt.plot(eps_list, inlier_list)
-            plt.title('Inlier vs Epsilon [mm]')
+            plt.title('Inlier Ratio vs Epsilon [mm]')
             plt.xlabel('Epsilon [mm]')
             plt.ylabel('Inlier')
             plt.savefig(os.path.join(output_dir, 'inlier_vs_epsilon.png'))
@@ -1086,7 +1089,7 @@ if __name__ == "__main__":
             plt.plot(iteration_list, offset_list)
             plt.plot(iteration_list, offset_list_w_refinement)
             plt.legend(['error', 'error w/ refinement'])
-            plt.title('Error [mm] vs Iterations')
+            plt.title('Mean Keypoint Error [mm] vs Iterations')
             plt.xlabel('Iterations')
             plt.ylabel('Error [mm]')
             plt.savefig(os.path.join(output_dir, 'error_vs_iterations.png'))
@@ -1097,7 +1100,7 @@ if __name__ == "__main__":
             plt.plot (iteration_list, std_list)
             plt.plot (iteration_list, std_list_w_refinement)
             plt.legend(['error', 'error w/ refinement', 'std', 'std w/ refinement'])
-            plt.title('Error [mm] vs Iterations')
+            plt.title('Keypoint Error [mm] vs Iterations')
             plt.xlabel('Iterations')
             plt.ylabel('Error [mm]')
             plt.savefig(os.path.join(output_dir, 'error_and_std_vs_iterations.png'))
@@ -1106,7 +1109,7 @@ if __name__ == "__main__":
             plt.plot(iteration_list, std_list)
             plt.plot(iteration_list, std_list_w_refinement)
             plt.legend(['std', 'std w/ refinement'])
-            plt.title('Std [mm] vs Iterations')
+            plt.title('Keypoint Error Std [mm] vs Iterations')
             plt.xlabel('Iterations')
             plt.ylabel('Std [mm]')
             plt.savefig(os.path.join(output_dir, 'std_vs_iterations.png'))
@@ -1115,7 +1118,7 @@ if __name__ == "__main__":
             with open(os.path.join(output_dir, 'results.txt'), 'a') as f:
                 f.write(f"Epsilon: {eps}, Iterations {itr}, Offset: {offset}, Offset with Refinement: {offset_w_refinement}, Std: {stds}, Std with Refinement: {std_w_refinement}, Average Object Size {obj_size}, Inlier Count: {inlier}, Inlier Ratio: {inlier/obj_size}, FPS: {fps}, FPS with Refinement: {fps_w_refinement}\n")
 
-            eps += 0.01
+            eps += 0.1
 
     if opts.dataset == 'lmo':
         estimate_6d_pose_lmo(opts)

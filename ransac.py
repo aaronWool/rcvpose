@@ -69,7 +69,7 @@ def random_center_est(xyz, radial_list, epsilon, iterations=25):
     
 
 # Iterate through all the data points and accumulate inliers
-@njit(parallel=True)
+#@njit(parallel=True)
 def accumulate_inliers(xyz, radial_list, iterations, best_vote, epsilon, early_stop=None):
 
     if early_stop is None:

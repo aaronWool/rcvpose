@@ -1,0 +1,16 @@
+Yangzheng's est radial maps:
+ADDs of ape before ICP: 1.0
+ADDs of ape after ICP: 1.0
+AUC of ape before ICP: 0.9500000000000001
+AUC of ape after ICP: 0.9500000000000001
+Average offset: 0.010341189701777203
+Average Std of offset: 0.0063756474028434165
+
+Model Output:
+ADDs of ape before ICP: 0.9266666666666666
+ADDs of ape after ICP: 1.0
+AUC of ape before ICP: 0.9163809523809525
+AUC of ape after ICP: 0.9500000000000001
+Average offset: 16.56288030736788
+Average Std of offset: 28.718474399825624
+

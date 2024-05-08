@@ -12,9 +12,12 @@ from tqdm import tqdm
 import random
 import open3d as o3d
 import warnings
+import torch
 warnings.filterwarnings("ignore")
 
 lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+
+
 
 linemod_K = np.array([[572.4114, 0., 325.2611],
                   [0., 573.57043, 242.04899],
@@ -133,12 +136,12 @@ def test_epsilon(root_dataset, out_dir):
                     break
 
             # create a histogram of the epsilon values
-            #plt.hist(epsilons, bins=300)
-            #plt.title('Epsilon Histogram')
-            #plt.xlabel('Epsilon')
-            #plt.ylabel('Frequency')
-            #plt.savefig(out_dir + class_name + '/' + str(filename) + '.png')
-            #plt.close() 
+            plt.hist(epsilons, bins=300)
+            plt.title('Epsilon Histogram')
+            plt.xlabel('Epsilon')
+            plt.ylabel('Frequency')
+            plt.savefig(out_dir + class_name + '/' + str(filename) + '.png')
+            plt.close() 
         
         # create a histogram of the epsilon values for the class
         # remove outliers 
