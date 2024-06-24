@@ -46,7 +46,7 @@ def read_depth(path):
 
 
 def test_epsilon(root_dataset, out_dir):
-    epsilons = []
+ 
     
     for class_name in lm_cls_names:
         print ('class_name:', class_name)
@@ -81,7 +81,7 @@ def test_epsilon(root_dataset, out_dir):
         keypoints = keypoints[1:4]
         #random_files = random.sample(test_list, 5)
         for filename in tqdm(test_list, total=len(test_list), unit='image', leave=False):
-            
+            epsilons = []
             # Read in rotation and translation matrix
             RTGT = np.load(root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
             
@@ -135,13 +135,17 @@ def test_epsilon(root_dataset, out_dir):
                 if keypoint_count == 3:
                     break
 
-            # create a histogram of the epsilon values
             plt.hist(epsilons, bins=300)
-            plt.title('Epsilon Histogram')
+            plt.title('Epsilon Histogram using masked radial map for file: ' + filename)
             plt.xlabel('Epsilon')
             plt.ylabel('Frequency')
             plt.savefig(out_dir + class_name + '/' + str(filename) + '.png')
             plt.close() 
+            plt.hist(epsilons, bins=300)
+            exit()
+
+
+        
         
         # create a histogram of the epsilon values for the class
         # remove outliers 
@@ -152,13 +156,7 @@ def test_epsilon(root_dataset, out_dir):
         plt.savefig(out_dir + class_name + '/class_epsilon_with_cutoff_at_2mm.png')
         #plt.show()
         plt.close()
-    plt.hist (epsilons, bins=2000)
-    plt.title('Epsilon Histogram')
-    plt.xlabel('Epsilon')
-    plt.ylabel('Frequency')
-    plt.savefig(out_dir + 'all_classes_epsilon.png')
-    plt.show()
-    plt.close()
+
 
 
 
@@ -170,7 +168,7 @@ if __name__ == "__main__":
                         type=str,
                         default='D:/')
     
-    out_dir = 'logs/epsilon_test/'
+    out_dir = 'logs/radial_error_test_from_file/'
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 

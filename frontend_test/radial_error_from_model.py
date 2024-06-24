@@ -93,7 +93,7 @@ def read_depth(path):
 
 
 def test_epsilon(root_dataset, out_dir):
-    epsilons = []
+   
     
     for class_name in lm_cls_names:
         print ('class_name:', class_name)
@@ -151,6 +151,7 @@ def test_epsilon(root_dataset, out_dir):
         keypoints = keypoints[1:4]
         #random_files = random.sample(test_list, 5)
         for filename in tqdm(test_list, total=len(test_list), unit='image', leave=False):
+            epsilons = []
             
             # Read in rotation and translation matrix
             RTGT = np.load(root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
@@ -218,13 +219,13 @@ def test_epsilon(root_dataset, out_dir):
                     break
 
   
-            #plt.hist(epsilons, bins=300)
-            plt.title('Epsilon Histogram')
+            plt.hist(epsilons, bins=10)
+            plt.title('Epsilon Histogram using model checkpoints for file: ' + filename)
             plt.xlabel('Epsilon')
             plt.ylabel('Frequency')
             plt.savefig(out_dir + class_name + '/' + str(filename) + '.png')
             plt.close() 
-        
+            exit()
 
       
         print ('Radial Error Mean[mm]: ', np.mean(class_epsilons))
@@ -248,7 +249,7 @@ if __name__ == "__main__":
                         type=str,
                         default='D:/')
     
-    out_dir = 'logs/epsilon_test2/'
+    out_dir = 'logs/radial_error_test_from_model2/'
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 

@@ -992,7 +992,7 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    output_dir = 'logs/eps_test_ape_w_model/'
+    output_dir = 'logs/eps_test_ape_w_model2/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -1004,7 +1004,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 0.1
+        eps = 0.6
         eps_list = []
         offset_list = []
         offset_list_w_refinement = []
@@ -1015,7 +1015,7 @@ if __name__ == "__main__":
         fps_list_w_refinement = []
         iteration_list = []
         iterations = [5, 10, 15, 20, 30, 40, 50, 60, 100, 200, 400]
-        while eps < 1.0:
+        while eps < 3.0:
             itr = 5000
             print("Current eps: ", eps)
             offset, stds, fps, offset_w_refinement, std_w_refinement, fps_w_refinement, obj_size, inlier  = estimate_6d_pose_lm(opts, eps, itr)
