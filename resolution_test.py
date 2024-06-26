@@ -17,8 +17,9 @@ from sklearn import metrics
 import scipy
 
 
-lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 
+lm_cls_names = ['ape']
 
 #lm_cls_names = ['holepuncher','iron','lamp','phone']
 
@@ -544,7 +545,7 @@ def estimate_6d_pose_lm(opts, resolution):
 
         if opts.using_ckpts:
             for i in range(1,4):
-                model_path = opts.model_dir + class_name+"_pt"+str(i)+".pth.tar"
+                model_path = rootpvPath + 'models/'+class_name+"_pt"+str(i)+".pth.tar"
                 model = DenseFCNResNet152(3,2)
                 #model = torch.nn.DataParallel(model)
                 #checkpoint = torch.load(model_path)
@@ -916,7 +917,7 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../datasets/test/')
+                    default='D:/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
@@ -925,7 +926,7 @@ if __name__ == "__main__":
                     default=False)  
     parser.add_argument('--using_ckpts',
                     type=bool,
-                    default=False)
+                    default=True)
     parser.add_argument('--dataset',
                         type=str,
                         default='lm',
@@ -939,13 +940,13 @@ if __name__ == "__main__":
     
     opts = parser.parse_args()   
 
-    out_dir = 'logs/results_acc/'
+    out_dir = 'logs/model_resolution_test/'
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
     if opts.dataset == 'lm':
-        resolutions = [16, 8, 5, 4, 2, 1]
-        offsets, std_offsets, fps = [], [], []
+        resolutions = [16, 8, 5, 4, 2, 1, 0.5]
+        offsets, std_offsets, fps, res = [], [], [], []
         for resolution in resolutions:
             print("Resolution: ", resolution)
             mean_offset, std_offset, mean_fps = estimate_6d_pose_lm(opts, resolution)
@@ -955,16 +956,17 @@ if __name__ == "__main__":
             offsets.append(mean_offset)
             std_offsets.append(std_offset)
             fps.append(mean_fps)
+            res.append(resolution)
 
-            plt.plot(resolutions, offsets, label='Mean error', color='blue')
-            plt.errorbar(resolutions, offsets, yerr=std_offsets, fmt='o', color='blue')
+            plt.plot(res, offsets, label='Mean error', color='blue')
+            plt.errorbar(res, offsets, yerr=std_offsets, fmt='o', color='blue')
             plt.title('Mean error vs resolution')
             plt.xlabel('Resolution [mm]')
             plt.ylabel('Mean error [mm]')
             plt.savefig(out_dir+'mean_error_vs_resolution.png')
             plt.close()
 
-            plt.plot(resolutions, fps)
+            plt.plot(res, fps)
             plt.title('FPS vs resolution')
             plt.xlabel('Resolution [mm]')
             plt.ylabel('FPS')

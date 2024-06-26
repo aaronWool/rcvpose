@@ -19,6 +19,9 @@ import scipy
 
 lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 
+lm_cls_names = ['ape']
+
+
 lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
 
 ycb_cls_names={1:'002_master_chef_can',
@@ -539,7 +542,7 @@ def estimate_6d_pose_lm(opts):
 
         if opts.using_ckpts:
             for i in range(1,4):
-                model_path = opts.model_dir + class_name+"_pt"+str(i)+".pth.tar"
+                model_path = rootpvPath + 'models/'+class_name+"_pt"+str(i)+".pth.tar"
                 model = DenseFCNResNet152(3,2)
                 #model = torch.nn.DataParallel(model)
                 #checkpoint = torch.load(model_path)
@@ -654,9 +657,8 @@ def estimate_6d_pose_lm(opts):
                             toc = time.time_ns()
                         if opts.frontend == 'RANSAC':
                             tic = time.time_ns()
-                            center_mm_s, _ = RANSAC_refine(xyz, radial_list, 100, 0.1)
+                            center_mm_s, _ = RANSAC_refine(xyz, radial_list, 1000, 0.1)
                             # x, y, z = center_est(xyz, radial_list)
-                            center_mm_s = np.array([x, y, z])
                             toc = time.time_ns()
                     
                             
@@ -1332,7 +1334,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='Datasets/LINEMOD/')
+                    default='D:/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
@@ -1341,10 +1343,10 @@ if __name__ == "__main__":
                     default=False)  
     parser.add_argument('--using_ckpts',
                     type=bool,
-                    default=False)
+                    default=True)
     parser.add_argument('--dataset',
                         type=str,
-                        default='lmo',
+                        default='lm',
                         choices=['lm', 'lmo', 'ycb']) 
     parser.add_argument('--frontend',
                         type=str,
@@ -1353,7 +1355,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--out_dir',
                         type=str,
-                        default='logs/lmo/')
+                        default='logs/ape_model_test/')
 
 
     

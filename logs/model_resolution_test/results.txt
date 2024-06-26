@@ -1,0 +1,5 @@
+Resolution: 16 mm, Mean error: 38.150434238826676 mm, Std error: 28.179179225793852 mm, Mean FPS: 37.29759106168107
+Resolution: 8 mm, Mean error: 20.32526776085223 mm, Std error: 23.81295544128964 mm, Mean FPS: 4.168407022482177
+Resolution: 5 mm, Mean error: 15.85174404815812 mm, Std error: 22.57602217429659 mm, Mean FPS: 1.0856631322005696
+Resolution: 4 mm, Mean error: 13.86060091957172 mm, Std error: 19.48900465704258 mm, Mean FPS: 0.5673911193423641
+Resolution: 2 mm, Mean error: 11.884498684998004 mm, Std error: 17.401245257483538 mm, Mean FPS: 0.07092625245636146

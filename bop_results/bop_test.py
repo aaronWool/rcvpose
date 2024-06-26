@@ -155,7 +155,8 @@ def read_depth(path):
     return depth
 
 
-def refine_estimation_with_icp(source_points, target_points, initial_transformation, obj):
+
+def refine_estimation_with_icp(source_points, target_points, initial_transformation, obj, debug, bf_icp, af_icp):
     """
     Refines the estimation of rotation and translation between source and target point sets using ICP.
 
@@ -167,27 +168,61 @@ def refine_estimation_with_icp(source_points, target_points, initial_transformat
     Returns:
     - refined_transformation: np.ndarray of shape (4, 4), refined transformation matrix after ICP.
     """
-    # Convert numpy arrays to Open3D point clouds
+
     source_pc = o3d.geometry.PointCloud()
     target_pc = o3d.geometry.PointCloud()
     source_pc.points = o3d.utility.Vector3dVector(source_points)
     target_pc.points = o3d.utility.Vector3dVector(target_points)
 
-    # Run ICP refinement
-    if np.asarray(target_pc.compute_point_cloud_distance(source_pc)).size > 0:
-        threshold = np.asarray(target_pc.compute_point_cloud_distance(source_pc)).min()
-    else:
-        print ('No points found')
-        return initial_transformation
+
+    if obj in lm_syms:
+        if np.asarray(target_pc.compute_point_cloud_distance(source_pc)).size > 0:
+            threshold = np.asarray(target_pc.compute_point_cloud_distance(source_pc)).min()
+            if debug:
+                if threshold <= add_threshold[obj]:
+                    bf_icp += 1       
+        else:
+            print ('No points found')
+            return initial_transformation
+    else: 
+        if np.asarray(target_pc.compute_point_cloud_distance(source_pc)).size > 0:
+            threshold = np.asarray(target_pc.compute_point_cloud_distance(source_pc)).mean()
+            if debug:
+                if threshold <= add_threshold[obj]:
+                    bf_icp += 1
+        else:
+            print ('No points found')
+            return initial_transformation
     
     criteria = o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness=add_threshold[obj],
                                                                   relative_rmse=add_threshold[obj],
                                                                     max_iteration=30)
-    
     result = o3d.pipelines.registration.registration_icp(
         source_pc, target_pc, threshold, initial_transformation,
         o3d.pipelines.registration.TransformationEstimationPointToPoint(),
         criteria)
+
+    if obj in lm_syms:
+        if np.asarray(target_pc.compute_point_cloud_distance(source_pc)).size > 0:
+            threshold = np.asarray(target_pc.compute_point_cloud_distance(source_pc)).min()
+            if debug:
+                if threshold <= add_threshold[obj]:
+                    af_icp += 1
+        else:
+            print ('No points found')
+    else:
+        if np.asarray(target_pc.compute_point_cloud_distance(source_pc)).size > 0:
+            threshold = np.asarray(target_pc.compute_point_cloud_distance(source_pc)).mean()
+            if debug:
+                if threshold <= add_threshold[obj]:
+                    af_icp += 1
+        else:
+            print ('No points found')
+
+    if debug:
+        print ('Before ICP: ', bf_icp)
+        print ('After ICP: ', af_icp)
+        print()
 
     return result.transformation
 
@@ -223,6 +258,10 @@ def estimate_6d_pose_lmo(opts):
     point_clouds = []
     obj_keypoints = []
     obj_max_radii = []
+    
+    bf_icp = 0
+    af_icp = 0
+
 
     for obj in lmo_cls_names:
         objs.append(obj)
@@ -245,7 +284,7 @@ def estimate_6d_pose_lmo(opts):
     depth_path = occ_path + 'RGB-D/depth_noseg/'
 
     file_count = len(os.listdir(jpg_path))
-
+    
     csv_path = opts.out_dir + 'estimated_data.csv'
     if os.path.exists(csv_path):
         os.remove(csv_path)
@@ -259,8 +298,10 @@ def estimate_6d_pose_lmo(opts):
 
     for filename in tqdm(os.listdir(jpg_path), disable=debug, total=file_count, desc='Processing images', position=0, leave=True, unit='image'):
 
+
         stripped_filename = filename.split('_')[1].split('.')[0]
         img_id = int(stripped_filename)
+
         if debug:
             print ('Processing image: ', img_id, ' ', general_counter, '/', file_count)
 
@@ -324,9 +365,9 @@ def estimate_6d_pose_lmo(opts):
                         +(transformed_gt_center[i+1,1]-center_mm_s[1])**2
                             +(transformed_gt_center[i+1,2]-center_mm_s[2])**2)**0.5
                 
-                if debug:
-                    print ('\tKeypoint ', str(keypoint_count), ' Offset: ', offset, 'mm')
-                    print ('\tRANSAC time: ', toc-tic, 's')
+                # if debug:
+                #     print ('\tKeypoint ', str(keypoint_count), ' Offset: ', offset, 'mm')
+                #     print ('\tRANSAC time: ', toc-tic, 's')
 
                 estimated_kpts[i] = center_mm_s
 
@@ -340,22 +381,23 @@ def estimate_6d_pose_lmo(opts):
             RTGT_mm[:, 3] = RTGT_mm[:, 3]*1000
             toc = time.time()
 
-            if debug:
-                print ('Horn time: ', toc-tic, 's')
-                print ('GT Rotation:\n', RTGT_mm[0:3, 0:3])
-                print ('GT Translation:\n', RTGT_mm[0:3, 3])
-                print ('Estimated Rotation:\n', RT[0:3, 0:3])
-                print ('Estimated Translation:\n', RT[0:3, 3])
+            # if debug:
+            #     print ('Horn time: ', toc-tic, 's')
+            #     print ('GT Rotation:\n', RTGT_mm[0:3, 0:3])
+            #     print ('GT Translation:\n', RTGT_mm[0:3, 3])
+            #     print ('Estimated Rotation:\n', RT[0:3, 0:3])
+            #     print ('Estimated Translation:\n', RT[0:3, 3])
 
             _, xyz_load_transformed=project(xyz_load*1000, linemod_K, RTGT_mm)
             _, xyz_load_est_transformed=project(xyz_load*1000, linemod_K, RT[0:3,:])
 
+
             if opts.icp:
                 tic = time.time()
-                refined_RT = refine_estimation_with_icp(xyz_load_transformed, xyz_load_est_transformed, RT, obj)
+                refined_RT = refine_estimation_with_icp(xyz_load_transformed, xyz_load_est_transformed, RT, obj, debug, bf_icp, af_icp)
                 toc = time.time()
-                if debug:
-                    print ('ICP time: ', toc-tic, 's')
+                # if debug:
+                #     print ('ICP time: ', toc-tic, 's')
             else:
                 refined_RT = RT
 
@@ -368,9 +410,9 @@ def estimate_6d_pose_lmo(opts):
                 't': ' '.join(map(str, refined_RT[0:3, 3])),
             })
 
-            if debug:
-                print ('Refined Rotation: \n', refined_RT[0:3, 0:3])
-                print ('Refined Translation: \n', refined_RT[0:3, 3])
+            # if debug:
+            #     print ('Refined Rotation: \n', refined_RT[0:3, 0:3])
+            #     print ('Refined Translation: \n', refined_RT[0:3, 3])
                 
 
         end_time = time.time()
@@ -405,7 +447,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--out_dir',
                         type=str,
-                        default='logs/test1/')
+                        default='logs/test5_mxitr/')
     
     parser.add_argument('--verbose',
                         type=bool,
@@ -413,7 +455,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--iterations',
                         type=int,
-                        default=100)
+                        default=5000)
     
     parser.add_argument('--epsilon',
                         type=float,
