@@ -1,0 +1,450 @@
+====================
+Results for ape
+Mean Offset: 0.0
+ADDs of ape before ICP: 1.0
+ADDs of ape after ICP: 1.0
+====================
+====================
+Results for ape
+Mean Offset: 0.005074183524507318
+ADDs of ape before ICP: 1.0
+ADDs of ape after ICP: 1.0
+====================
+====================
+Results for ape
+Mean Offset: 0.010746100538825036
+ADDs of ape before ICP: 1.0
+ADDs of ape after ICP: 1.0
+====================
+====================
+Results for ape
+Mean Offset: 0.015888325958344694
+ADDs of ape before ICP: 0.978494623655914
+ADDs of ape after ICP: 0.978494623655914
+====================
+====================
+Results for ape
+Mean Offset: 0.018725567373969344
+ADDs of ape before ICP: 0.9623655913978495
+ADDs of ape after ICP: 0.9623655913978495
+====================
+====================
+Results for ape
+Mean Offset: 0.02461227315827353
+ADDs of ape before ICP: 0.9301075268817204
+ADDs of ape after ICP: 0.9301075268817204
+====================
+====================
+Results for ape
+Mean Offset: 0.031123075324179968
+ADDs of ape before ICP: 0.8494623655913979
+ADDs of ape after ICP: 0.8494623655913979
+====================
+====================
+Results for ape
+Mean Offset: 0.034889188485210845
+ADDs of ape before ICP: 0.7419354838709677
+ADDs of ape after ICP: 0.7419354838709677
+====================
+====================
+Results for ape
+Mean Offset: 0.03756887467441771
+ADDs of ape before ICP: 0.7526881720430108
+ADDs of ape after ICP: 0.7526881720430108
+====================
+====================
+Results for ape
+Mean Offset: 0.045254263325968526
+ADDs of ape before ICP: 0.7096774193548387
+ADDs of ape after ICP: 0.7096774193548387
+====================
+====================
+Results for ape
+Mean Offset: 0.04951903488839585
+ADDs of ape before ICP: 0.5591397849462365
+ADDs of ape after ICP: 0.5591397849462365
+====================
+====================
+Results for ape
+Mean Offset: 0.05768602012366383
+ADDs of ape before ICP: 0.4838709677419355
+ADDs of ape after ICP: 0.4838709677419355
+====================
+====================
+Results for ape
+Mean Offset: 0.05891915148918601
+ADDs of ape before ICP: 0.5161290322580645
+ADDs of ape after ICP: 0.5161290322580645
+====================
+====================
+Results for ape
+Mean Offset: 0.06320107653230335
+ADDs of ape before ICP: 0.5
+ADDs of ape after ICP: 0.5
+====================
+====================
+Results for ape
+Mean Offset: 0.073922094710935
+ADDs of ape before ICP: 0.3817204301075269
+ADDs of ape after ICP: 0.3817204301075269
+====================
+====================
+Results for ape
+Mean Offset: 0.07379254687123675
+ADDs of ape before ICP: 0.3602150537634409
+ADDs of ape after ICP: 0.3602150537634409
+====================
+====================
+Results for ape
+Mean Offset: 0.07612409250374189
+ADDs of ape before ICP: 0.3548387096774194
+ADDs of ape after ICP: 0.3548387096774194
+====================
+====================
+Results for ape
+Mean Offset: 0.09020588618181297
+ADDs of ape before ICP: 0.3064516129032258
+ADDs of ape after ICP: 0.3064516129032258
+====================
+====================
+Results for ape
+Mean Offset: 0.09424932125484992
+ADDs of ape before ICP: 0.26344086021505375
+ADDs of ape after ICP: 0.26344086021505375
+====================
+====================
+Results for ape
+Mean Offset: 0.09704951124965913
+ADDs of ape before ICP: 0.2903225806451613
+ADDs of ape after ICP: 0.2903225806451613
+====================
+====================
+Results for ape
+Mean Offset: 0.09247291998605435
+ADDs of ape before ICP: 0.2903225806451613
+ADDs of ape after ICP: 0.2903225806451613
+====================
+====================
+Results for ape
+Mean Offset: 0.10501088737603388
+ADDs of ape before ICP: 0.2903225806451613
+ADDs of ape after ICP: 0.2903225806451613
+====================
+====================
+Results for ape
+Mean Offset: 0.11822102383336969
+ADDs of ape before ICP: 0.1881720430107527
+ADDs of ape after ICP: 0.1881720430107527
+====================
+====================
+Results for ape
+Mean Offset: 0.11572882648391129
+ADDs of ape before ICP: 0.23655913978494625
+ADDs of ape after ICP: 0.23655913978494625
+====================
+====================
+Results for ape
+Mean Offset: 0.12176626536368852
+ADDs of ape before ICP: 0.23118279569892472
+ADDs of ape after ICP: 0.23118279569892472
+====================
+====================
+Results for ape
+Mean Offset: 0.12670458453340114
+ADDs of ape before ICP: 0.12903225806451613
+ADDs of ape after ICP: 0.12903225806451613
+====================
+====================
+Results for ape
+Mean Offset: 0.14006225383251128
+ADDs of ape before ICP: 0.15591397849462366
+ADDs of ape after ICP: 0.15591397849462366
+====================
+====================
+Results for ape
+Mean Offset: 0.1318241074528865
+ADDs of ape before ICP: 0.1881720430107527
+ADDs of ape after ICP: 0.1881720430107527
+====================
+====================
+Results for ape
+Mean Offset: 0.14891162896992777
+ADDs of ape before ICP: 0.14516129032258066
+ADDs of ape after ICP: 0.14516129032258066
+====================
+====================
+Results for ape
+Mean Offset: 0.14849887330582498
+ADDs of ape before ICP: 0.16666666666666666
+ADDs of ape after ICP: 0.16666666666666666
+====================
+====================
+Results for ape
+Mean Offset: 0.1505811149823498
+ADDs of ape before ICP: 0.15591397849462366
+ADDs of ape after ICP: 0.15591397849462366
+====================
+====================
+Results for ape
+Mean Offset: 0.1513172165385453
+ADDs of ape before ICP: 0.11827956989247312
+ADDs of ape after ICP: 0.11827956989247312
+====================
+====================
+Results for ape
+Mean Offset: 0.15745458673107665
+ADDs of ape before ICP: 0.11290322580645161
+ADDs of ape after ICP: 0.11290322580645161
+====================
+====================
+Results for ape
+Mean Offset: 0.174614380894251
+ADDs of ape before ICP: 0.10752688172043011
+ADDs of ape after ICP: 0.10752688172043011
+====================
+====================
+Results for ape
+Mean Offset: 0.16750398849989437
+ADDs of ape before ICP: 0.10215053763440861
+ADDs of ape after ICP: 0.10215053763440861
+====================
+====================
+Results for ape
+Mean Offset: 0.17632403578520667
+ADDs of ape before ICP: 0.08064516129032258
+ADDs of ape after ICP: 0.08064516129032258
+====================
+====================
+Results for ape
+Mean Offset: 0.19284841395742386
+ADDs of ape before ICP: 0.053763440860215055
+ADDs of ape after ICP: 0.053763440860215055
+====================
+====================
+Results for ape
+Mean Offset: 0.18572722213055057
+ADDs of ape before ICP: 0.06989247311827956
+ADDs of ape after ICP: 0.06989247311827956
+====================
+====================
+Results for ape
+Mean Offset: 0.18782062057307827
+ADDs of ape before ICP: 0.0967741935483871
+ADDs of ape after ICP: 0.0967741935483871
+====================
+====================
+Results for ape
+Mean Offset: 0.1906183046226862
+ADDs of ape before ICP: 0.12365591397849462
+ADDs of ape after ICP: 0.12365591397849462
+====================
+====================
+Results for ape
+Mean Offset: 0.2016564004714566
+ADDs of ape before ICP: 0.08064516129032258
+ADDs of ape after ICP: 0.08064516129032258
+====================
+====================
+Results for ape
+Mean Offset: 0.21536150471165003
+ADDs of ape before ICP: 0.06451612903225806
+ADDs of ape after ICP: 0.06451612903225806
+====================
+====================
+Results for ape
+Mean Offset: 0.21329758160443693
+ADDs of ape before ICP: 0.07526881720430108
+ADDs of ape after ICP: 0.07526881720430108
+====================
+====================
+Results for ape
+Mean Offset: 0.21685595228434162
+ADDs of ape before ICP: 0.06451612903225806
+ADDs of ape after ICP: 0.06451612903225806
+====================
+====================
+Results for ape
+Mean Offset: 0.21238939381494173
+ADDs of ape before ICP: 0.06451612903225806
+ADDs of ape after ICP: 0.06451612903225806
+====================
+====================
+Results for ape
+Mean Offset: 0.24512035408149255
+ADDs of ape before ICP: 0.05913978494623656
+ADDs of ape after ICP: 0.05913978494623656
+====================
+====================
+Results for ape
+Mean Offset: 0.2247196464201425
+ADDs of ape before ICP: 0.0967741935483871
+ADDs of ape after ICP: 0.0967741935483871
+====================
+====================
+Results for ape
+Mean Offset: 0.24553654346920406
+ADDs of ape before ICP: 0.06989247311827956
+ADDs of ape after ICP: 0.06989247311827956
+====================
+====================
+Results for ape
+Mean Offset: 0.2453813683773598
+ADDs of ape before ICP: 0.04838709677419355
+ADDs of ape after ICP: 0.04838709677419355
+====================
+====================
+Results for ape
+Mean Offset: 0.26246917066256015
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 0.026881720430107527
+====================
+====================
+Results for ape
+Mean Offset: 0.26015105659822785
+ADDs of ape before ICP: 0.04838709677419355
+ADDs of ape after ICP: 0.04838709677419355
+====================
+====================
+Results for ape
+Mean Offset: 0.25352844011489256
+ADDs of ape before ICP: 0.06451612903225806
+ADDs of ape after ICP: 0.06451612903225806
+====================
+====================
+Results for ape
+Mean Offset: 0.24553466645132102
+ADDs of ape before ICP: 0.06451612903225806
+ADDs of ape after ICP: 0.06451612903225806
+====================
+====================
+Results for ape
+Mean Offset: 0.2608321270281586
+ADDs of ape before ICP: 0.03763440860215054
+ADDs of ape after ICP: 0.03763440860215054
+====================
+====================
+Results for ape
+Mean Offset: 0.27944379282685905
+ADDs of ape before ICP: 0.04838709677419355
+ADDs of ape after ICP: 0.04838709677419355
+====================
+====================
+Results for ape
+Mean Offset: 0.27063369946187826
+ADDs of ape before ICP: 0.043010752688172046
+ADDs of ape after ICP: 0.043010752688172046
+====================
+====================
+Results for ape
+Mean Offset: 0.27492354777529754
+ADDs of ape before ICP: 0.043010752688172046
+ADDs of ape after ICP: 0.043010752688172046
+====================
+====================
+Results for ape
+Mean Offset: 0.29194120382766636
+ADDs of ape before ICP: 0.016129032258064516
+ADDs of ape after ICP: 0.016129032258064516
+====================
+====================
+Results for ape
+Mean Offset: 0.2721125021382907
+ADDs of ape before ICP: 0.053763440860215055
+ADDs of ape after ICP: 0.053763440860215055
+====================
+====================
+Results for ape
+Mean Offset: 0.3189800604736889
+ADDs of ape before ICP: 0.04838709677419355
+ADDs of ape after ICP: 0.04838709677419355
+====================
+====================
+Results for ape
+Mean Offset: 0.3147856044804593
+ADDs of ape before ICP: 0.04838709677419355
+ADDs of ape after ICP: 0.04838709677419355
+====================
+====================
+Results for ape
+Mean Offset: 0.31066661242803306
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 0.026881720430107527
+====================
+====================
+Results for ape
+Mean Offset: 0.3064132553667687
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 0.03225806451612903
+====================
+====================
+Results for ape
+Mean Offset: 0.33433110809341987
+ADDs of ape before ICP: 0.016129032258064516
+ADDs of ape after ICP: 0.016129032258064516
+====================
+====================
+Results for ape
+Mean Offset: 0.33087790113162785
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 0.026881720430107527
+====================
+====================
+Results for ape
+Mean Offset: 0.3271409908323017
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 0.021505376344086023
+====================
+====================
+Results for ape
+Mean Offset: 0.3536072434330484
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 0.03225806451612903
+====================
+====================
+Results for ape
+Mean Offset: 0.35493592916689554
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 0.021505376344086023
+====================
+====================
+Results for ape
+Mean Offset: 0.3476089732013073
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 0.026881720430107527
+====================
+====================
+Results for ape
+Mean Offset: 0.3501980747239806
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 0.021505376344086023
+====================
+====================
+Results for ape
+Mean Offset: 0.352093992287524
+ADDs of ape before ICP: 0.043010752688172046
+ADDs of ape after ICP: 0.043010752688172046
+====================
+====================
+Results for ape
+Mean Offset: 0.358667952378402
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 0.021505376344086023
+====================
+====================
+Results for ape
+Mean Offset: 0.3697916165246902
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 0.03225806451612903
+====================
+====================
+Results for ape
+Mean Offset: 0.3403691922286396
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 0.026881720430107527
+====================
+====================
+Results for ape
+Mean Offset: 0.3885019107854492
+ADDs of ape before ICP: 0.005376344086021506
+ADDs of ape after ICP: 0.005376344086021506
+====================
