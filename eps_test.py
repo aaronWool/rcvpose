@@ -742,6 +742,7 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
         plt.ylabel('Frequency')
         plt.title('Distribution of Offsets')
         plt.show()
+        exit()
 
     return np.mean(offsets), np.std(offsets), np.mean(fps), np.mean(offsets_w_refinement), np.std(offsets_w_refinement) , np.mean(fps_w_refinement), np.mean(object_sizes), np.mean(inliers)
     
@@ -976,7 +977,7 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='D:/')
+                    default='../datasets/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
@@ -1011,7 +1012,7 @@ if __name__ == "__main__":
         opts.frontend = 'RANSAC_refine'
 
     if opts.dataset == 'lm':
-        eps = 0.6
+        eps = 1.0
         eps_list = []
         offset_list = []
         offset_list_w_refinement = []
