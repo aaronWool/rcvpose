@@ -5,6 +5,7 @@ from tqdm import tqdm
 import os
 import open3d as o3d
 import time
+from PIL import Image
 import math
 #import h5py
 from sklearn import metrics
@@ -129,6 +130,8 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
     horn = HornPoseFitting()
 
     offsets = []
+    bf_icp_dist = []
+    af_icp_dist = []
 
 
     for class_name in lm_cls_names:
@@ -136,13 +139,16 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
 
         # print("Evaluation on ", class_name)
         rootPath = opts.root_dataset + "LINEMOD_ORIG/"+class_name+"/"
-        rootpvPath = opts.root_dataset +class_name+"/"
-        test_list = open(opts.root_dataset +class_name+"/" +"Split/train.txt","r").readlines()
+        # rootpvPath = opts.root_dataset +class_name+"/"
+        rootpvPath = opts.root_dataset +"LINEMOD/"+class_name+"/"
+        # test_list = open(opts.root_dataset +class_name+"/" +"Split/val.txt","r").readlines()
+        test_list = open(opts.root_dataset +"LINEMOD/"+ class_name+"/" +"Split/train.txt","r").readlines()
         test_list = [ s.replace('\n', '') for s in test_list]
         test_list_len = len(test_list)
-        #print(test_list)
+        
 
-        pcd_load = o3d.io.read_point_cloud(opts.root_dataset +class_name+"/"+class_name+".ply")
+        # pcd_load = o3d.io.read_point_cloud(opts.root_dataset +class_name+"/"+class_name+".ply")
+        pcd_load = o3d.io.read_point_cloud(opts.root_dataset +"LINEMOD/"+class_name+"/"+class_name+".ply")
 
         #time consumption
         net_time = 0
@@ -179,7 +185,10 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
         dataPath = rootpvPath + 'JPEGImages/'
 
         for filename in tqdm(os.listdir(dataPath), desc='Processing '+class_name, leave=False):
-            RTGT = np.load(opts.root_dataset +class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
+        # for filename in os.listdir(dataPath):
+            input_path = dataPath + filename
+            # RTGT = np.load(opts.root_dataset +class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
+            RTGT = np.load(opts.root_dataset +"LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
             estimated_kpts = np.zeros((3,3))
             #filename = '000810.jpg'
             #print("Evaluating ", filename)
@@ -206,7 +215,9 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
 
                         x = random_radius*np.sin(phi)*np.cos(theta)
                         y = random_radius*np.sin(phi)*np.sin(theta)
-                        z = 0#random_radius*np.cos(phi)
+                        # z = 0
+                        z = random_radius*np.cos(phi)
+                        
 
                         random_vector = np.array([x, y, z])
                         keypoint_w_added_noise = transformed_gt_center_mm[keypoint_count] + random_vector
@@ -233,6 +244,8 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                     RT = np.zeros((4, 4))
                     horn.lmshorn(kpts, kpts_w_gaussian_noise, 3, RT)
                     # print(RT)
+                    # print(RTGT)
+                    # print(RT)
                     dump, xyz_load_est_transformed=project(xyz_load*1000, linemod_K, RT[0:3,:])
                     RTGT_mm = RTGT
                     RTGT_mm[:,3] = RTGT_mm[:,3]*1000
@@ -240,7 +253,22 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                     # print(RTGT_mm)
                     dump, xyz_load_transformed=project(xyz_load*1000, linemod_K, RTGT_mm)
 
-                    #xyz_load_est_transformed = xyz_load_est_transformed*1000
+                    # print (xyz_load_transformed)
+                    # print (xyz_load_est_transformed)
+                    # exit()
+                    # xyz_load_transformed = xyz_load_transformed / 1000
+                    # xyz_load_est_transformed = xyz_load_est_transformed / 1000
+                    
+                    # xyz_load_est_transformed = xyz_load_est_transformed*1000
+     
+                    # input_image = np.asarray(Image.open(input_path).convert('RGB'))
+                    # input_image = np.copy(input_image)
+                    # for coor in dump:
+                        # if coor[0] >= 0 and coor[0] < input_image.shape[1] and coor[1] >= 0 and coor[1] < input_image.shape[0]:
+                            # input_image[int(coor[1]),int(coor[0])] = [255,0,0]
+                    # plt.imshow(input_image)
+                    # plt.show()
+
 
                     sceneGT = o3d.geometry.PointCloud()
                     sceneEst = o3d.geometry.PointCloud()
@@ -248,15 +276,20 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                     sceneEst.points=o3d.utility.Vector3dVector(xyz_load_est_transformed)
                     sceneGT.paint_uniform_color(np.array([0,0,1]))
                     sceneEst.paint_uniform_color(np.array([1,0,0]))
+                    
 
 
                     min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
                     distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
 
+                
+
                     if class_name in lm_syms:
+                        bf_icp_dist.append(min_distance)
                         if min_distance <= add_threshold[class_name]*1000:
                             bf_icp+=1
                     else:
+                        bf_icp_dist.append(distance)
                         #print('ADD(s) point distance before ICP: ', distance)
                         if distance <= add_threshold[class_name]*1000:
                             bf_icp+=1
@@ -272,7 +305,9 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                                 auc_adds_count[0, i] += 1
                                 class_auc_adds_count [0, i] += 1
                         i += 1
-
+                    # print ('Distance before ICP: ', distance)
+                    # print ('Successful before ICP: ', bf_icp)
+                    # o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est before icp')
 
                     trans_init = np.asarray([[1, 0, 0, 0],
                                             [0, 1, 0, 0],
@@ -288,15 +323,17 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                         o3d.pipelines.registration.TransformationEstimationPointToPoint(),
                         criteria)
                     sceneGT.transform(reg_p2p.transformation)
-
+             
 
                     #print('ADD(s) point distance after ICP: ', distance)
                     min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
                     distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
                     if class_name in lm_syms:
+                        af_icp_dist.append(min_distance)
                         if min_distance <= add_threshold[class_name]*1000:
                             af_icp+=1
                     else:
+                        af_icp_dist.append(distance)
                         if distance <= add_threshold[class_name]*1000:
                             af_icp+=1      
 
@@ -311,6 +348,9 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                                 auc_adds_count[1, i] += 1
                                 class_auc_adds_count[1, i] += 1
                         i += 1
+                    # print ('Distance after ICP: ', distance)
+                    # print ('Successful after ICP: ', af_icp)
+                    # o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
 
                     general_counter += 1
 
@@ -326,6 +366,8 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
         print ('Gaussian Std Dev: ', std_dev_mm, 'mm')
         print('ADDs of '+class_name+' before ICP: ', bf_icp/general_counter)
         print('ADDs of '+class_name+' after ICP: ', af_icp/general_counter)
+        print ('Mean Point Cloud Distance before ICP: ', np.mean(bf_icp_dist), 'mm')
+        print ('Mean Point Cloud Distance after ICP: ', np.mean(af_icp_dist), 'mm')
         print ('Mean Offset: ', np.mean(offsets))
         # print('AUC of ' + class_name + ' before ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)
         # print('AUC of ' + class_name + ' after ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1)
@@ -335,13 +377,25 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
             f.write('Gaussian Std Dev: '+str(std_dev_mm)+'\n')
             f.write('ADDs of '+class_name+' before ICP: '+str(bf_icp/general_counter)+'\n')
             f.write('ADDs of '+class_name+' after ICP: '+str(af_icp/general_counter)+'\n')
+            f.write('Mean Point Cloud Distance before ICP: '+str(np.mean(bf_icp_dist))+'\n')
+            f.write('Mean Point Cloud Distance after ICP: '+str(np.mean(af_icp_dist))+'\n')
             f.write('Mean Offset: '+str(np.mean(offsets))+'\n')
             # f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)+'\n')
             # f.write('AUC of ' + class_name + ' after ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1)+'\n')
             f.write('='*20+'\n')
+        
+        # histogram of offsets
+        plt.hist(offsets, bins=200, color='b', alpha=0.7, rwidth=0.85)
+        plt.xlabel('Offset (mm)')
+        plt.ylabel('Frequency')
+        plt.title('Offset Histogram')
+        if not os.path.exists(output_dir + 'Offset_Histograms/'):
+            os.makedirs(output_dir + 'Offset_Histograms/')
+        plt.savefig(output_dir + 'Offset_Histograms/r'+str(mean_radius_mm)+'_s'+str(std_dev_mm)+'.png')
+        plt.close()
 
     # return np.mean(offsets), bf_icp/general_counter, af_icp/general_counter, metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1, metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1
-    return np.mean(offsets), bf_icp/general_counter, af_icp/general_counter
+    return np.mean(offsets), bf_icp/general_counter, af_icp/general_counter, np.mean(bf_icp_dist), np.mean(af_icp_dist)
 
 
 
@@ -355,13 +409,11 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../datasets/')
-
-
+                    default='D:/')
 
     opts = parser.parse_args()
 
-    output_dir = 'logs/keypoint_test/ext/'
+    output_dir = 'logs/keypoint_test/my_dataset/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -370,22 +422,26 @@ if __name__ == "__main__":
     bf_icps = []
     af_icps = []
     mean_offsets = []
-    i=0
+    mean_dist_bf_icp = []
+    mean_dist_af_icp = []
+    i=1.0
 
-    while i < 20.0:
-        mean = 300
-        std = 200
+    while i < 300.0:
+        mean = i
+        std = i/2
         means.append(mean)
         stds.append(std)
-        mean_offset, bf_icp, af_icp  = estimate_6d_pose_lm(opts, mean, std)
+        mean_offset, bf_icp, af_icp, dist_bf_icp, dist_af_icp  = estimate_6d_pose_lm(opts, mean, std)
 
         mean_offsets.append(mean_offset)
         bf_icps.append(bf_icp)
         af_icps.append(af_icp)
+        mean_dist_bf_icp.append(dist_bf_icp)
+        mean_dist_af_icp.append(dist_af_icp)
+
 
         plt.plot(mean_offsets, bf_icps, label='Before ICP')
         plt.plot(mean_offsets, af_icps, label='After ICP')
-
         plt.xlabel('Mean Offset (mm)')
         plt.ylabel('ADDs')
         plt.legend()
@@ -407,5 +463,24 @@ if __name__ == "__main__":
         plt.legend()
         plt.savefig(output_dir + 'ADDs_vs_StdDev.png')
         plt.close()
+
+        plt.plot(mean_offsets, mean_dist_bf_icp, label='Before ICP')
+        plt.plot(mean_offsets, mean_dist_af_icp, label='After ICP')
+        plt.xlabel('Mean Offset (mm)')
+        plt.ylabel('Mean Point Cloud Distance (mm)')
+        plt.legend()
+        plt.savefig(output_dir + 'MeanDist_vs_MeanOffset.png')
+        plt.close()
+
+        # make a plot that shows the affect of mean and std dev on the ADDs bf and af ICP
+        plt.plot(means, bf_icps, label='Gaussian Mean vs ADDs Before ICP', color='b', linestyle='solid')
+        plt.plot(means, af_icps, label='Gaussian Mean vs ADDs After ICP', color='orange', linestyle='solid')
+        plt.plot(stds, bf_icps, label='Gaussian Std Dev vs ADDs Before ICP', color='g', linestyle='dashed')
+        plt.plot(stds, af_icps, label='Gaussian Std Dev vs ADDs After ICP', color='r', linestyle='dashed')
+        plt.xlabel('Gaussian Mean or Standard Deviation (mm)')
+        plt.ylabel('ADDs')
+        plt.legend()
+        plt.savefig(output_dir + 'ADDs_vs_Gaussian.png')
+        plt.close()
         
-        i+=0.01
+        i+=2

@@ -706,7 +706,10 @@ def estimate_6d_pose_lm(opts):
                     RTGT_mm[:,3] = RTGT_mm[:,3]*1000
                     #print(RTGT_mm)
                     dump, xyz_load_transformed=project(xyz_load*1000, linemod_K, RTGT_mm)
-                    
+                    # print (xyz_load_transformed)
+                    # print (xyz_load_est_transformed)
+                    # exit()
+
                     #xyz_load_est_transformed = xyz_load_est_transformed*1000
                     if opts.demo_mode:
                         input_image = np.asarray(Image.open(input_path).convert('RGB'))
