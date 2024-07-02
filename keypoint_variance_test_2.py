@@ -409,7 +409,7 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='D:/')
+                    default='../datasets/')
 
     opts = parser.parse_args()
 
