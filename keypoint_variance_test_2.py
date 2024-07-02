@@ -252,67 +252,67 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
 
                     min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
                     distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
-                    if distance <= add_threshold[class_name]*1000:
-                        bf_icp+=1
 
-                    scene = o3d.geometry.PointCloud()
-                    scene.points = o3d.utility.Vector3dVector(xyz_load_est_transformed)
-                    cad_model = o3d.geometry.PointCloud()
-                    cad_model.points = o3d.utility.Vector3dVector(xyz_load*1000)
-                    # trans_init = np.asarray([[1, 0, 0, 0],
-                    #                         [0, 1, 0, 0],
-                    #                         [0, 0, 1, 0],
-                    #                         [0, 0, 0, 1]])
-                    trans_init = RT
-                    #if class_name in lm_syms:
-                    #    threshold = min_distance
-                    #else:
-                    threshold = distance
-                    criteria = o3d.pipelines.registration.ICPConvergenceCriteria()
+                    if class_name in lm_syms:
+                        if min_distance <= add_threshold[class_name]*1000:
+                            bf_icp+=1
+                    else:
+                        #print('ADD(s) point distance before ICP: ', distance)
+                        if distance <= add_threshold[class_name]*1000:
+                            bf_icp+=1
+
+                    i = 0
+                    for threshold in auc_threshold:
+                        if class_name in lm_syms:
+                            if min_distance <= threshold*1000:
+                                auc_adds_count[0, i] += 1
+                                class_auc_adds_count [0, i] += 1
+                        else:
+                            if distance <= threshold*1000:
+                                auc_adds_count[0, i] += 1
+                                class_auc_adds_count [0, i] += 1
+                        i += 1
+
+
+                    trans_init = np.asarray([[1, 0, 0, 0],
+                                            [0, 1, 0, 0],
+                                            [0, 0, 1, 0], 
+                                            [0, 0, 0, 1]])
+                    if class_name in lm_syms:
+                        threshold = min_distance
+                    else:
+                        threshold = distance
+                    criteria = o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000)
                     reg_p2p = o3d.pipelines.registration.registration_icp(
-                        cad_model, scene, threshold, trans_init,
+                        sceneGT, sceneEst,  threshold, trans_init,
                         o3d.pipelines.registration.TransformationEstimationPointToPoint(),
                         criteria)
-                    cad_model.transform(reg_p2p.transformation)
+                    sceneGT.transform(reg_p2p.transformation)
 
-                    distance = np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).mean()
-                    if distance <= add_threshold[class_name]*1000:
-                        af_icp+=1
+
+                    #print('ADD(s) point distance after ICP: ', distance)
+                    min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
+                    distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
+                    if class_name in lm_syms:
+                        if min_distance <= add_threshold[class_name]*1000:
+                            af_icp+=1
+                    else:
+                        if distance <= add_threshold[class_name]*1000:
+                            af_icp+=1      
+
+                    i = 0
+                    for threshold in auc_threshold:
+                        if class_name in lm_syms:
+                            if min_distance <= threshold*1000:
+                                auc_adds_count[1, i] += 1
+                                class_auc_adds_count [1, i] += 1
+                        else:
+                            if distance <= threshold*1000:
+                                auc_adds_count[1, i] += 1
+                                class_auc_adds_count[1, i] += 1
+                        i += 1
+
                     general_counter += 1
-                    # print('Current ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
-                    # print('Currnet ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter)
-                
-                    # if class_name in lm_syms:
-                    #     if min_distance <= add_threshold[class_name]*1000:
-                    #         af_icp+=1
-                    # else:
-                    #     if distance <= add_threshold[class_name]*1000:
-                    #         af_icp+=1
-
-                    # i = 0
-                    # for threshold in auc_threshold:
-                    #     if class_name in lm_syms:
-                    #         if min_distance <= threshold*1000:
-                    #             auc_adds_count[1, i] += 1
-                    #             class_auc_adds_count [1, i] += 1
-                    #     else:
-                    #         if distance <= threshold*1000:
-                    #             auc_adds_count[1, i] += 1
-                    #             class_auc_adds_count[1, i] += 1
-                    #     i += 1
-
-                    # general_counter += 1
-
-                    # print('Mean Offset: ', np.mean(offsets))
-                    # print('Current ADD\(s\) of '+class_name+' before ICP: ', bf_icp/general_counter)
-                    # print('Currnet ADD\(s\) of '+class_name+' after ICP: ', af_icp/general_counter)
-                    # print('Current AUC of ' + class_name + ' before ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)
-                    # print('Current AUC of ' + class_name + ' after ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1)
-                    # print('Processed: ', round((general_counter/test_list_len)*100, 2), '%\n')
-                    # break
-
-                    # if general_counter > 20:
-                        # break
 
                     if general_counter/test_list_len == 1:
                         break
@@ -361,7 +361,7 @@ if __name__ == "__main__":
 
     opts = parser.parse_args()
 
-    output_dir = 'logs/keypoint_test/6/'
+    output_dir = 'logs/keypoint_test/ext/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -372,9 +372,9 @@ if __name__ == "__main__":
     mean_offsets = []
     i=0
 
-    while i < 1.0:
-        mean = i
-        std = 0
+    while i < 20.0:
+        mean = 300
+        std = 200
         means.append(mean)
         stds.append(std)
         mean_offset, bf_icp, af_icp  = estimate_6d_pose_lm(opts, mean, std)

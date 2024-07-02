@@ -1,0 +1,18 @@
+Gaussian Mean: 20
+Gaussian Std Dev: 10
+ADDs of ape before ICP: 0.0
+ADDs of ape after ICP: 1.0
+Mean Offset: 12.809736355938583
+====================
+Gaussian Mean: 30
+Gaussian Std Dev: 20
+ADDs of ape before ICP: 0.0
+ADDs of ape after ICP: 1.0
+Mean Offset: 20.43523981041562
+====================
+Gaussian Mean: 300
+Gaussian Std Dev: 200
+ADDs of ape before ICP: 0.0
+ADDs of ape after ICP: 0.6451612903225806
+Mean Offset: 204.03625616296281
+====================

@@ -1,280 +1,600 @@
-====================
-Results for ape
-Mean Offset: 15.023382689926395
+Gaussian Mean: 0
+Gaussian Std Dev: 0
 ADDs of ape before ICP: 1.0
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9494623655913978
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.0
 ====================
-====================
-Results for ape
-Mean Offset: 16.03717975907384
+Gaussian Mean: 0
+Gaussian Std Dev: 0.01
 ADDs of ape before ICP: 1.0
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9483870967741934
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.005069233634880888
 ====================
-====================
-Results for ape
-Mean Offset: 16.9412249874474
+Gaussian Mean: 0
+Gaussian Std Dev: 0.02
 ADDs of ape before ICP: 1.0
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9440860215053762
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.010145097320396984
 ====================
-====================
-Results for ape
-Mean Offset: 17.995106853063376
-ADDs of ape before ICP: 0.9946236559139785
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9408602150537635
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 18.986679528078383
-ADDs of ape before ICP: 1.0
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.938709677419355
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 20.01647667838082
-ADDs of ape before ICP: 0.9946236559139785
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9327956989247311
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 20.954485903701027
+Gaussian Mean: 0
+Gaussian Std Dev: 0.03
 ADDs of ape before ICP: 0.9838709677419355
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9317204301075269
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.014956027362573641
 ====================
-====================
-Results for ape
-Mean Offset: 22.003857061652994
-ADDs of ape before ICP: 0.956989247311828
+Gaussian Mean: 0
+Gaussian Std Dev: 0.04
+ADDs of ape before ICP: 0.9193548387096774
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9333333333333333
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.0208920879315246
 ====================
-====================
-Results for ape
-Mean Offset: 22.97268791326277
-ADDs of ape before ICP: 0.956989247311828
+Gaussian Mean: 0
+Gaussian Std Dev: 0.05
+ADDs of ape before ICP: 0.8870967741935484
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9220430107526881
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.024874092807868838
 ====================
-====================
-Results for ape
-Mean Offset: 23.90845073520076
-ADDs of ape before ICP: 0.9623655913978495
+Gaussian Mean: 0
+Gaussian Std Dev: 0.060000000000000005
+ADDs of ape before ICP: 0.8172043010752689
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9215053763440859
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.030652355322142198
 ====================
-====================
-Results for ape
-Mean Offset: 25.013242723425666
-ADDs of ape before ICP: 0.967741935483871
+Gaussian Mean: 0
+Gaussian Std Dev: 0.07
+ADDs of ape before ICP: 0.7688172043010753
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.917741935483871
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.03479669199348188
 ====================
-====================
-Results for ape
-Mean Offset: 26.072462600726883
-ADDs of ape before ICP: 0.9408602150537635
+Gaussian Mean: 0
+Gaussian Std Dev: 0.08
+ADDs of ape before ICP: 0.6774193548387096
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9198924731182796
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.04238005512813382
 ====================
-====================
-Results for ape
-Mean Offset: 27.039862881315308
-ADDs of ape before ICP: 0.8978494623655914
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9080645161290322
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 28.027252812776215
-ADDs of ape before ICP: 0.8763440860215054
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9021505376344087
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 29.01438802337343
-ADDs of ape before ICP: 0.8709677419354839
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.9043010752688172
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 29.975061406010223
-ADDs of ape before ICP: 0.8064516129032258
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8876344086021506
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 30.961855782567007
-ADDs of ape before ICP: 0.8118279569892473
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8908602150537634
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 32.039150942671434
-ADDs of ape before ICP: 0.8118279569892473
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8946236559139784
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 33.04530322996838
-ADDs of ape before ICP: 0.7580645161290323
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8865591397849463
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 34.003329537626946
-ADDs of ape before ICP: 0.7473118279569892
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8849462365591398
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 35.02117070565353
-ADDs of ape before ICP: 0.7258064516129032
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8784946236559139
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 36.04862873088368
-ADDs of ape before ICP: 0.6451612903225806
-ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8763440860215053
-AUC of ape after ICP: 0.9500000000000001
-====================
-====================
-Results for ape
-Mean Offset: 37.051005468746425
+Gaussian Mean: 0
+Gaussian Std Dev: 0.09
 ADDs of ape before ICP: 0.6505376344086021
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8661290322580646
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.04617564474978886
 ====================
-====================
-Results for ape
-Mean Offset: 37.98012856462805
-ADDs of ape before ICP: 0.6021505376344086
+Gaussian Mean: 0
+Gaussian Std Dev: 0.09999999999999999
+ADDs of ape before ICP: 0.543010752688172
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8650537634408603
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.05138731879587728
 ====================
-====================
-Results for ape
-Mean Offset: 38.95392875972993
-ADDs of ape before ICP: 0.5967741935483871
+Gaussian Mean: 0
+Gaussian Std Dev: 0.10999999999999999
+ADDs of ape before ICP: 0.5376344086021505
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8618279569892474
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.05725943182666847
 ====================
-====================
-Results for ape
-Mean Offset: 39.91317151966653
-ADDs of ape before ICP: 0.5268817204301075
+Gaussian Mean: 0
+Gaussian Std Dev: 0.11999999999999998
+ADDs of ape before ICP: 0.43010752688172044
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8548387096774194
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.06560470927807976
 ====================
-====================
-Results for ape
-Mean Offset: 40.953643485541264
-ADDs of ape before ICP: 0.510752688172043
+Gaussian Mean: 0
+Gaussian Std Dev: 0.12999999999999998
+ADDs of ape before ICP: 0.3924731182795699
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.853225806451613
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.07118861687804552
 ====================
-====================
-Results for ape
-Mean Offset: 41.99107888909949
-ADDs of ape before ICP: 0.521505376344086
+Gaussian Mean: 0
+Gaussian Std Dev: 0.13999999999999999
+ADDs of ape before ICP: 0.46236559139784944
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8553763440860215
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.0725290683564622
 ====================
-====================
-Results for ape
-Mean Offset: 43.014392157899785
-ADDs of ape before ICP: 0.43548387096774194
+Gaussian Mean: 0
+Gaussian Std Dev: 0.15
+ADDs of ape before ICP: 0.45161290322580644
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8403225806451612
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.07136162296237633
 ====================
-====================
-Results for ape
-Mean Offset: 44.0200838099335
-ADDs of ape before ICP: 0.510752688172043
+Gaussian Mean: 0
+Gaussian Std Dev: 0.16
+ADDs of ape before ICP: 0.3387096774193548
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8456989247311828
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.07951174710482423
 ====================
-====================
-Results for ape
-Mean Offset: 45.01642617788351
-ADDs of ape before ICP: 0.45698924731182794
+Gaussian Mean: 0
+Gaussian Std Dev: 0.17
+ADDs of ape before ICP: 0.3279569892473118
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8370967741935484
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.09042742794042206
 ====================
-====================
-Results for ape
-Mean Offset: 46.08211277516892
-ADDs of ape before ICP: 0.44623655913978494
+Gaussian Mean: 0
+Gaussian Std Dev: 0.18000000000000002
+ADDs of ape before ICP: 0.3279569892473118
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8435483870967743
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.08817481546846731
 ====================
-====================
-Results for ape
-Mean Offset: 46.921040033781786
-ADDs of ape before ICP: 0.43548387096774194
+Gaussian Mean: 0
+Gaussian Std Dev: 0.19000000000000003
+ADDs of ape before ICP: 0.3010752688172043
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8387096774193549
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.09598266271223303
 ====================
-====================
-Results for ape
-Mean Offset: 48.0872408428128
-ADDs of ape before ICP: 0.4032258064516129
+Gaussian Mean: 0
+Gaussian Std Dev: 0.20000000000000004
+ADDs of ape before ICP: 0.3548387096774194
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8177419354838711
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.09788464002723173
 ====================
-====================
-Results for ape
-Mean Offset: 49.062842130519
-ADDs of ape before ICP: 0.3333333333333333
+Gaussian Mean: 0
+Gaussian Std Dev: 0.21000000000000005
+ADDs of ape before ICP: 0.2903225806451613
 ADDs of ape after ICP: 1.0
-AUC of ape before ICP: 0.8182795698924731
-AUC of ape after ICP: 0.9500000000000001
+Mean Offset: 0.10793534566662302
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.22000000000000006
+ADDs of ape before ICP: 0.24731182795698925
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.1138601571907121
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.23000000000000007
+ADDs of ape before ICP: 0.1935483870967742
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.12161153076008535
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.24000000000000007
+ADDs of ape before ICP: 0.20430107526881722
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.12488572444797445
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.25000000000000006
+ADDs of ape before ICP: 0.1989247311827957
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.11903727535902746
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.26000000000000006
+ADDs of ape before ICP: 0.1881720430107527
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.12772843874738102
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.2700000000000001
+ADDs of ape before ICP: 0.1774193548387097
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.14341454489345656
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.2800000000000001
+ADDs of ape before ICP: 0.15591397849462366
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.14835632163703788
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.2900000000000001
+ADDs of ape before ICP: 0.16129032258064516
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.1423861653346772
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.3000000000000001
+ADDs of ape before ICP: 0.13440860215053763
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.1512894823230713
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.3100000000000001
+ADDs of ape before ICP: 0.12903225806451613
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.16468748467662497
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.3200000000000001
+ADDs of ape before ICP: 0.11827956989247312
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.15985058609132743
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.3300000000000001
+ADDs of ape before ICP: 0.14516129032258066
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.16595090016317776
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.34000000000000014
+ADDs of ape before ICP: 0.11290322580645161
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.17831668978264498
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.35000000000000014
+ADDs of ape before ICP: 0.10752688172043011
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.1816348403569994
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.36000000000000015
+ADDs of ape before ICP: 0.06989247311827956
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.18811540822951262
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.37000000000000016
+ADDs of ape before ICP: 0.07526881720430108
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.1870124292124004
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.38000000000000017
+ADDs of ape before ICP: 0.08602150537634409
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.1962188732377534
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.3900000000000002
+ADDs of ape before ICP: 0.0967741935483871
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.20626810904741943
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.4000000000000002
+ADDs of ape before ICP: 0.11290322580645161
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.1874497545358519
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.4100000000000002
+ADDs of ape before ICP: 0.08602150537634409
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.19991384343369153
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.4200000000000002
+ADDs of ape before ICP: 0.07526881720430108
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.215094217567642
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.4300000000000002
+ADDs of ape before ICP: 0.07526881720430108
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.21401720213652053
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.4400000000000002
+ADDs of ape before ICP: 0.04838709677419355
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.22570832517866132
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.45000000000000023
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.23375954301299312
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.46000000000000024
+ADDs of ape before ICP: 0.07526881720430108
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.2224232014377392
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.47000000000000025
+ADDs of ape before ICP: 0.053763440860215055
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.23668964924205202
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.48000000000000026
+ADDs of ape before ICP: 0.08602150537634409
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.24607497065506148
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.49000000000000027
+ADDs of ape before ICP: 0.053763440860215055
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.24087352436717638
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5000000000000002
+ADDs of ape before ICP: 0.043010752688172046
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.25006422916705356
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5100000000000002
+ADDs of ape before ICP: 0.06451612903225806
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.26367196449906183
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5200000000000002
+ADDs of ape before ICP: 0.043010752688172046
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.25151393342556444
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5300000000000002
+ADDs of ape before ICP: 0.05913978494623656
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.2561840206335549
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5400000000000003
+ADDs of ape before ICP: 0.053763440860215055
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.25196173506605174
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5500000000000003
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.28336679398820247
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5600000000000003
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.2930652124299028
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5700000000000003
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.31222961896150625
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5800000000000003
+ADDs of ape before ICP: 0.06451612903225806
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.2948908984282251
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.5900000000000003
+ADDs of ape before ICP: 0.04838709677419355
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3035409397935626
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6000000000000003
+ADDs of ape before ICP: 0.043010752688172046
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.30421932672181806
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6100000000000003
+ADDs of ape before ICP: 0.03763440860215054
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3062753657267075
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6200000000000003
+ADDs of ape before ICP: 0.04838709677419355
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.34248265493067587
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6300000000000003
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3042495876687372
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6400000000000003
+ADDs of ape before ICP: 0.06989247311827956
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3342311155079851
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6500000000000004
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.33608834681924843
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6600000000000004
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.32301995759290314
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6700000000000004
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3545371446505857
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6800000000000004
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3566619287883568
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.6900000000000004
+ADDs of ape before ICP: 0.03763440860215054
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3655404426663675
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7000000000000004
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3592136273500817
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7100000000000004
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.35141752155840467
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7200000000000004
+ADDs of ape before ICP: 0.010752688172043012
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3846861879715433
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7300000000000004
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3604966212036706
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7400000000000004
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.36708576750863436
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7500000000000004
+ADDs of ape before ICP: 0.016129032258064516
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.3790461143420233
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7600000000000005
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.36604076938257163
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7700000000000005
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.39553013556180805
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7800000000000005
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.38918245284820163
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.7900000000000005
+ADDs of ape before ICP: 0.03225806451612903
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.4056697815487664
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8000000000000005
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.39669165911601345
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8100000000000005
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.4172037375092741
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8200000000000005
+ADDs of ape before ICP: 0.053763440860215055
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.41642674997677287
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8300000000000005
+ADDs of ape before ICP: 0.0
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.4175637053670876
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8400000000000005
+ADDs of ape before ICP: 0.026881720430107527
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.447436577814119
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8500000000000005
+ADDs of ape before ICP: 0.010752688172043012
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.44733604131418714
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8600000000000005
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.39796783748064346
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8700000000000006
+ADDs of ape before ICP: 0.010752688172043012
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.46276751022894624
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8800000000000006
+ADDs of ape before ICP: 0.0
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.46525675429966046
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.8900000000000006
+ADDs of ape before ICP: 0.043010752688172046
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.4160998459027984
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9000000000000006
+ADDs of ape before ICP: 0.010752688172043012
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.4733651522145569
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9100000000000006
+ADDs of ape before ICP: 0.010752688172043012
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.43992171119052603
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9200000000000006
+ADDs of ape before ICP: 0.016129032258064516
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.47774888484127503
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9300000000000006
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.45062029141592647
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9400000000000006
+ADDs of ape before ICP: 0.010752688172043012
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.4914733802461448
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9500000000000006
+ADDs of ape before ICP: 0.005376344086021506
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.5276661807168272
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9600000000000006
+ADDs of ape before ICP: 0.016129032258064516
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.45178774008601036
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9700000000000006
+ADDs of ape before ICP: 0.010752688172043012
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.5143974505274451
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9800000000000006
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.481294900489452
+====================
+Gaussian Mean: 0
+Gaussian Std Dev: 0.9900000000000007
+ADDs of ape before ICP: 0.021505376344086023
+ADDs of ape after ICP: 1.0
+Mean Offset: 0.47924761205900523
 ====================
