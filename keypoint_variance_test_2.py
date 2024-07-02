@@ -409,11 +409,11 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../datasets/')
+                    default='D:/')
 
     opts = parser.parse_args()
 
-    output_dir = 'logs/keypoint_test/my_dataset/'
+    output_dir = 'logs/keypoint_test/5/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -424,7 +424,7 @@ if __name__ == "__main__":
     mean_offsets = []
     mean_dist_bf_icp = []
     mean_dist_af_icp = []
-    i=1.0
+    i=1
 
     while i < 300.0:
         mean = i
@@ -483,4 +483,4 @@ if __name__ == "__main__":
         plt.savefig(output_dir + 'ADDs_vs_Gaussian.png')
         plt.close()
         
-        i+=2
+        i+=1

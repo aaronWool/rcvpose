@@ -1,0 +1,24 @@
+Gaussian Mean: 1.0
+Gaussian Std Dev: 0.5
+ADDs of ape before ICP: 1.0
+ADDs of ape after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.7641544720148378
+Mean Point Cloud Distance after ICP: 0.0877902722770036
+Mean Offset: 1.0208690928993491
+====================
+Gaussian Mean: 5.0
+Gaussian Std Dev: 2.5
+ADDs of ape before ICP: 1.0
+ADDs of ape after ICP: 1.0
+Mean Point Cloud Distance before ICP: 2.318223900745584
+Mean Point Cloud Distance after ICP: 0.023330286032873057
+Mean Offset: 5.102791068113046
+====================
+Gaussian Mean: 9.0
+Gaussian Std Dev: 4.5
+ADDs of ape before ICP: 1.0
+ADDs of ape after ICP: 1.0
+Mean Point Cloud Distance before ICP: 3.8898079737737588
+Mean Point Cloud Distance after ICP: 0.0054866885029305765
+Mean Offset: 9.328180455853069
+====================
