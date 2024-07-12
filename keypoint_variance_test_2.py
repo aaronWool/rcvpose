@@ -11,9 +11,9 @@ import math
 from sklearn import metrics
 
 
-# lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
 
-lm_cls_names = ['ape']
+# lm_cls_names = ['ape']
 
 
 

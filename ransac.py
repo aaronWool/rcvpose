@@ -201,6 +201,8 @@ def linear_least_squares(xyz, radial_list):
     return np.array([x, y, z])
 
 def RANSAC(xyz, radial_list, iterations, epsilon):
+    assert isinstance(iterations, int), 'iterations must be an integer'
+
     xyz_mm = xyz*1000
     radial_list_mm = radial_list*100    
 
@@ -213,6 +215,7 @@ def RANSAC(xyz, radial_list, iterations, epsilon):
     return center
 
 def RANSAC_refine(xyz, radial_list, iterations, epsilon):
+    assert isinstance(iterations, int), 'iterations must be an integer'
    
     len_xyz = len(xyz)
 

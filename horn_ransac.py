@@ -1,0 +1,747 @@
+from models.fcnresnet import DenseFCNResNet152, ResFCNResNet152
+from util.horn import HornPoseFitting
+import utils
+import torch
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+from numba import jit,njit,cuda
+import os
+import open3d as o3d
+import time
+from ransac import RANSAC, RANSAC_refine
+from numba import prange
+import math
+#import h5py
+from sklearn import metrics
+import scipy
+
+
+#lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
+
+lm_cls_names = ['ape']
+
+
+#lm_cls_names = ['holepuncher','iron','lamp','phone']
+
+
+
+lmo_cls_names = ['ape', 'can', 'cat', 'duck', 'driller',  'eggbox', 'glue', 'holepuncher']
+ycb_cls_names={1:'002_master_chef_can',
+           2:'003_cracker_box',
+           3:'004_sugar_box',
+           4:'005_tomato_soup_can',
+           5:'006_mustard_bottle',
+           6:'007_tuna_fish_can',
+           7:'008_pudding_box',
+           8:'009_gelatin_box',
+           9:'010_potted_meat_can',
+           10:'011_banana',
+           11:'019_pitcher_base',
+           12:'021_bleach_cleanser',
+           13:'024_bowl',
+           14:'025_mug',
+           15:'035_power_drill',
+           16:'036_wood_block',
+           17:'037_scissors',
+           18:'040_large_marker',
+           19:'051_large_clamp',
+           20:'052_extra_large_clamp',
+           21:'061_foam_brick'}
+lm_syms = ['eggbox', 'glue']
+ycb_syms = ['024_bowl','036_wood_block','051_large_clamp','052_extra_large_clamp','061_foam_brick']
+add_threshold = {
+                  'eggbox': 0.019735770122546523,
+                  'ape': 0.01421240983190395,
+                  'cat': 0.018594838977253875,
+                  'cam': 0.02222763033276377,
+                  'duck': 0.015569664208967385,
+                  'glue': 0.01930723067998101,
+                  'can': 0.028415044264086586,
+                  'driller': 0.031877906042,
+                  'holepuncher': 0.019606109985,
+                  'benchvise': .033091264970068,
+                  'iron':.03172344425531,
+                  'lamp':.03165980764376,
+                  'phone':.02543407135792}
+
+linemod_K = np.array([[572.4114, 0., 325.2611],
+                  [0., 573.57043, 242.04899],
+                  [0., 0., 1.]])
+
+#IO function from PVNet
+def project(xyz, K, RT):
+    """
+    xyz: [N, 3]
+    K: [3, 3]
+    RT: [3, 4]
+    """
+    #pointc->actual scene
+    xyz = np.dot(xyz, RT[:, :3].T) + RT[:, 3:].T
+    actual_xyz=xyz
+    xyz = np.dot(xyz, K.T)
+    xy = xyz[:, :2] / xyz[:, 2:]
+    return xy,actual_xyz
+
+def rgbd_to_point_cloud(K, depth):
+    vs, us = depth.nonzero()
+    zs = depth[vs, us]
+    #print(zs.min())
+    #print(zs.max())
+    xs = ((us - K[0, 2]) * zs) / float(K[0, 0])
+    ys = ((vs - K[1, 2]) * zs) / float(K[1, 1])
+    pts = np.array([xs, ys, zs]).T
+    return pts
+    
+def rgbd_to_color_point_cloud(K, depth, rgb):
+    vs, us = depth.nonzero()
+    zs = depth[vs, us]
+    r = rgb[vs,us,0]
+    g = rgb[vs,us,1]
+    b = rgb[vs,us,2]
+    #print(zs.min())
+    #print(zs.max())
+    xs = ((us - K[0, 2]) * zs) / float(K[0, 0])
+    ys = ((vs - K[1, 2]) * zs) / float(K[1, 1])
+    pts = np.array([xs, ys, zs, r, g, b]).T
+    return pts
+
+def rgbd_to_point_cloud_no_depth(K, depth):
+    vs, us = depth.nonzero()
+    zs = depth[vs, us]
+    zs_min = zs.min()
+    zs_max = zs.max()
+    iter_range = int(zs_max*1000)+1-int(zs_min*1000)
+    pts=[]
+    for i in range(iter_range):
+        if(i%1==0):
+            z_tmp = np.empty(zs.shape) 
+            z_tmp.fill(zs_min+i*0.001)
+            xs = ((us - K[0, 2]) * z_tmp) / float(K[0, 0])
+            ys = ((vs - K[1, 2]) * z_tmp) / float(K[1, 1])
+            if(i == 0):
+                pts = np.expand_dims(np.array([xs, ys, z_tmp]).T, axis=0)
+                #print(pts.shape)
+            else:
+                pts = np.append(pts, np.expand_dims(np.array([xs, ys, z_tmp]).T, axis=0), axis=0)
+                #print(pts.shape)
+    print(pts.shape)
+    return pts
+    
+def FCResBackbone(model, input_img_path, normalized_depth):
+    """
+    This is a funciton runs through a pre-trained FCN-ResNet checkpoint
+    Args:
+        model: model obj
+        input_img_path: input image to the model
+    Returns:
+        output_map: feature map estimated by the model
+                    radial map output shape: (1,h,w)
+                    vector map output shape: (2,h,w)
+    """
+    #model = DenseFCNResNet152(3,2)
+    #model = torch.nn.DataParallel(model)
+    #checkpoint = torch.load(model_path)
+    #model.load_state_dict(checkpoint)
+    #optim = torch.optim.Adam(model.parameters(), lr=1e-3)
+    #model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
+    #model.eval()
+    input_image = Image.open(input_img_path).convert('RGB')
+    #plt.imshow(input_image)
+    #plt.show()
+    img = np.array(input_image, dtype=np.float64)
+    img /= 255.
+    img -= np.array([0.485, 0.456, 0.406])
+    img /= np.array([0.229, 0.224, 0.225])
+    img = img.transpose(2, 0, 1)
+    #dpt = np.load(normalized_depth)
+    #img = np.append(img,np.expand_dims(dpt,axis=0),axis=0)
+    input_tensor = torch.from_numpy(img).float()
+
+    input_batch = input_tensor.unsqueeze(0)  # create a mini-batch as expected by the model
+    # use gpu if available
+    if torch.cuda.is_available():
+         input_batch = input_batch.to('cuda')
+         model.to('cuda')
+    with torch.no_grad():
+        sem_out, radial_out = model(input_batch)
+    sem_out, radial_out = sem_out.cpu(), radial_out.cpu()
+
+    sem_out, radial_out = np.asarray(sem_out[0]),np.asarray(radial_out[0])
+    return sem_out[0], radial_out[0]
+
+#@jit(nopython=True)
+def coords_inside_image(rr, cc, shape, val=None):
+    """
+    Modified based on https://github.com/scikit-image/scikit-image/blob/v0.19.2/skimage/draw/draw.py#L484-L544
+    Return the coordinates inside an image of a given shape.
+    Parameters
+    ----------
+    rr, cc : (N,) ndarray of int
+        Indices of pixels.
+    shape : tuple
+        Image shape which is used to determine the maximum extent of output
+        pixel coordinates.  Must be at least length 2. Only the first two values
+        are used to determine the extent of the input image.
+    val : (N, D) ndarray of float, optional
+        Values of pixels at coordinates ``[rr, cc]``.
+    Returns
+    -------
+    rr, cc : (M,) array of int
+        Row and column indices of valid pixels (i.e. those inside `shape`).
+    val : (M, D) array of float, optional
+        Values at `rr, cc`. Returned only if `val` is given as input.
+    """
+    mask = (rr >= 0) & (rr < shape[0]) & (cc >= 0) & (cc < shape[1])
+    if val is None:
+        return rr[mask], cc[mask]
+    else:
+        return rr[mask], cc[mask], val[mask]
+
+#@jit(nopython=True)        
+def circle_perimeter(r_o, c_o, radius, method, shape):
+    """
+    Modified based on https://github.com/scikit-image/scikit-image/blob/v0.19.2/skimage/draw/draw.py#L484-L544
+    Generate circle perimeter coordinates.
+    Parameters
+    ----------
+    r, c : int
+        Centre coordinate of circle.
+    radius : int
+        Radius of circle.
+    method : {'bresenham', 'andres'}
+        bresenham : Bresenham method (default)
+        andres : Andres method
+    shape : tuple
+        Image shape which is used to determine the maximum extent of output pixel
+        coordinates. This is useful for circles that exceed the image size.
+        If None, the full extent of the circle is used.
+    Returns
+    -------
+    rr, cc : (N,) ndarray of int
+        Bresenham and Andres' method:
+        Indices of pixels that belong to the circle perimeter.
+        May be used to directly index into an array, e.g.
+        ``img[rr, cc] = 1``.
+    Notes
+    -----
+    Andres method presents the advantage that concentric
+    circles create a disc whereas Bresenham can make holes. There
+    is also less distortions when Andres circles are rotated.
+    Bresenham method is also known as midpoint circle algorithm.
+    Anti-aliased circle generator is available with `circle_perimeter_aa`.
+    References
+    ----------
+    .. [1] J.E. Bresenham, "Algorithm for computer control of a digital
+           plotter", IBM Systems journal, 4 (1965) 25-30.
+    .. [2] E. Andres, "Discrete circles, rings and spheres", Computers &
+           Graphics, 18 (1994) 695-706.
+    """
+
+    rr = []
+    cc = []
+
+    c = 0
+    r = radius
+    d = 0
+
+    dceil = 0
+    dceil_prev = 0
+
+
+    if method == 'bresenham':
+        d = 3 - 2 * radius
+    elif method == 'andres':
+        d = radius - 1
+    else:
+        raise ValueError('Wrong method')
+
+    while r >= c:
+        rr.extend([r, -r, r, -r, c, -c, c, -c])
+        cc.extend([c, c, -c, -c, r, r, -r, -r])
+
+        if method == 'bresenham':
+            if d < 0:
+                d += 4 * c + 6
+            else:
+                d += 4 * (c - r) + 10
+                r -= 1
+            c += 1
+        elif method == 'andres':
+            if d >= 2 * (c - 1):
+                d = d - 2 * c
+                c = c + 1
+            elif d <= 2 * (radius - r):
+                d = d + 2 * r - 1
+                r = r - 1
+            else:
+                d = d + 2 * (r - c - 1)
+                r = r - 1
+                c = c + 1
+
+    if shape is not None:
+        return coords_inside_image(np.array(rr, dtype=np.intp) + r_o,
+                                    np.array(cc, dtype=np.intp) + c_o,
+                                    shape)
+    return (np.array(rr, dtype=np.intp) + r,
+            np.array(cc, dtype=np.intp) + c)
+
+#@jit(nopython=True,parallel=True)
+def draw_sphere(x_o, r_o, c_o, radius, method, shape):
+    xx=[]
+    yy=[]
+    zz=[]
+    circle_shape = (shape[1],shape[2])
+    radius_tmp = radius
+    radius_decrement = 1
+    # from x center to 0
+    for i in range(x_o,0,-1):
+        yy_tmp, zz_tmp = circle_perimeter(r_o, c_o, radius_tmp, method, circle_shape)
+        radius_tmp =int(np.around((radius**2-radius_decrement**2)*0.5))
+        radius_decrement+=1
+        xx_tmp = np.full(yy_tmp.shape, i)
+        yy.append(yy_tmp)
+        zz.append(zz_tmp)
+        xx.append(xx_tmp)
+    radius_tmp = radius
+    radius_decrement = 1
+    #from x center to up boundary
+    for i in range(x_o,shape[0]-1,1):
+        yy_tmp, zz_tmp = circle_perimeter(r_o, c_o, radius_tmp, method, circle_shape)
+        radius_tmp =int(np.around((radius**2-radius_decrement**2)*0.5))
+        radius_decrement+=1
+        xx_tmp = np.full(yy_tmp.shape, i)
+        yy.append(yy_tmp)
+        zz.append(zz_tmp)
+        xx.append(xx_tmp)
+    return (xx,yy,zz)
+
+def parallel_for(count,xyz_mm,radial_list_mm,VoteMap_3D):
+    xx=[]
+    yy=[]
+    zz=[]
+    xyz = xyz_mm[count]
+    radius = radial_list_mm[count]
+    radius = int(np.around(radial_list_mm[count]))
+    shape = VoteMap_3D.shape
+    
+    xx_,yy_,zz_=draw_sphere(int(np.around(xyz[0])),int(np.around(xyz[1])),int(np.around(xyz[2])),radius,'andres',shape)
+    xx.append(xx_)
+    yy.append(yy_)
+    zz.append(zz_)
+    return xx,yy,zz
+
+@jit(nopython=True,parallel=True)
+#@jit(parallel=True)     
+def fast_for(xyz_mm,radial_list_mm,VoteMap_3D):  
+    factor = (3**0.5)/4
+    for count in prange(xyz_mm.shape[0]):
+        xyz = xyz_mm[count]
+        radius = radial_list_mm[count]
+        radius = int(np.around(radial_list_mm[count]))
+        shape = VoteMap_3D.shape
+        for i in prange(VoteMap_3D.shape[0]):
+            for j in prange(VoteMap_3D.shape[1]):
+                for k in prange(VoteMap_3D.shape[2]):
+                    distance = ((i-xyz[0])**2+(j-xyz[1])**2+(k-xyz[2])**2)**0.5
+                    if radius - distance < factor and radius - distance>0:
+                        VoteMap_3D[i,j,k]+=1
+        
+    return VoteMap_3D
+
+
+@cuda.jit
+def cuda_internal1(VoteMap_3D,xyz,radius):
+    m, i,j,k=cuda.grid(4)
+    if m<xyz.shape[0] and i<VoteMap_3D.shape[0] and j<VoteMap_3D.shape[1] and k<VoteMap_3D.shape[2]:
+        distance = ((i-xyz[m,0])**2+(j-xyz[m,1])**2+(k-xyz[m,2])**2)**0.5
+        if radius - distance < factor and radius - distance >=0:
+            VoteMap_3D[i,j,k]+=1
+
+@cuda.jit
+def cuda_internal(xyz_mm, radial_list_mm, VoteMap_3D):
+    m = cuda.grid(1)
+    if m<xyz_mm.shape[0]:
+        threadsperblock = (8, 8, 8)
+        blockspergrid_x = math.ceil(VoteMap_3D.shape[0] / threadsperblock[0])
+        blockspergrid_y = math.ceil(VoteMap_3D.shape[1] / threadsperblock[1])
+        blockspergrid_z = math.ceil(VoteMap_3D.shape[2] / threadsperblock[2])
+        blockspergrid = (blockspergrid_x, blockspergrid_y, blockspergrid_z)
+        cuda_internal1[blockspergrid, threadsperblock](VoteMap_3D,xyz[m],radius[m])
+
+@cuda.jit
+def fast_for_cuda(xyz_mm,radial_list_mm,VoteMap_3D): 
+    threadsperblock = (8, 8, 8, 8)
+    blockspergrid_w = math.ceil(xyz_mm.shape[0] / threadsperblock[0])
+    blockspergrid_x = math.ceil(VoteMap_3D.shape[0] / threadsperblock[1])
+    blockspergrid_y = math.ceil(VoteMap_3D.shape[1] / threadsperblock[2])
+    blockspergrid_z = math.ceil(VoteMap_3D.shape[2] / threadsperblock[3])
+    blockspergrid = (blockspergrid_w, blockspergrid_x, blockspergrid_y, blockspergrid_z)
+    cuda_internal1[blockspergrid, threadsperblock](VoteMap_3D,xyz_mm,radial_list_mm)
+
+def Accumulator_3D(xyz, radial_list):
+    acc_unit = 2
+    # unit 5mm 
+    xyz_mm = xyz*1000/acc_unit #point cloud is in meter
+
+    #print(xyz_mm)
+    
+    #recenter the point cloud
+    x_mean_mm = np.mean(xyz_mm[:,0])
+    y_mean_mm = np.mean(xyz_mm[:,1])
+    z_mean_mm = np.mean(xyz_mm[:,2])
+    xyz_mm[:,0] -= x_mean_mm
+    xyz_mm[:,1] -= y_mean_mm
+    xyz_mm[:,2] -= z_mean_mm
+    
+    radial_list_mm = radial_list*100/acc_unit  #radius map is in decimetre for training purpose
+    
+    xyz_mm_min = xyz_mm.min()
+    xyz_mm_max = xyz_mm.max()
+    radius_max = radial_list_mm.max()
+    
+    zero_boundary = int(xyz_mm_min-radius_max)+1
+    
+    if(zero_boundary<0):
+        xyz_mm -= zero_boundary
+        #length of 3D vote map 
+    length = int(xyz_mm.max())
+    
+    VoteMap_3D = np.zeros((length+int(radius_max),length+int(radius_max),length+int(radius_max)))
+    tic = time.perf_counter()
+    VoteMap_3D = fast_for(xyz_mm,radial_list_mm,VoteMap_3D)
+    toc = time.perf_counter()
+                        
+    center = np.argwhere(VoteMap_3D==VoteMap_3D.max())
+   # print("debug center raw: ",center)
+    center = center.astype("float64")
+    if(zero_boundary<0):
+        center = center+zero_boundary
+        
+    #return to global coordinate
+    center[0,0] = (center[0,0]+x_mean_mm+0.5)*acc_unit
+    center[0,1] = (center[0,1]+y_mean_mm+0.5)*acc_unit
+    center[0,2] = (center[0,2]+z_mean_mm+0.5)*acc_unit
+    
+    #center = center*acc_unit+((3**0.5)/2)
+
+    return center
+
+@jit(nopython=True, parallel=True)    
+def fast_for_no_depth(xyz_mm,radial_list_mm,VoteMap_3D):
+    factor = (3**0.5)/4
+    for xyz_son in xyz_mm:    
+        for count in prange(xyz_son.shape[0]):
+            xyz = xyz_son[count]
+            radius = radial_list_mm[count]
+            for i in prange(VoteMap_3D.shape[0]):
+                for j in prange(VoteMap_3D.shape[1]):
+                    for k in prange(VoteMap_3D.shape[2]):
+                        distance = ((i-xyz[0])**2+(j-xyz[1])**2+(k-xyz[2])**2)**0.5
+                        if radius - distance < factor and radius - distance>0:
+                            VoteMap_3D[i,j,k]+=1
+    return VoteMap_3D
+    
+def Accumulator_3D_no_depth(xyz, radial_list, pixel_coor):
+    # unit 5mm 
+    xyz_mm = xyz*200 #point cloud is in meter
+    #recenter the point cloud
+    x_mean_mm = np.mean(xyz_mm[:,0])
+    y_mean_mm = np.mean(xyz_mm[:,1])
+    z_mean_mm = np.mean(xyz_mm[:,2])
+    xyz_mm[:,0] -= x_mean_mm
+    xyz_mm[:,1] -= y_mean_mm
+    xyz_mm[:,2] -= z_mean_mm
+    
+    radial_list_mm = radial_list*20 #radius map is in decimetre for training purpose
+    
+    xyz_mm_min = xyz_mm.min()
+    xyz_mm_max = xyz_mm.max()
+    radius_max = radial_list_mm.max()
+    
+    zero_boundary = int(xyz_mm_min-radius_max)+1
+    #print("debug zero boundary: ",zero_boundary)
+    
+    if(zero_boundary<0):
+        xyz_mm = xyz_mm-zero_boundary
+        #length of 3D vote map 
+    length = int(xyz_mm.max())+1
+    
+    VoteMap_3D = np.zeros((length,length,length))
+    
+    #print(length)
+    
+    VoteMap_3D = fast_for_no_depth(xyz_mm,radial_list_mm,VoteMap_3D)
+    
+                        
+    center = np.argwhere(VoteMap_3D==VoteMap_3D.max())
+    if(zero_boundary<0):
+        center = center+zero_boundary
+        
+    #return to global coordinate
+    center[0,0] += x_mean_mm
+    center[0,1] += y_mean_mm
+    center[0,2] += z_mean_mm
+    
+    center = center*5
+
+    return center
+
+#for original linemod depth
+def read_depth(path):
+    if (path[-3:] == 'dpt'):
+        with open(path) as f:
+            h,w = np.fromfile(f,dtype=np.uint32,count=2)
+            data = np.fromfile(f,dtype=np.uint16,count=w*h)
+            depth = data.reshape((h,w))
+    else:
+        depth = np.asarray(Image.open(path)).copy()
+    return depth
+
+
+depthList=[]
+
+def estimate_6d_pose_lm(opts, eps=45, itr=400):
+    horn = HornPoseFitting()
+
+    itr = int(itr)
+
+    for class_name in lm_cls_names:
+
+
+        print("Evaluation on ", class_name)
+        rootPath = opts.root_dataset + "LINEMOD_ORIG/"+class_name+"/" 
+        rootpvPath = opts.root_dataset + "LINEMOD/"+class_name+"/" 
+        rootRadialMapPath = opts.root_dataset + "estRadialMap/"+class_name+"/"
+        test_list = open(opts.root_dataset + "LINEMOD/"+class_name+"/" +"Split/train.txt","r").readlines()
+        test_list = [ s.replace('\n', '') for s in test_list]
+        test_list_len = len(test_list)
+        #print(test_list)
+        
+        pcd_load = o3d.io.read_point_cloud(opts.root_dataset + "LINEMOD/"+class_name+"/"+class_name+".ply")
+        
+        #time consumption
+        net_time = 0
+        general_counter = 0
+        
+        model_list=[]
+
+        if opts.using_ckpts:
+            for i in range(1,4):
+                model_path = rootpvPath + 'models/'+class_name+"_pt"+str(i)+".pth.tar"
+                model = DenseFCNResNet152(3,2)
+                #model = torch.nn.DataParallel(model)
+                #checkpoint = torch.load(model_path)
+                #model.load_state_dict(checkpoint)
+                optim = torch.optim.Adam(model.parameters(), lr=1e-3)
+                model, _, _, _ = utils.load_checkpoint(model, optim, model_path)
+                model.eval()
+                model_list.append(model)
+        
+
+
+        xyz_load = np.asarray(pcd_load.points)
+
+
+        keypoints=np.load(rootpvPath + 'Outside9.npy')
+
+        #threshold of radii maximum limits
+        max_radii_dm = np.zeros(3)
+        for i in range(3):
+            dsitances = ((xyz_load[:,0]-keypoints[i+1,0])**2
+                 +(xyz_load[:,1]-keypoints[i+1,1])**2
+                +(xyz_load[:,2]-keypoints[i+1,2])**2)**0.5
+            max_radii_dm[i] = dsitances.max()*10
+        #print(max_radii_dm)
+        dataPath = rootpvPath + 'JPEGImages/'
+            
+        for filename in os.listdir(dataPath):
+            #filename = '000810.jpg'
+            #print("Evaluating ", filename)
+            if filename.endswith(".jpg"):
+                #print(os.path.splitext(filename)[0][5:].zfill(6))
+                if os.path.splitext(filename)[0] in test_list:
+                #if filename in test_list:
+                    print("Evaluating ", filename)
+                    estimated_kpts = np.zeros((3,3))
+                    RTGT = np.load(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
+                    #print(opts.root_dataset + "LINEMOD/"+class_name+"/pose/pose"+str(int(os.path.splitext(filename)[0]))+'.npy')
+                    keypoint_count = 1
+                    pure_ransac_centers = np.zeros((3,3))
+                    ransac_w_refine_centers = np.zeros((3,3))
+                    gt_centers = np.zeros((3,3))
+                    radial_error = 0
+                    pixel_count = 0
+
+
+                    for keypoint in keypoints:
+                        keypoint=keypoints[keypoint_count]
+               
+                        if opts.using_ckpts:
+                            if(os.path.exists(model_path)==False):
+                                raise ValueError(opts.model_dir + class_name+"_pt"+str(keypoint_count)+".pth.tar not found")
+                
+                        GTRadiusPath = rootPath+'Out_pt'+str(keypoint_count)+'_dm/'
+                      
+                        transformed_gt_center_mm = (np.dot(keypoints, RTGT[:, :3].T) + RTGT[:, 3:].T)*1000
+
+                        transformed_gt_center_mm = transformed_gt_center_mm[keypoint_count]
+
+                        gt_centers[keypoint_count-1] = transformed_gt_center_mm
+                        
+                        input_path = dataPath +filename
+                        normalized_depth = []
+                        tic = time.time_ns()
+                        if opts.using_ckpts:
+                            sem_out, radial_out = FCResBackbone(model_list[keypoint_count-1], input_path, normalized_depth)
+                        
+                        toc = time.time_ns()
+                        net_time += toc-tic
+                        #print("Network time consumption: ", network_time_single)
+                        depth_map1 = read_depth(rootPath+'data/depth'+str(int(os.path.splitext(filename)[0]))+'.dpt')
+                        if opts.using_ckpts:
+                            sem_out = np.where(sem_out>0.8,1,0)
+                            sem_out = np.where(radial_out<=max_radii_dm[keypoint_count-1], sem_out,0)
+                            depth_map = depth_map1*sem_out
+                            xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
+                            radial_out = np.where(radial_out<=max_radii_dm[keypoint_count-1], radial_out,0)
+                            
+                            pixel_coor = np.where(sem_out==1)
+                            radial_list = radial_out[pixel_coor]
+                        else:
+                            radialMapPath = rootRadialMapPath + 'Out_pt'+str(keypoint_count)+'_dm/'+str(filename[:-4])+'.npy'
+                            radial_est = np.load(radialMapPath)                    
+                            radial_est = np.where(radial_est<=max_radii_dm[keypoint_count-1], radial_est,0)
+                            sem_out = np.where(radial_est!=0,1,0)
+                            #print(sem_out.shape)
+                            depth_map = depth_map1*sem_out
+                            xyz_mm = rgbd_to_point_cloud(linemod_K,depth_map)
+                            radial_list = radial_est[depth_map.nonzero()] 
+                        xyz = xyz_mm/1000
+
+                        pixel_count += len(radial_list)
+
+                        for radius, pixel in zip(radial_list, xyz_mm):
+                            radius = radius * 100 # converting to mm
+                            dist = np.linalg.norm(pixel-transformed_gt_center_mm)
+                            curr_radial_error = abs(radius - dist)
+                            radial_error += curr_radial_error
+
+
+                        tic = time.time_ns()
+                        pure_ransac_center = RANSAC(xyz, radial_list, itr, eps)
+                        toc = time.time_ns()
+                   
+                        
+                        pure_ransac_centers[keypoint_count-1] = pure_ransac_center
+
+                        tic = time.time_ns()
+                        ransac_w_refine_center, num_inliers = RANSAC_refine(xyz, radial_list, itr, eps)
+                        toc = time.time_ns()
+
+                        ransac_w_refine_centers[keypoint_count-1] = ransac_w_refine_center
+
+                        keypoint_count += 1
+                        if keypoint_count == 4:
+                            break
+                    
+                    kpts = keypoints[1:4,:]*1000
+
+                    # Horn's method for pose estimation and refinement
+                    RT_pure_ransac = np.zeros((4,4))
+                    RT_ransac_refine = np.zeros((4,4))
+                    horn.lmshorn(kpts, pure_ransac_centers, 3, RT_pure_ransac)
+                    horn.lmshorn(kpts, ransac_w_refine_centers, 3, RT_ransac_refine)
+
+                    # print ('GT RT: \n', RTGT)
+                    # print ('RT Pure Ransac: \n', RT_pure_ransac[0:3,:])
+                    # print ('RT Ransac with Refinement: \n', RT_ransac_refine[0:3,:])
+
+                    # Refine the estimated keypoints using the RT matrices
+                    refined_keypoints_pure_ransac = (np.dot(kpts, RT_pure_ransac[:3, :3].T) + RT_pure_ransac[:3, 3])
+                    refined_keypoints_ransac_refine = (np.dot(kpts, RT_ransac_refine[:3, :3].T) + RT_ransac_refine[:3, 3])
+
+
+
+                    radial_error = radial_error/pixel_count
+
+                    pure_ransac_offsets = np.zeros(3)
+                    ransac_w_refine_offsets = np.zeros(3)
+                    refined_keypoints_pure_ransac_offsets = np.zeros(3)
+                    refined_keypoints_ransac_w_refine_offsets = np.zeros(3)
+                    for i in range(3):
+                        pure_ransac_offsets[i] = np.linalg.norm(pure_ransac_centers[i]-gt_centers[i])
+                        ransac_w_refine_offsets[i] = np.linalg.norm(ransac_w_refine_centers[i]-gt_centers[i])
+                        refined_keypoints_pure_ransac_offsets[i] = np.linalg.norm(refined_keypoints_pure_ransac[i]-gt_centers[i])
+                        refined_keypoints_ransac_w_refine_offsets[i] = np.linalg.norm(refined_keypoints_ransac_refine[i]-gt_centers[i])
+                    
+                    avg_pure_ransac_offset = np.mean(pure_ransac_offsets)
+                    avg_ransac_w_refine_offset = np.mean(ransac_w_refine_offsets)
+
+                    print ()
+                    print('='*50)
+
+                    print ('Image: ', filename)
+                    print ('Radial Error for all pixels: \t', radial_error)
+
+                    print ('-'*50)
+                    print ('Non Transformed Keypoints: \n', kpts)
+
+                    print ('-'*50)
+                    print ('GT centers: \n', gt_centers)
+
+                    print ('-'*50)
+                    print ('Pure RANSAC centers: \n', pure_ransac_centers)
+                    print ('Pure RANSAC offsets (mm): \n', pure_ransac_offsets)
+                    print ('Average Pure RANSAC offset (mm): \t', avg_pure_ransac_offset)
+
+                    print ('-'*50)
+                    print ('RANSAC with refinement centers: \n', ransac_w_refine_centers)
+                    print ('RANSAC with refinement offsets (mm): \n', ransac_w_refine_offsets)
+                    print ('Average RANSAC with refinement offset (mm): \t', avg_ransac_w_refine_offset)
+
+                    print ('-'*50)
+                    print ('Refined Keypoints Pure RANSAC: \n ', refined_keypoints_pure_ransac)
+                    print ('Refined Keypoints pure RANSAC offsets (mm): \n', refined_keypoints_pure_ransac_offsets)
+                    print ('Average Refined Keypoints Pure RANSAC offset (mm): \t', np.mean(refined_keypoints_pure_ransac_offsets))
+                    
+                    print ('-'*50)
+                    print ('Refined Keypoints RANSAC with Refinement: \n ', refined_keypoints_ransac_refine)
+                    print ('Refined Keypoints RANSAC with Refinement offsets (mm): \n', refined_keypoints_ransac_w_refine_offsets)
+                    print ('Average Refined Keypoints RANSAC with Refinement offset (mm): \t', np.mean(refined_keypoints_ransac_w_refine_offsets))
+                    exit()
+
+                    general_counter += 1 
+    return
+
+
+if __name__ == "__main__":
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    # ../datasets/test/  , D:/
+    parser.add_argument('--root_dataset',
+                    type=str,
+                    default='../datasets/')
+    parser.add_argument('--model_dir',
+                    type=str,
+                    default='ckpts/')   
+    parser.add_argument('--using_ckpts',
+                    type=bool,
+                    default=True)
+    parser.add_argument('--output_dir',
+                    type=str,
+                    default='ransac_test_w_horn/1/')
+    
+    output_dir = 'logs/' + parser.parse_args().output_dir
+
+    
+    opts = parser.parse_args()   
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    estimate_6d_pose_lm(opts, eps=2.0, itr=5000)
+
+
+
