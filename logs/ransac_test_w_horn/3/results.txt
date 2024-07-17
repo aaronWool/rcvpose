@@ -1,0 +1,53 @@
+Class: ape
+Avg pure ransac keypoint error: 	13.998643177453323
+Avg ransac w refine keypoint error: 	14.053819526347326
+Avg horn w pure ransac keypoint error: 	13.848935022081994
+Avg horn w ransac w refine keypoint error: 	14.089378153124274
+Avg geo metric ransac keypoint error: 	100.7085021247131
+Difference in pure ransac and pure ransac with the horn method: 	0.14970815537132864
+Difference in ransac w refine and ransac w refine with the horn method: 	-0.03555862677694854
+
+Class: ape
+Avg pure ransac keypoint error: 	14.429899150796329
+Avg ransac w refine keypoint error: 	14.426802018545745
+Avg horn w pure ransac keypoint error: 	14.226794021449205
+Avg horn w ransac w refine keypoint error: 	14.222188482570791
+Avg geo metric ransac keypoint error: 	18.775921198186698
+Difference in pure ransac and pure ransac with the horn method: 	0.203105129347124
+Difference in ransac w refine and ransac w refine with the horn method: 	0.20461353597495346
+
+Class: ape
+Avg pure ransac keypoint error: 	13.618662921584248
+Avg ransac w refine keypoint error: 	13.803897258577964
+Avg horn w pure ransac keypoint error: 	13.342326690341917
+Avg horn w ransac w refine keypoint error: 	13.46774178472148
+Avg geo metric ransac keypoint error: 	29.075019174930638
+Difference in pure ransac and pure ransac with the horn method: 	0.27633623124233075
+Difference in ransac w refine and ransac w refine with the horn method: 	0.3361554738564827
+
+Class: ape
+Avg pure ransac keypoint error: 	13.72572324310609
+Avg ransac w refine keypoint error: 	14.373585649908065
+Avg horn w pure ransac keypoint error: 	13.479628745067545
+Avg horn w ransac w refine keypoint error: 	14.364638121220542
+Avg geo metric ransac keypoint error: 	4055046616332.2583
+Avg pre refinement keypoint error: 	168.44314735627793
+
+Difference in pure ransac and pure ransac with the horn method: 	0.24609449803854488
+Difference in ransac w refine and ransac w refine with the horn method: 	0.008947528687523132
+
+Final avg geo metric ransac time (s): 	0.2737435048387097
+
+Class: ape
+Avg pure ransac keypoint error: 	13.855483342785991
+Avg ransac w refine keypoint error: 	13.853987596698001
+Avg horn w pure ransac keypoint error: 	13.657760173388224
+Avg horn w ransac w refine keypoint error: 	13.61985751197666
+Avg geo metric ransac keypoint error: 	106.1196637325897
+Avg pre refinement keypoint error: 	165.57796229576726
+
+Difference in pure ransac and pure ransac with the horn method: 	0.1977231693977668
+Difference in ransac w refine and ransac w refine with the horn method: 	0.23413008472134145
+
+Final avg geo metric ransac time (s): 	0.27140293279569894
+

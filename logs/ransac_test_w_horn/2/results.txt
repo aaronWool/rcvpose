@@ -1,0 +1,8 @@
+Class: ape
+Avg pure ransac keypoint error: 	13.551764192732637
+Avg ransac w refine keypoint error: 	14.293411125186655
+Avg horn w pure ransac keypoint error: 	13.326998585477451
+Avg horn w ransac w refine keypoint error: 	14.386461653658664
+Difference in pure ransac and pure ransac with the horn method: 	0.22476560725518624
+Difference in ransac w refine and ransac w refine with the horn method: 	-0.09305052847200912
+

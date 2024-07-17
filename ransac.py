@@ -1,6 +1,7 @@
 import numba
 from numba import jit, prange, njit
 import numpy as np
+from util.horn import HornPoseFitting
 import random
 
 
@@ -66,6 +67,33 @@ def random_center_est(xyz, radial_list, epsilon, iterations=25):
     best_vote = sorted_votes[0]
     
     return best_vote
+
+
+# @jit(nopython=True, parallel=True)
+def random_est_accumulate(xyz, radial_list, best_vote, epsilon, iterations):
+    estimates = np.zeros((iterations, 3))
+    count = 0
+
+    for itr in prange(iterations):
+        index = np.random.randint(0, len(xyz), 4)
+        point_list = xyz[index]
+        radius_list = radial_list[index]
+        x, y, z = center_est(point_list, radius_list)
+        dist = ((x-best_vote[1])**2 + (y-best_vote[2])**2 + (z-best_vote[3])**2)**0.5
+        if abs(dist - best_vote[0]) < epsilon:
+            continue
+
+        estimates[count] = np.array([x, y, z])
+        count += 1
+
+    estimates = estimates[:count]
+
+    return estimates
+
+
+
+
+
     
 
 # Iterate through all the data points and accumulate inliers
@@ -200,6 +228,8 @@ def linear_least_squares(xyz, radial_list):
 
     return np.array([x, y, z])
 
+
+
 def RANSAC(xyz, radial_list, iterations, epsilon):
     assert isinstance(iterations, int), 'iterations must be an integer'
 
@@ -213,6 +243,141 @@ def RANSAC(xyz, radial_list, iterations, epsilon):
     center = center.astype("float64")
     
     return center
+
+
+def RANSAC_geometric(initial_kpts, xyz1, xyz2, xyz3, radial_list1, radial_list2, radial_list3, iterations, epsilon, gt_kpts=None, debug=False):
+    assert isinstance(iterations, int), 'iterations must be an integer'
+
+    if debug:
+        assert gt_kpts is not None, 'gt_kpts must be provided for debugging'
+
+    horn = HornPoseFitting()
+
+    kpt1 = np.zeros(3)
+    kpt2 = np.zeros(3)
+    kpt3 = np.zeros(3)
+
+    # Convert to mm
+
+    xyz1_mm = xyz1*1000
+    xyz2_mm = xyz2*1000
+    xyz3_mm = xyz3*1000
+
+    radial_list1_mm = radial_list1*100
+    radial_list2_mm = radial_list2*100
+    radial_list3_mm = radial_list3*100
+    
+
+    if debug:
+        print('\n')
+        print ('='*50)
+        print ('RANSAC: Geometric Refinement')
+        # print ('\tinitial_kpts = ', initial_kpts)
+        print ('\tEpsilon (mm) = ', epsilon)
+        print ('\tIterations = ', iterations)
+        print ('\tLength of xyz1 = ', len(xyz1))
+        print ('\tLength of xyz2 = ', len(xyz2))
+        print ('\tLength of xyz3 = ', len(xyz3))
+
+    # Get the best vote and inliers for each estimated keypoint
+    best_vote1 = random_center_est(xyz1_mm, radial_list1_mm, epsilon, iterations)
+    best_vote2 = random_center_est(xyz2_mm, radial_list2_mm, epsilon, iterations)
+    best_vote3 = random_center_est(xyz3_mm, radial_list3_mm, epsilon, iterations)
+
+    if debug:
+        print ('\tbest_vote1 = ', best_vote1)
+        print ('\tbest_vote2 = ', best_vote2)
+        print ('\tbest_vote3 = ', best_vote3)
+
+    RT_temp = np.zeros((4,4))
+
+    est_kpts = np.zeros((3,3))
+    est_kpts[0] = best_vote1[1:4]
+    est_kpts[1] = best_vote2[1:4]
+    est_kpts[2] = best_vote3[1:4]
+
+
+    horn.lmshorn(initial_kpts, est_kpts, 3, RT_temp)
+
+    transformed_initial_keypoints = (np.dot(initial_kpts, RT_temp[:3,:3].T) + RT_temp[:3,3])
+
+    
+    new_vote1 = np.zeros(4)
+    new_vote2 = np.zeros(4)
+    new_vote3 = np.zeros(4)
+
+    new_vote1[1:4] = transformed_initial_keypoints[0]
+    new_vote2[1:4] = transformed_initial_keypoints[1]
+    new_vote3[1:4] = transformed_initial_keypoints[2]
+
+    
+    if debug:
+        print ('\tvote with geo constraint 1 = ', transformed_initial_keypoints[0])
+        print ('\tvote with geo constraint 2 = ', transformed_initial_keypoints[1])
+        print ('\tvote with geo constraint 3 = ', transformed_initial_keypoints[2])
+
+        print ('\tPost Horn keypoint offsets from gt')
+        if gt_kpts is not None:
+            kpt_err1 = np.sqrt((gt_kpts[0][0] - new_vote1[1])**2 + (gt_kpts[0][1] - new_vote1[2])**2 + (gt_kpts[0][2] - new_vote1[3])**2)
+            kpt_err2 = np.sqrt((gt_kpts[1][0] - new_vote2[1])**2 + (gt_kpts[1][1] - new_vote2[2])**2 + (gt_kpts[1][2] - new_vote2[3])**2)
+            kpt_err3 = np.sqrt((gt_kpts[2][0] - new_vote3[1])**2 + (gt_kpts[2][1] - new_vote3[2])**2 + (gt_kpts[2][2] - new_vote3[3])**2)
+        
+        print ('\tkpt1 error = ', kpt_err1)
+        print ('\tkpt2 error = ', kpt_err2)
+        print ('\tkpt3 error = ', kpt_err3)
+        print ('\tAverage error = ', (kpt_err1 + kpt_err2 + kpt_err3)/3.0)
+
+
+    # epsilon = epsilon-0.1
+
+
+    xyz_inliers1, radial_list_inliers1 = accumulate_inliers(xyz1_mm, radial_list1_mm, len(xyz1), new_vote1, epsilon)
+    xyz_inliers2, radial_list_inliers2 = accumulate_inliers(xyz2_mm, radial_list2_mm, len(xyz2), new_vote2, epsilon)
+    xyz_inliers3, radial_list_inliers3 = accumulate_inliers(xyz3_mm, radial_list3_mm, len(xyz3), new_vote3, epsilon)
+
+    if len(xyz_inliers1) >= 4:
+        second_vote1 = random_center_est(xyz_inliers1, radial_list_inliers1, epsilon, iterations)
+        kpt1 = np.array([second_vote1[1], second_vote1[2], second_vote1[3]])
+    else:
+        kpt1 = new_vote1[1:4]
+
+    if len(xyz_inliers2) >= 4:
+        second_vote2 = random_center_est(xyz_inliers2, radial_list_inliers2, epsilon, iterations)
+        kpt2 = np.array([second_vote2[1], second_vote2[2], second_vote2[3]])
+    else:
+        kpt2 = new_vote2[1:4]
+
+    if len(xyz_inliers3) >= 4:
+        second_vote3 = random_center_est(xyz_inliers3, radial_list_inliers3, epsilon, iterations)
+        kpt3 = np.array([second_vote3[1], second_vote3[2], second_vote3[3]])
+    else:
+        kpt3 = new_vote3[1:4]
+
+    if debug:
+        print ('\tSecond vote 1 = ', second_vote1)
+        print ('\tSecond vote 2 = ', second_vote2)
+        print ('\tSecond vote 3 = ', second_vote3)
+        print ()
+        print ('\tFinal keypoint offsets from gt')
+        
+        if gt_kpts is not None:
+            kpt_err1 = np.sqrt((gt_kpts[0][0] - kpt1[0])**2 + (gt_kpts[0][1] - kpt1[1])**2 + (gt_kpts[0][2] - kpt1[2])**2)
+            kpt_err2 = np.sqrt((gt_kpts[1][0] - kpt2[0])**2 + (gt_kpts[1][1] - kpt2[1])**2 + (gt_kpts[1][2] - kpt2[2])**2)
+            kpt_err3 = np.sqrt((gt_kpts[2][0] - kpt3[0])**2 + (gt_kpts[2][1] - kpt3[1])**2 + (gt_kpts[2][2] - kpt3[2])**2)
+
+        print ('\tkpt1 error = ', kpt_err1)
+        print ('\tkpt2 error = ', kpt_err2)
+        print ('\tkpt3 error = ', kpt_err3)
+        print ('\tAverage error = ', (kpt_err1 + kpt_err2 + kpt_err3)/3.0)
+        wait = input('Press Enter to continue')
+        print ('='*50)
+
+    pre_refinement_kpts = np.array([new_vote1[1:4], new_vote2[1:4], new_vote3[1:4]])
+
+    refined_kpts = np.array([kpt1, kpt2, kpt3])
+
+    return refined_kpts, pre_refinement_kpts
+    
 
 def RANSAC_refine(xyz, radial_list, iterations, epsilon):
     assert isinstance(iterations, int), 'iterations must be an integer'
