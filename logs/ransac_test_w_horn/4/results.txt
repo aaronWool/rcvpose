@@ -1,8 +1,8 @@
 Class: ape
-Radial error: 3.241467513667634
-Pure RANSAC keypoint error: 13.442152736302234
-RANSAC with geometric keypoint error: 13.551173364204027
-RANSAC with geometric and refinement keypoint error: 699929894143668.4
-Final keypoint error with second horn: 699929894143667.5
-Total time: 13971.185362799999s
-Network time: 83.6590206s
+Radial error: 3.241467335670595
+Pure RANSAC keypoint error: 13.044294027589526
+RANSAC with geometric keypoint error: 12.652368862321817
+RANSAC with geometric and refinement keypoint error: 14.220567203880814
+Final keypoint error with second horn: 14.270769690849917
+Total time: 45174.169456799995s
+Network time: 77.6213785s

@@ -30,7 +30,7 @@ def center_est(point_list, radius_list):
 
 
 # Random Sample Consensus looks for a good first guess, uses epsilon to determine inliers
-@jit(nopython=True, parallel=True)
+# @jit(nopython=True, parallel=True)
 def random_center_est(xyz, radial_list, epsilon, iterations=25):
 
     n = len(xyz)

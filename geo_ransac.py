@@ -726,7 +726,7 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
             f.write('Final keypoint error with second horn: ' + str(np.mean(final_kpt_error_w_second_horn)) + '\n')
             f.write('Total time: ' + str(total_frontend_time/1e9*general_counter) + 's\n')
             f.write('Network time: ' + str(net_time/1e9) + 's\n')
-            f.write('Total Keypoint Error Reduction: ' + str(np.mean(pure_ransac_kpt_error)-np.mean(final_kpt_error_w_second_horn) + '\n\n'))
+            f.write('Total Keypoint Error Reduction: ' + str(np.mean(pure_ransac_kpt_error)-np.mean(final_kpt_error_w_second_horn)) + '\n\n')
 
     return
 
@@ -738,7 +738,7 @@ if __name__ == "__main__":
     # ../datasets/test/  , D:/
     parser.add_argument('--root_dataset',
                     type=str,
-                    default='../datasets/')
+                    default='D:/')
     parser.add_argument('--model_dir',
                     type=str,
                     default='ckpts/')   
@@ -757,7 +757,7 @@ if __name__ == "__main__":
     opts = parser.parse_args()   
 
 
-    estimate_6d_pose_lm(opts, eps=1.0, itr=5000)
+    estimate_6d_pose_lm(opts, eps=1.0, itr=10000)
 
 
 
