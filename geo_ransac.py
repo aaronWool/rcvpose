@@ -504,8 +504,6 @@ depthList=[]
 
 def estimate_6d_pose_lm(opts, eps=45, itr=400):
     horn = HornPoseFitting()
-
-
     debug = opts.debug
 
     if debug:
@@ -513,17 +511,20 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
 
     itr = int(itr)
 
+    output_dir = 'logs/' + opts.output_dir + '/'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     for class_name in lm_cls_names:
+        
+        radial_errors = []
+        pure_ransac_kpt_error = []
+        ransac_w_geo_kpt_error = []
+        ransac_w_geo_and_refine_kpt_error = []
+        final_kpt_error_w_second_horn = []
 
-        pure_ransac = []
-        ransac_w_refine = []
-        horn_w_pure_ransac = []
-        horn_w_ransac_w_refine = []
-        geo_metric_ransac = []
-        pre_refinement_kpts = []
 
-
-        geo_net_time = 0
+        total_frontend_time = 0
 
 
         print("Evaluation on ", class_name)
@@ -589,9 +590,7 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                     keypoint_count = 1
                     pure_ransac_centers = np.zeros((3,3))
                     ransac_w_refine_centers = np.zeros((3,3))
-                    gt_centers = np.zeros((3,3))
-                    radial_error = 0
-                    pixel_count = 0
+                    gt_kpts = np.zeros((3,3))
 
                     radial_list1 = []
                     radial_list2 = []
@@ -614,7 +613,7 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
 
                         transformed_gt_center_mm = transformed_gt_center_mm[keypoint_count]
 
-                        gt_centers[keypoint_count-1] = transformed_gt_center_mm
+                        gt_kpts[keypoint_count-1] = transformed_gt_center_mm
                         
                         input_path = dataPath +filename
                         normalized_depth = []
@@ -656,7 +655,9 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                             radial_list3 = radial_list
                             xyz3 = xyz
 
-                        pixel_count += len(radial_list)
+                        pixel_count = len(radial_list)
+
+                        radial_error = 0
 
                         for radius, pixel in zip(radial_list, xyz_mm):
                             radius = radius * 100 # converting to mm
@@ -664,19 +665,7 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                             curr_radial_error = abs(radius - dist)
                             radial_error += curr_radial_error
 
-
-                        tic = time.time_ns()
-                        pure_ransac_center = RANSAC(xyz, radial_list, itr, eps)
-                        toc = time.time_ns()
-                   
-                        
-                        pure_ransac_centers[keypoint_count-1] = pure_ransac_center
-
-                        tic = time.time_ns()
-                        ransac_w_refine_center, num_inliers = RANSAC_refine(xyz, radial_list, itr, eps)
-                        toc = time.time_ns()
-
-                        ransac_w_refine_centers[keypoint_count-1] = ransac_w_refine_center
+                        radial_errors.append(radial_error/pixel_count)
 
                         keypoint_count += 1
                         if keypoint_count == 4:
@@ -687,130 +676,58 @@ def estimate_6d_pose_lm(opts, eps=45, itr=400):
                     initial_kpts = kpts
 
                     tic = time.time_ns()
-                    geo_ransac_keypoints, pre_refinement_kpts = RANSAC_geometric(initial_kpts, xyz1, xyz2, xyz3, radial_list1, radial_list2, radial_list3, itr, eps, gt_centers, debug=debug)
+                    geo_ransac_keypoints, pre_refinement_kpts, pure_ransac_kpts = RANSAC_geometric(initial_kpts, xyz1, xyz2, xyz3, radial_list1, radial_list2, radial_list3, itr, eps, gt_kpts, debug=debug)
                     toc = time.time_ns()
-                    geo_net_time += toc-tic
+                    total_frontend_time += toc-tic
 
+                    RT = np.zeros((4,4))
+                    horn.lmshorn(kpts, geo_ransac_keypoints, 3, RT)
 
-                    # print ('GT centers: \n', gt_centers)                    
+                    second_refined_kpts = np.dot(kpts, RT[:3,:3].T) + RT[:3,3].T
 
-                    # Horn's method for pose estimation and refinement
-                    RT_pure_ransac = np.zeros((4,4))
-                    RT_ransac_refine = np.zeros((4,4))
-                    horn.lmshorn(kpts, pure_ransac_centers, 3, RT_pure_ransac)
-                    horn.lmshorn(kpts, ransac_w_refine_centers, 3, RT_ransac_refine)
-
-                    # print ('GT RT: \n', RTGT)
-                    # print ('RT Pure Ransac: \n', RT_pure_ransac[0:3,:])
-                    # print ('RT Ransac with Refinement: \n', RT_ransac_refine[0:3,:])
-
-                    refined_keypoints_pure_ransac = (np.dot(kpts, RT_pure_ransac[:3, :3].T) + RT_pure_ransac[:3, 3])
-                    refined_keypoints_ransac_refine = (np.dot(kpts, RT_ransac_refine[:3, :3].T) + RT_ransac_refine[:3, 3])
-
-                    radial_error = radial_error/pixel_count
-
-                    pure_ransac_offsets = np.zeros(3)
-                    ransac_w_refine_offsets = np.zeros(3)
-                    refined_keypoints_pure_ransac_offsets = np.zeros(3)
-                    refined_keypoints_ransac_w_refine_offsets = np.zeros(3)
-                    geo_metric_ransac_offsets = np.zeros(3)
-                    pre_refinement_kpts_offsets = np.zeros(3)
+                    # pure_ransac_kpt_error = []
+                    # ransac_w_geo_kpt_error = []
+                    # ransac_w_geo_and_refine_kpt_error = []
+                    # final_kpt_error_w_second_horn = []
 
                     for i in range(3):
-                        pure_ransac_offsets[i] = np.linalg.norm(pure_ransac_centers[i]-gt_centers[i])
-                        ransac_w_refine_offsets[i] = np.linalg.norm(ransac_w_refine_centers[i]-gt_centers[i])
-                        refined_keypoints_pure_ransac_offsets[i] = np.linalg.norm(refined_keypoints_pure_ransac[i]-gt_centers[i])
-                        refined_keypoints_ransac_w_refine_offsets[i] = np.linalg.norm(refined_keypoints_ransac_refine[i]-gt_centers[i])
-                        geo_metric_ransac_offsets[i] = np.linalg.norm(geo_ransac_keypoints[i]-gt_centers[i])
-                        pre_refinement_kpts_offsets[i] = np.linalg.norm(pre_refinement_kpts[i]-gt_centers[i])
-                        pure_ransac.append(pure_ransac_offsets[i])
-                        ransac_w_refine.append(ransac_w_refine_offsets[i])
-                        horn_w_pure_ransac.append(refined_keypoints_pure_ransac_offsets[i])
-                        horn_w_ransac_w_refine.append(refined_keypoints_ransac_w_refine_offsets[i])
-                        geo_metric_ransac.append(geo_metric_ransac_offsets[i])
+                        pure_ransac_kpt_error.append(np.linalg.norm(pure_ransac_kpts[i]-gt_kpts[i]))
+                        ransac_w_geo_kpt_error.append(np.linalg.norm(pre_refinement_kpts[i]-gt_kpts[i]))
+                        ransac_w_geo_and_refine_kpt_error.append(np.linalg.norm(geo_ransac_keypoints[i]-gt_kpts[i]))
+                        final_kpt_error_w_second_horn.append(np.linalg.norm(second_refined_kpts[i]-gt_kpts[i]))
 
                     
-                    avg_pure_ransac_offset = np.mean(pure_ransac_offsets)
-                    avg_ransac_w_refine_offset = np.mean(ransac_w_refine_offsets)
-                    avg_refined_keypoints_pure_ransac_offset = np.mean(refined_keypoints_pure_ransac_offsets)
-                    avg_refined_keypoints_ransac_w_refine_offset = np.mean(refined_keypoints_ransac_w_refine_offsets)
-                    avg_geo_metric_ransac_offset = np.mean(geo_metric_ransac_offsets)
-                    avg_pre_refinement_kpts_offset = np.mean(pre_refinement_kpts_offsets)
-
-                    if debug:
-                        print ()
-                        print('='*50)
-
-                        print ('Image: ', filename)
-                        print ('Radial Error for all pixels: \t', radial_error)
-
-                        print ('-'*50)
-                        print ('Non Transformed Keypoints: \n', kpts)
-
-                        print ('-'*50)
-                        print ('GT centers: \n', gt_centers)
-
-                        print ('-'*50)
-                        print ('Pure RANSAC centers: \n', pure_ransac_centers)
-                        print ('Pure RANSAC offsets (mm): \n', pure_ransac_offsets)
-                        print ('Average Pure RANSAC offset (mm): \t', avg_pure_ransac_offset)
-
-                        print ('-'*50)
-                        print ('RANSAC with refinement centers: \n', ransac_w_refine_centers)
-                        print ('RANSAC with refinement offsets (mm): \n', ransac_w_refine_offsets)
-                        print ('Average RANSAC with refinement offset (mm): \t', avg_ransac_w_refine_offset)
-
-                        print ('-'*50)
-                        print ('Refined Keypoints Pure RANSAC: \n ', refined_keypoints_pure_ransac)
-                        print ('Refined Keypoints pure RANSAC offsets (mm): \n', refined_keypoints_pure_ransac_offsets)
-                        print ('Average Refined Keypoints Pure RANSAC offset (mm): \t', avg_refined_keypoints_pure_ransac_offset)
-                        
-                        print ('-'*50)
-                        print ('Refined Keypoints RANSAC with Refinement: \n ', refined_keypoints_ransac_refine)
-                        print ('Refined Keypoints RANSAC with Refinement offsets (mm): \n', refined_keypoints_ransac_w_refine_offsets)
-                        print ('Average Refined Keypoints RANSAC with Refinement offset (mm): \t', avg_refined_keypoints_ransac_w_refine_offset)
-
-                        print ('-'*50) 
-                        print ('Geo metric RANSAC keypoints: \n', geo_ransac_keypoints)
-                        print ('Geo metric RANSAC offsets (mm): \n', geo_metric_ransac_offsets)
-                        print ('Average Geo metric RANSAC offset (mm): \t', avg_geo_metric_ransac_offset)
-
-                        print ('-'*50)
-                        print ('Pre Refinement Keypoints: \n', pre_refinement_kpts)
-                        print ('Pre Refinement Keypoints offsets (mm): \n', pre_refinement_kpts_offsets)
-                        print ('Average Pre Refinement Keypoints offset (mm): \t', avg_pre_refinement_kpts_offset)
-
-                        wait = input("PRESS ENTER TO CONTINUE.\n\n\n")
-                        print ('='*50)
-
                     general_counter += 1 
 
+                    if debug:
+                        print ('Avg Radial error: ', np.mean(radial_errors))
+                        print ('Avg Pure RANSAC keypoint error: ', np.mean(pure_ransac_kpt_error))
+                        print ('Avg RANSAC with geometric keypoint error: ', np.mean(ransac_w_geo_kpt_error))
+                        print ('Avg RANSAC with geometric and refinement keypoint error: ', np.mean(ransac_w_geo_and_refine_kpt_error))
+                        print ('Avg Final keypoint error with second horn: ', np.mean(final_kpt_error_w_second_horn))
+                        print ('Total time: ', total_frontend_time/1e9*general_counter, 's')
+                        # wait = input("PRESS ENTER TO CONTINUE.")
 
-        print ('Class: ', class_name)
-        print ('Final avg pure ransac keypoint error: \t', np.mean(pure_ransac))
-        print ('Final avg ransac w refine keypoint error: \t', np.mean(ransac_w_refine))
-        print ('Final avg horn w pure ransac keypoint error: \t', np.mean(horn_w_pure_ransac))
-        print ('Final avg horn w ransac w refine keypoint error: \t', np.mean(horn_w_ransac_w_refine))
-        print ('Final avg geo metric ransac keypoint error: \t', np.mean(geo_metric_ransac))
-        print ('Final avg pre refinement keypoint error: \t', np.mean(pre_refinement_kpts))
-        print ('Final avg geo metric ransac time (s): \t', geo_net_time/(1e9*general_counter))
-        print ('Difference in pure ransac and pure ransac with the horn method: \t', np.mean(pure_ransac) - np.mean(horn_w_pure_ransac))
-        print ('Difference in ransac w refine and ransac w refine with the horn method: \t', np.mean(ransac_w_refine) - np.mean(horn_w_ransac_w_refine))
-        print()
+        print ('Radial error: ', np.mean(radial_errors))
+        print ('Pure RANSAC keypoint error: ', np.mean(pure_ransac_kpt_error))
+        print ('RANSAC with geometric keypoint error: ', np.mean(ransac_w_geo_kpt_error))
+        print ('RANSAC with geometric and refinement keypoint error: ', np.mean(ransac_w_geo_and_refine_kpt_error))
+        print ('Final keypoint error with second horn: ', np.mean(final_kpt_error_w_second_horn))
+        print ('Total time: ', total_frontend_time/1e9*general_counter, 's')
+        print ('Network time: ', net_time/1e9, 's')
+        print ('Total Keypoint Error Reduction: ', np.mean(pure_ransac_kpt_error)-np.mean(final_kpt_error_w_second_horn))
 
         with open(output_dir + 'results.txt', 'a') as f:
             f.write('Class: ' + class_name + '\n')
-            f.write('Avg pure ransac keypoint error: \t' + str(np.mean(pure_ransac)) + '\n')
-            f.write('Avg ransac w refine keypoint error: \t' + str(np.mean(ransac_w_refine)) + '\n')
-            f.write('Avg horn w pure ransac keypoint error: \t' + str(np.mean(horn_w_pure_ransac)) + '\n')
-            f.write('Avg horn w ransac w refine keypoint error: \t' + str(np.mean(horn_w_ransac_w_refine)) + '\n')
-            f.write('Avg geo metric ransac keypoint error: \t' + str(np.mean(geo_metric_ransac)) + '\n')
-            f.write('Avg pre refinement keypoint error: \t' + str(np.mean(pre_refinement_kpts)) + '\n\n')
-            f.write('Difference in pure ransac and pure ransac with the horn method: \t' + str(np.mean(pure_ransac) - np.mean(horn_w_pure_ransac)) + '\n')
-            f.write('Difference in ransac w refine and ransac w refine with the horn method: \t' + str(np.mean(ransac_w_refine) - np.mean(horn_w_ransac_w_refine)) + '\n\n')
-            f.write('Final avg geo metric ransac time (s): \t' + str(geo_net_time/(1e9*general_counter)) + '\n\n')
+            f.write('Radial error: ' + str(np.mean(radial_errors)) + '\n')
+            f.write('Pure RANSAC keypoint error: ' + str(np.mean(pure_ransac_kpt_error)) + '\n')
+            f.write('RANSAC with geometric keypoint error: ' + str(np.mean(ransac_w_geo_kpt_error)) + '\n')
+            f.write('RANSAC with geometric and refinement keypoint error: ' + str(np.mean(ransac_w_geo_and_refine_kpt_error)) + '\n')
+            f.write('Final keypoint error with second horn: ' + str(np.mean(final_kpt_error_w_second_horn)) + '\n')
+            f.write('Total time: ' + str(total_frontend_time/1e9*general_counter) + 's\n')
+            f.write('Network time: ' + str(net_time/1e9) + 's\n')
+            f.write('Total Keypoint Error Reduction: ' + str(np.mean(pure_ransac_kpt_error)-np.mean(final_kpt_error_w_second_horn) + '\n\n'))
 
-            
     return
 
 
@@ -830,18 +747,15 @@ if __name__ == "__main__":
                     default=True)
     parser.add_argument('--output_dir',
                     type=str,
-                    default='ransac_test_w_horn/3/')
+                    default='ransac_test_w_horn/4/')
     parser.add_argument('--debug', 
                         type=bool,
-                        default=False)
+                        default=True)
     
-    output_dir = 'logs/' + parser.parse_args().output_dir
 
     
     opts = parser.parse_args()   
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
 
     estimate_6d_pose_lm(opts, eps=1.0, itr=5000)
 
