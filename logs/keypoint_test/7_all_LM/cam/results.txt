@@ -1,0 +1,8 @@
+Gaussian Mean: 1
+Gaussian Std Dev: 0.5
+ADDs of cam before ICP: 1.0
+ADDs of cam after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.7516431432173104
+Mean Point Cloud Distance after ICP: 0.10831077633698002
+Mean Offset: 1.003815175449525
+====================

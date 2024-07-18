@@ -1,0 +1,16 @@
+Gaussian Mean: 1
+Gaussian Std Dev: 0.5
+ADDs of lamp before ICP: 1.0
+ADDs of lamp after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.6331741521126464
+Mean Point Cloud Distance after ICP: 0.12927725596211098
+Mean Offset: 1.0071196983023925
+====================
+Gaussian Mean: 2
+Gaussian Std Dev: 1.0
+ADDs of lamp before ICP: 1.0
+ADDs of lamp after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.9553691868958494
+Mean Point Cloud Distance after ICP: 0.3012472153633141
+Mean Offset: 2.04305905830912
+====================

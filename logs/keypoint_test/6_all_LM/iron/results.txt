@@ -1,0 +1,16 @@
+Gaussian Mean: 1
+Gaussian Std Dev: 0.5
+ADDs of iron before ICP: 1.0
+ADDs of iron after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.6261153964642997
+Mean Point Cloud Distance after ICP: 0.1351782141569868
+Mean Offset: 1.0055753617945788
+====================
+Gaussian Mean: 2
+Gaussian Std Dev: 1.0
+ADDs of iron before ICP: 1.0
+ADDs of iron after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.9409358769790396
+Mean Point Cloud Distance after ICP: 0.29242426734383975
+Mean Offset: 2.03906083473055
+====================

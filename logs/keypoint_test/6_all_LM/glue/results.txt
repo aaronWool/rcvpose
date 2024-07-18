@@ -1,0 +1,24 @@
+Gaussian Mean: 1
+Gaussian Std Dev: 0.5
+ADDs of glue before ICP: 1.0
+ADDs of glue after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.6077626869872411
+Mean Point Cloud Distance after ICP: 0.13527304254072314
+Mean Offset: 1.0076702606587349
+====================
+Gaussian Mean: 2
+Gaussian Std Dev: 1.0
+ADDs of glue before ICP: 1.0
+ADDs of glue after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.9136387104872368
+Mean Point Cloud Distance after ICP: 0.26927313389643254
+Mean Offset: 2.0327715392699734
+====================
+Gaussian Mean: 3
+Gaussian Std Dev: 1.5
+ADDs of glue before ICP: 1.0
+ADDs of glue after ICP: 1.0
+Mean Point Cloud Distance before ICP: 1.1577002625187247
+Mean Point Cloud Distance after ICP: 0.20888441528702298
+Mean Offset: 3.0396819764792498
+====================

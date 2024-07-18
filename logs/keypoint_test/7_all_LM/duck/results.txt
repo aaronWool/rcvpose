@@ -1,0 +1,8 @@
+Gaussian Mean: 1
+Gaussian Std Dev: 0.5
+ADDs of duck before ICP: 1.0
+ADDs of duck after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.7271587820476912
+Mean Point Cloud Distance after ICP: 0.11221037505938569
+Mean Offset: 1.0030718253748616
+====================

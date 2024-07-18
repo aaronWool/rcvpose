@@ -1,0 +1,8 @@
+Gaussian Mean: 1
+Gaussian Std Dev: 0.5
+ADDs of driller before ICP: 1.0
+ADDs of driller after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.7244368376805004
+Mean Point Cloud Distance after ICP: 0.096460783676055
+Mean Offset: 1.004747856071242
+====================

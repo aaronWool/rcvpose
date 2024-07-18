@@ -1,0 +1,8 @@
+Gaussian Mean: 1
+Gaussian Std Dev: 0.5
+ADDs of eggbox before ICP: 1.0
+ADDs of eggbox after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.6485023909906664
+Mean Point Cloud Distance after ICP: 0.0964663815799829
+Mean Offset: 1.007618671182468
+====================
