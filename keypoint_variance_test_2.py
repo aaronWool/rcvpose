@@ -9,6 +9,7 @@ from PIL import Image
 import math
 #import h5py
 from sklearn import metrics
+from boptoolkit.pose_error import vsd, mssd, mspd, add, adi, re, te, proj
 
 
 lm_cls_names = ['ape', 'benchvise', 'cam', 'can', 'cat', 'duck', 'driller', 'eggbox', 'glue', 'holepuncher','iron','lamp','phone']
@@ -50,116 +51,7 @@ def project(xyz, K, RT):
     xy = xyz[:, :2] / xyz[:, 2:]
     return xy,actual_xyz
 
-def rgbd_to_point_cloud(K, depth):
-    vs, us = depth.nonzero()
-    zs = depth[vs, us]
-    #print(zs.min())
-    #print(zs.max())
-    xs = ((us - K[0, 2]) * zs) / float(K[0, 0])
-    ys = ((vs - K[1, 2]) * zs) / float(K[1, 1])
-    pts = np.array([xs, ys, zs]).T
-    return pts
 
-def rgbd_to_color_point_cloud(K, depth, rgb):
-    vs, us = depth.nonzero()
-    zs = depth[vs, us]
-    r = rgb[vs,us,0]
-    g = rgb[vs,us,1]
-    b = rgb[vs,us,2]
-    #print(zs.min())
-    #print(zs.max())
-    xs = ((us - K[0, 2]) * zs) / float(K[0, 0])
-    ys = ((vs - K[1, 2]) * zs) / float(K[1, 1])
-    pts = np.array([xs, ys, zs, r, g, b]).T
-    return pts
-
-def rgbd_to_point_cloud_no_depth(K, depth):
-    vs, us = depth.nonzero()
-    zs = depth[vs, us]
-    zs_min = zs.min()
-    zs_max = zs.max()
-    iter_range = int(zs_max*1000)+1-int(zs_min*1000)
-    pts=[]
-    for i in range(iter_range):
-        if(i%1==0):
-            z_tmp = np.empty(zs.shape)
-            z_tmp.fill(zs_min+i*0.001)
-            xs = ((us - K[0, 2]) * z_tmp) / float(K[0, 0])
-            ys = ((vs - K[1, 2]) * z_tmp) / float(K[1, 1])
-            if(i == 0):
-                pts = np.expand_dims(np.array([xs, ys, z_tmp]).T, axis=0)
-                #print(pts.shape)
-            else:
-                pts = np.append(pts, np.expand_dims(np.array([xs, ys, z_tmp]).T, axis=0), axis=0)
-                #print(pts.shape)
-    print(pts.shape)
-    return pts
-
-def project(xyz, K, RT):
-    """
-    xyz: [N, 3]
-    K: [3, 3]
-    RT: [3, 4]
-    """
-    # Apply the rotation and translation to the 3D points
-    xyz = np.dot(xyz, RT[:, :3].T) + RT[:, 3:].T
-    actual_xyz = xyz
-    xyz = np.dot(xyz, K.T)
-    xy = xyz[:, :2] / xyz[:, 2:]
-    return xy, actual_xyz, xyz[:, 2]
-
-def compute_camera_position(RT):
-    """
-    Compute the camera position in world coordinates from the RT matrix.
-    """
-    R = RT[:, :3]
-    t = RT[:, 3]
-    camera_position = -np.dot(R.T, t)
-    return camera_position
-
-def create_triangles(num_points):
-    """
-    Helper function to create triangles for the mesh.
-    Assumes points are in a regular grid.
-    """
-    triangles = []
-    side_length = int(np.sqrt(num_points))
-    for i in range(side_length - 1):
-        for j in range(side_length - 1):
-            idx = i * side_length + j
-            triangles.append([idx, idx + 1, idx + side_length])
-            triangles.append([idx + 1, idx + side_length, idx + side_length + 1])
-    return triangles
-
-
-def get_visible_points_from_camera(xyz, K, RT):
-    """
-    Get points that are visible from the camera position derived from RT.
-    """
-    # Compute camera position
-    camera_position = compute_camera_position(RT)
-    
-    # Transform points using the RT matrix
-    transformed_xyz = np.dot(xyz, RT[:, :3].T) + RT[:, 3:].T
-
-    # Project points to get 2D coordinates and depths
-    _, _, depths = project(xyz, K, RT)
-
-    # Create a mesh from the transformed points and compute normals
-    mesh = o3d.geometry.TriangleMesh()
-    mesh.vertices = o3d.utility.Vector3dVector(transformed_xyz)
-    mesh.triangles = o3d.utility.Vector3iVector(create_triangles(len(transformed_xyz)))
-    mesh.compute_vertex_normals()
-    normals = np.asarray(mesh.vertex_normals)
-
-    # Determine the direction from the camera to each point
-    view_directions = transformed_xyz - camera_position
-    view_directions /= np.linalg.norm(view_directions, axis=1, keepdims=True)
-
-    # Check visibility: normals should face towards the camera (dot product > 0)
-    visibility = np.einsum('ij,ij->i', normals, view_directions) > 0
-
-    return transformed_xyz[visibility], depths[visibility]
 
 depthList=[]
 
@@ -283,12 +175,21 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                     # print(RT)
                     # print(RTGT)
                     # print(RT)
-                    dump, xyz_load_est_transformed,_=project(xyz_load*1000, linemod_K, RT[0:3,:])
+
+                    dump, xyz_load_est_transformed=project(xyz_load*1000, linemod_K, RT[0:3,:])
                     RTGT_mm = RTGT
                     RTGT_mm[:,3] = RTGT_mm[:,3]*1000
 
                     # print(RTGT_mm)
-                    dump, xyz_load_transformed,_=project(xyz_load*1000, linemod_K, RTGT_mm)
+                    dump, xyz_load_transformed=project(xyz_load*1000, linemod_K, RTGT_mm)
+
+                    R_est = RT[0:3,0:3]
+                    R_gt = RTGT_mm[0:3,0:3]
+                    t_est = RT[0:3,3]
+                    t_gt = RTGT_mm[0:3,3]
+
+                    add_error = add(R_est, t_est, R_gt, t_gt, xyz_load)
+                 
 
                     # print (xyz_load_transformed)
                     # print (xyz_load_est_transformed)
@@ -306,18 +207,15 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                     # plt.imshow(input_image)
                     # plt.show()
 
-                    visible_xyz_load_transformed, _ = get_visible_points_from_camera(xyz_load * 1000, linemod_K, RTGT_mm)
-                    visible_xyz_load_est_transformed, _ = get_visible_points_from_camera(xyz_load * 1000, linemod_K, RT[0:3, :])
+                
 
 
                     sceneGT = o3d.geometry.PointCloud()
                     sceneEst = o3d.geometry.PointCloud()
                     sceneGT.points = o3d.utility.Vector3dVector(xyz_load_transformed)
-                    sceneEst.points = o3d.utility.Vector3dVector(visible_xyz_load_est_transformed)
+                    sceneEst.points = o3d.utility.Vector3dVector(xyz_load_est_transformed)
                     sceneGT.paint_uniform_color(np.array([0, 0, 1]))
                     sceneEst.paint_uniform_color(np.array([1, 0, 0]))
-
-                    
 
                     min_distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).min()
                     distance = np.asarray(sceneGT.compute_point_cloud_distance(sceneEst)).mean()
@@ -389,10 +287,7 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                                 auc_adds_count[1, i] += 1
                                 class_auc_adds_count[1, i] += 1
                         i += 1
-                    # print ('Distance after ICP: ', distance)
-                    # print ('Successful after ICP: ', af_icp)
-                    # o3d.visualization.draw_geometries([sceneGT, sceneEst],window_name='gt vs est after icp')
-
+              
                     general_counter += 1
 
                     if general_counter/test_list_len == 1:
@@ -465,7 +360,7 @@ if __name__ == "__main__":
     mean_offsets = []
     mean_dist_bf_icp = []
     mean_dist_af_icp = []
-    i=1
+    i=5
 
     while i < 300.0:
         mean = i
