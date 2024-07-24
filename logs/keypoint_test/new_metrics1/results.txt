@@ -1,0 +1,602 @@
+Gaussian Mean: 1
+Gaussian Std Dev: 0.5
+ADDs before ICP: 1.0
+ADDs after ICP: 1.0
+Mean Point Cloud Distance before ICP: 0.8108673784617217
+Mean Point Cloud Distance after ICP: 1.6217209841522655
+Mean ADI before ICP: 0.771404118802028
+Mean ADI after ICP: 1.5817188959502917
+Mean RE before ICP: 0.41647156581290357
+Mean RE after ICP: 0.8329280441618094
+Mean TE before ICP: 0.8108673603524515
+Mean TE after ICP: 1.6217209479343184
+Mean Offset: 0.9948219807091531
+====================
+Gaussian Mean: 2
+Gaussian Std Dev: 1.0
+ADDs before ICP: 1.0
+ADDs after ICP: 1.0
+Mean Point Cloud Distance before ICP: 1.7771592066889608
+Mean Point Cloud Distance after ICP: 3.5541757058573746
+Mean ADI before ICP: 1.7372221243541057
+Mean ADI after ICP: 3.5139834833105366
+Mean RE before ICP: 0.9055419245660657
+Mean RE after ICP: 1.8111513380729876
+Mean TE before ICP: 1.7771591721900781
+Mean TE after ICP: 3.5541756368627744
+Mean Offset: 2.0621734478682234
+====================
+Gaussian Mean: 3
+Gaussian Std Dev: 1.5
+ADDs before ICP: 1.0
+ADDs after ICP: 1.0
+Mean Point Cloud Distance before ICP: 2.4320891537789358
+Mean Point Cloud Distance after ICP: 4.863848108255629
+Mean ADI before ICP: 2.391905364798315
+Mean ADI after ICP: 4.823489236720154
+Mean RE before ICP: 1.2093630326816973
+Mean RE after ICP: 2.4187602971888085
+Mean TE before ICP: 2.432089100293683
+Mean TE after ICP: 4.863848001295199
+Mean Offset: 3.0577865590831244
+====================
+Gaussian Mean: 4
+Gaussian Std Dev: 2.0
+ADDs before ICP: 1.0
+ADDs after ICP: 0.9838709677419355
+Mean Point Cloud Distance before ICP: 3.265472274701539
+Mean Point Cloud Distance after ICP: 6.530063709217997
+Mean ADI before ICP: 3.2251454907817254
+Mean ADI after ICP: 6.489591663483386
+Mean RE before ICP: 1.6424449667627858
+Mean RE after ICP: 3.284896926600913
+Mean TE before ICP: 3.2654721976593324
+Mean TE after ICP: 6.530063555161684
+Mean Offset: 4.122834141078288
+====================
+Gaussian Mean: 5
+Gaussian Std Dev: 2.5
+ADDs before ICP: 1.0
+ADDs after ICP: 0.946236559139785
+Mean Point Cloud Distance before ICP: 4.016274437016382
+Mean Point Cloud Distance after ICP: 8.030877583435528
+Mean ADI before ICP: 3.975431494571504
+Mean ADI after ICP: 7.9899451552548975
+Mean RE before ICP: 2.0880468792784845
+Mean RE after ICP: 4.176139850431682
+Mean TE before ICP: 4.016274341584577
+Mean TE after ICP: 8.03087739263101
+Mean Offset: 5.1474306561902035
+====================
+Gaussian Mean: 6
+Gaussian Std Dev: 3.0
+ADDs before ICP: 1.0
+ADDs after ICP: 0.8118279569892473
+Mean Point Cloud Distance before ICP: 5.0113734092138245
+Mean Point Cloud Distance after ICP: 10.019326251046019
+Mean ADI before ICP: 4.970612350177735
+Mean ADI after ICP: 9.978478437559637
+Mean RE before ICP: 2.6066811951134805
+Mean RE after ICP: 5.213363457942209
+Mean TE before ICP: 5.0113732959486015
+Mean TE after ICP: 10.019326024613482
+Mean Offset: 6.2357390049694255
+====================
+Gaussian Mean: 7
+Gaussian Std Dev: 3.5
+ADDs before ICP: 0.9946236559139785
+ADDs after ICP: 0.7634408602150538
+Mean Point Cloud Distance before ICP: 5.43023464994943
+Mean Point Cloud Distance after ICP: 10.849454995517204
+Mean ADI before ICP: 5.389552309976977
+Mean ADI after ICP: 10.808696990061252
+Mean RE before ICP: 2.8584369709973867
+Mean RE after ICP: 5.711038479126552
+Mean TE before ICP: 5.430234503998719
+Mean TE after ICP: 10.849454703468007
+Mean Offset: 6.968059312532121
+====================
+Gaussian Mean: 8
+Gaussian Std Dev: 4.0
+ADDs before ICP: 0.9946236559139785
+ADDs after ICP: 0.553763440860215
+Mean Point Cloud Distance before ICP: 6.68382911065373
+Mean Point Cloud Distance after ICP: 13.360021049099844
+Mean ADI before ICP: 6.64337181206841
+Mean ADI after ICP: 13.319546517477018
+Mean RE before ICP: 3.3222329283335013
+Mean RE after ICP: 6.644472603674018
+Mean TE before ICP: 6.68382898138842
+Mean TE after ICP: 13.360020790761267
+Mean Offset: 8.139506011957806
+====================
+Gaussian Mean: 9
+Gaussian Std Dev: 4.5
+ADDs before ICP: 0.967741935483871
+ADDs after ICP: 0.553763440860215
+Mean Point Cloud Distance before ICP: 7.271105499845963
+Mean Point Cloud Distance after ICP: 14.531331216273184
+Mean ADI before ICP: 7.2301459955273195
+Mean ADI after ICP: 14.49031078334823
+Mean RE before ICP: 3.8404144485815483
+Mean RE after ICP: 7.6808641645994875
+Mean TE before ICP: 7.271105326740011
+Mean TE after ICP: 14.531330870393274
+Mean Offset: 9.315429057106778
+====================
+Gaussian Mean: 10
+Gaussian Std Dev: 5.0
+ADDs before ICP: 0.8924731182795699
+ADDs after ICP: 0.45698924731182794
+Mean Point Cloud Distance before ICP: 8.383967597973529
+Mean Point Cloud Distance after ICP: 16.751183333927216
+Mean ADI before ICP: 8.343364075043793
+Mean ADI after ICP: 16.71053444755364
+Mean RE before ICP: 4.272268065593632
+Mean RE after ICP: 8.544540775561101
+Mean TE before ICP: 8.383967405482071
+Mean TE after ICP: 16.75118294941918
+Mean Offset: 10.070515417180795
+====================
+Gaussian Mean: 11
+Gaussian Std Dev: 5.5
+ADDs before ICP: 0.8924731182795699
+ADDs after ICP: 0.3924731182795699
+Mean Point Cloud Distance before ICP: 8.7463569243653
+Mean Point Cloud Distance after ICP: 17.47570023114463
+Mean ADI before ICP: 8.705607338575241
+Mean ADI after ICP: 17.434906064990123
+Mean RE before ICP: 4.389849528850619
+Mean RE after ICP: 8.77965157701434
+Mean TE before ICP: 8.746356701731871
+Mean TE after ICP: 17.47569978654215
+Mean Offset: 10.895158584477
+====================
+Gaussian Mean: 12
+Gaussian Std Dev: 6.0
+ADDs before ICP: 0.7795698924731183
+ADDs after ICP: 0.2956989247311828
+Mean Point Cloud Distance before ICP: 10.27860608000275
+Mean Point Cloud Distance after ICP: 20.52400123928036
+Mean ADI before ICP: 10.237632264425903
+Mean ADI after ICP: 20.4828915392179
+Mean RE before ICP: 5.080831421630958
+Mean RE after ICP: 10.161701827772742
+Mean TE before ICP: 10.278605861300406
+Mean TE after ICP: 20.524000802654953
+Mean Offset: 12.085671994961414
+====================
+Gaussian Mean: 13
+Gaussian Std Dev: 6.5
+ADDs before ICP: 0.8118279569892473
+ADDs after ICP: 0.3010752688172043
+Mean Point Cloud Distance before ICP: 10.13674798740691
+Mean Point Cloud Distance after ICP: 20.243731678037037
+Mean ADI before ICP: 10.09663406900927
+Mean ADI after ICP: 20.20362467994391
+Mean RE before ICP: 5.31300133457271
+Mean RE after ICP: 10.62601879551762
+Mean TE before ICP: 10.136747749989835
+Mean TE after ICP: 20.243731204065302
+Mean Offset: 12.728264358492526
+====================
+Gaussian Mean: 14
+Gaussian Std Dev: 7.0
+ADDs before ICP: 0.7526881720430108
+ADDs after ICP: 0.23118279569892472
+Mean Point Cloud Distance before ICP: 11.272439891412159
+Mean Point Cloud Distance after ICP: 22.508190547302647
+Mean ADI before ICP: 11.232128641393983
+Mean ADI after ICP: 22.467818242885304
+Mean RE before ICP: 5.611785089011294
+Mean RE after ICP: 11.223558556430548
+Mean TE before ICP: 11.272439647039782
+Mean TE after ICP: 22.50819005957846
+Mean Offset: 14.141892038575094
+====================
+Gaussian Mean: 15
+Gaussian Std Dev: 7.5
+ADDs before ICP: 0.6505376344086021
+ADDs after ICP: 0.23118279569892472
+Mean Point Cloud Distance before ICP: 11.845541851029832
+Mean Point Cloud Distance after ICP: 23.638307044710256
+Mean ADI before ICP: 11.804613234208245
+Mean ADI after ICP: 23.597357253382924
+Mean RE before ICP: 6.4849503902924335
+Mean RE after ICP: 12.938117334702785
+Mean TE before ICP: 11.845541516753416
+Mean TE after ICP: 23.638306401273194
+Mean Offset: 15.081776180904306
+====================
+Gaussian Mean: 16
+Gaussian Std Dev: 8.0
+ADDs before ICP: 0.6344086021505376
+ADDs after ICP: 0.15053763440860216
+Mean Point Cloud Distance before ICP: 12.800126647797134
+Mean Point Cloud Distance after ICP: 25.541624237830817
+Mean ADI before ICP: 12.760246067183871
+Mean ADI after ICP: 25.501672375418753
+Mean RE before ICP: 6.555258460999109
+Mean RE after ICP: 13.11052127493566
+Mean TE before ICP: 12.8001263956064
+Mean TE after ICP: 25.541623734786143
+Mean Offset: 15.370316952537035
+====================
+Gaussian Mean: 17
+Gaussian Std Dev: 8.5
+ADDs before ICP: 0.5698924731182796
+ADDs after ICP: 0.13440860215053763
+Mean Point Cloud Distance before ICP: 13.636703550555586
+Mean Point Cloud Distance after ICP: 27.214624100810582
+Mean ADI before ICP: 13.595377887089423
+Mean ADI after ICP: 27.173344049559972
+Mean RE before ICP: 6.8600611290646
+Mean RE after ICP: 13.720116237920754
+Mean TE before ICP: 13.636703249881922
+Mean TE after ICP: 27.21462350143997
+Mean Offset: 17.173990873569416
+====================
+Gaussian Mean: 18
+Gaussian Std Dev: 9.0
+ADDs before ICP: 0.478494623655914
+ADDs after ICP: 0.12365591397849462
+Mean Point Cloud Distance before ICP: 14.837549974668041
+Mean Point Cloud Distance after ICP: 29.59148854943678
+Mean ADI before ICP: 14.796079640041361
+Mean ADI after ICP: 29.550048374399022
+Mean RE before ICP: 7.25438384942803
+Mean RE after ICP: 14.50880564632178
+Mean TE before ICP: 14.83754969189392
+Mean TE after ICP: 29.591487986125323
+Mean Offset: 18.331967179647506
+====================
+Gaussian Mean: 19
+Gaussian Std Dev: 9.5
+ADDs before ICP: 0.44623655913978494
+ADDs after ICP: 0.0913978494623656
+Mean Point Cloud Distance before ICP: 16.18908204436
+Mean Point Cloud Distance after ICP: 32.2725448822558
+Mean ADI before ICP: 16.148534882045123
+Mean ADI after ICP: 32.2319507238379
+Mean RE before ICP: 7.9487777415819005
+Mean RE after ICP: 15.897561085700687
+Mean TE before ICP: 16.18908173375903
+Mean TE after ICP: 32.27254426380846
+Mean Offset: 19.382864896005657
+====================
+Gaussian Mean: 20
+Gaussian Std Dev: 10.0
+ADDs before ICP: 0.42473118279569894
+ADDs after ICP: 0.06451612903225806
+Mean Point Cloud Distance before ICP: 17.024844398586314
+Mean Point Cloud Distance after ICP: 33.91214013461645
+Mean ADI before ICP: 16.983850151437952
+Mean ADI after ICP: 33.87106630514978
+Mean RE before ICP: 8.535950983800696
+Mean RE after ICP: 17.07188911427218
+Mean TE before ICP: 17.02484403878913
+Mean TE after ICP: 33.91213941874259
+Mean Offset: 20.210170403830958
+====================
+Gaussian Mean: 21
+Gaussian Std Dev: 10.5
+ADDs before ICP: 0.40860215053763443
+ADDs after ICP: 0.11290322580645161
+Mean Point Cloud Distance before ICP: 17.150643332403643
+Mean Point Cloud Distance after ICP: 34.154914750919794
+Mean ADI before ICP: 17.10958596548999
+Mean ADI after ICP: 34.11392148899662
+Mean RE before ICP: 8.861214137754114
+Mean RE after ICP: 17.72241270401048
+Mean TE before ICP: 17.15064294522298
+Mean TE after ICP: 34.154913980878554
+Mean Offset: 21.701856515883044
+====================
+Gaussian Mean: 22
+Gaussian Std Dev: 11.0
+ADDs before ICP: 0.4032258064516129
+ADDs after ICP: 0.0913978494623656
+Mean Point Cloud Distance before ICP: 17.64700982774804
+Mean Point Cloud Distance after ICP: 35.14127011869559
+Mean ADI before ICP: 17.60632918857963
+Mean ADI after ICP: 35.10057925705285
+Mean RE before ICP: 9.12623738812522
+Mean RE after ICP: 18.252487762321767
+Mean TE before ICP: 17.647009395306288
+Mean TE after ICP: 35.141269258625236
+Mean Offset: 21.546847709399714
+====================
+Gaussian Mean: 23
+Gaussian Std Dev: 11.5
+ADDs before ICP: 0.3387096774193548
+ADDs after ICP: 0.08064516129032258
+Mean Point Cloud Distance before ICP: 18.594378030061655
+Mean Point Cloud Distance after ICP: 37.01148296452907
+Mean ADI before ICP: 18.554002739924208
+Mean ADI after ICP: 36.971180090893625
+Mean RE before ICP: 9.56453082024294
+Mean RE after ICP: 19.12905097251921
+Mean TE before ICP: 18.594377559829578
+Mean TE after ICP: 37.01148203035487
+Mean Offset: 22.150141219186974
+====================
+Gaussian Mean: 24
+Gaussian Std Dev: 12.0
+ADDs before ICP: 0.3064516129032258
+ADDs after ICP: 0.05913978494623656
+Mean Point Cloud Distance before ICP: 19.633701053070578
+Mean Point Cloud Distance after ICP: 39.06994450918631
+Mean ADI before ICP: 19.592648724094598
+Mean ADI after ICP: 39.02888674782708
+Mean RE before ICP: 10.146593665477543
+Mean RE after ICP: 20.293170838498504
+Mean TE before ICP: 19.633700633467303
+Mean TE after ICP: 39.06994367556334
+Mean Offset: 24.293189575383266
+====================
+Gaussian Mean: 25
+Gaussian Std Dev: 12.5
+ADDs before ICP: 0.2849462365591398
+ADDs after ICP: 0.08602150537634409
+Mean Point Cloud Distance before ICP: 20.1083587549898
+Mean Point Cloud Distance after ICP: 39.95198827867553
+Mean ADI before ICP: 20.06706306399467
+Mean ADI after ICP: 39.91068226852274
+Mean RE before ICP: 11.036877262409291
+Mean RE after ICP: 22.073756812461944
+Mean TE before ICP: 20.108358199119575
+Mean TE after ICP: 39.951987174924405
+Mean Offset: 26.024548668691715
+====================
+Gaussian Mean: 26
+Gaussian Std Dev: 13.0
+ADDs before ICP: 0.2956989247311828
+ADDs after ICP: 0.053763440860215055
+Mean Point Cloud Distance before ICP: 20.624589678412946
+Mean Point Cloud Distance after ICP: 40.999747093388756
+Mean ADI before ICP: 20.58336685906316
+Mean ADI after ICP: 40.95862239755442
+Mean RE before ICP: 10.899479182068509
+Mean RE after ICP: 21.79897137736113
+Mean TE before ICP: 20.62458919474818
+Mean TE after ICP: 40.99974613392117
+Mean Offset: 25.68829222283029
+====================
+Gaussian Mean: 27
+Gaussian Std Dev: 13.5
+ADDs before ICP: 0.22043010752688172
+ADDs after ICP: 0.016129032258064516
+Mean Point Cloud Distance before ICP: 22.61295767423814
+Mean Point Cloud Distance after ICP: 44.90241560955425
+Mean ADI before ICP: 22.572425720554282
+Mean ADI after ICP: 44.86188399536779
+Mean RE before ICP: 11.701037266828065
+Mean RE after ICP: 23.402082140967533
+Mean TE before ICP: 22.612957154867438
+Mean TE after ICP: 44.90241458049732
+Mean Offset: 28.375291492346083
+====================
+Gaussian Mean: 28
+Gaussian Std Dev: 14.0
+ADDs before ICP: 0.16666666666666666
+ADDs after ICP: 0.026881720430107527
+Mean Point Cloud Distance before ICP: 24.17355567803961
+Mean Point Cloud Distance after ICP: 47.94063214885524
+Mean ADI before ICP: 24.133170819884484
+Mean ADI after ICP: 47.90027620632154
+Mean RE before ICP: 12.48947628293533
+Mean RE after ICP: 24.978948685225692
+Mean TE before ICP: 24.173555184408503
+Mean TE after ICP: 47.94063117232923
+Mean Offset: 28.717906142382212
+====================
+Gaussian Mean: 29
+Gaussian Std Dev: 14.5
+ADDs before ICP: 0.20430107526881722
+ADDs after ICP: 0.03763440860215054
+Mean Point Cloud Distance before ICP: 23.69757812208097
+Mean Point Cloud Distance after ICP: 47.027780465109736
+Mean ADI before ICP: 23.65628693426988
+Mean ADI after ICP: 46.98647745888114
+Mean RE before ICP: 12.245201881115195
+Mean RE after ICP: 24.490390322528494
+Mean TE before ICP: 23.697577577365937
+Mean TE after ICP: 47.02777938733215
+Mean Offset: 29.738957924709744
+====================
+Gaussian Mean: 30
+Gaussian Std Dev: 15.0
+ADDs before ICP: 0.22043010752688172
+ADDs after ICP: 0.03763440860215054
+Mean Point Cloud Distance before ICP: 24.429181248742236
+Mean Point Cloud Distance after ICP: 48.282449329850984
+Mean ADI before ICP: 24.388662447702064
+Mean ADI after ICP: 48.24205156707144
+Mean RE before ICP: 13.35325221563796
+Mean RE after ICP: 26.706506067558102
+Mean TE before ICP: 24.42918065645875
+Mean TE after ICP: 48.282448160995614
+Mean Offset: 30.58662554283936
+====================
+Gaussian Mean: 31
+Gaussian Std Dev: 15.5
+ADDs before ICP: 0.16129032258064516
+ADDs after ICP: 0.016129032258064516
+Mean Point Cloud Distance before ICP: 26.36486188830908
+Mean Point Cloud Distance after ICP: 52.27166513126088
+Mean ADI before ICP: 26.324242581147182
+Mean ADI after ICP: 52.23120136957771
+Mean RE before ICP: 13.038866845113379
+Mean RE after ICP: 26.0777336641705
+Mean TE before ICP: 26.36486134208596
+Mean TE after ICP: 52.27166405280097
+Mean Offset: 32.473307884220524
+====================
+Gaussian Mean: 32
+Gaussian Std Dev: 16.0
+ADDs before ICP: 0.16129032258064516
+ADDs after ICP: 0.021505376344086023
+Mean Point Cloud Distance before ICP: 26.30578124365931
+Mean Point Cloud Distance after ICP: 52.03301758697545
+Mean ADI before ICP: 26.26549870252755
+Mean ADI after ICP: 51.99289624220994
+Mean RE before ICP: 14.005427332393467
+Mean RE after ICP: 28.010860058140214
+Mean TE before ICP: 26.30578066456862
+Mean TE after ICP: 52.03301644497608
+Mean Offset: 32.430812962427304
+====================
+Gaussian Mean: 33
+Gaussian Std Dev: 16.5
+ADDs before ICP: 0.16129032258064516
+ADDs after ICP: 0.05913978494623656
+Mean Point Cloud Distance before ICP: 28.85799552113918
+Mean Point Cloud Distance after ICP: 57.09989152418656
+Mean ADI before ICP: 28.8176650062044
+Mean ADI after ICP: 57.05964386925393
+Mean RE before ICP: 13.790077370768346
+Mean RE after ICP: 27.580135507977673
+Mean TE before ICP: 28.85799491508021
+Mean TE after ICP: 57.099890328689206
+Mean Offset: 34.526065471978434
+====================
+Gaussian Mean: 34
+Gaussian Std Dev: 17.0
+ADDs before ICP: 0.16666666666666666
+ADDs after ICP: 0.016129032258064516
+Mean Point Cloud Distance before ICP: 27.5260161907112
+Mean Point Cloud Distance after ICP: 54.48296431774394
+Mean ADI before ICP: 27.48556930899908
+Mean ADI after ICP: 54.4424914836407
+Mean RE before ICP: 14.182366558654524
+Mean RE after ICP: 28.36472666887439
+Mean TE before ICP: 27.5260156296145
+Mean TE after ICP: 54.482963210157614
+Mean Offset: 33.6119572712425
+====================
+Gaussian Mean: 35
+Gaussian Std Dev: 17.5
+ADDs before ICP: 0.14516129032258066
+ADDs after ICP: 0.021505376344086023
+Mean Point Cloud Distance before ICP: 28.79268911285017
+Mean Point Cloud Distance after ICP: 56.84251913832879
+Mean ADI before ICP: 28.752154898065772
+Mean ADI after ICP: 56.80192693746829
+Mean RE before ICP: 15.204512653808695
+Mean RE after ICP: 30.409036102965278
+Mean TE before ICP: 28.792688414682214
+Mean TE after ICP: 56.842517763394405
+Mean Offset: 35.335926653311105
+====================
+Gaussian Mean: 36
+Gaussian Std Dev: 18.0
+ADDs before ICP: 0.12903225806451613
+ADDs after ICP: 0.010752688172043012
+Mean Point Cloud Distance before ICP: 30.211833229585295
+Mean Point Cloud Distance after ICP: 59.64037728412789
+Mean ADI before ICP: 30.17155907829656
+Mean ADI after ICP: 59.60020384245683
+Mean RE before ICP: 15.418703839843973
+Mean RE after ICP: 30.837421617301985
+Mean TE before ICP: 30.2118325452031
+Mean TE after ICP: 59.6403759396332
+Mean Offset: 36.30416593645794
+====================
+Gaussian Mean: 37
+Gaussian Std Dev: 18.5
+ADDs before ICP: 0.16129032258064516
+ADDs after ICP: 0.010752688172043012
+Mean Point Cloud Distance before ICP: 30.86082568245044
+Mean Point Cloud Distance after ICP: 60.75134304749585
+Mean ADI before ICP: 30.819746683232406
+Mean ADI after ICP: 60.71034468854677
+Mean RE before ICP: 15.435383678639463
+Mean RE after ICP: 30.870778240266567
+Mean TE before ICP: 30.860825029006197
+Mean TE after ICP: 60.75134176301811
+Mean Offset: 36.815003882728035
+====================
+Gaussian Mean: 38
+Gaussian Std Dev: 19.0
+ADDs before ICP: 0.13440860215053763
+ADDs after ICP: 0.03225806451612903
+Mean Point Cloud Distance before ICP: 31.27733534218501
+Mean Point Cloud Distance after ICP: 61.563745116459
+Mean ADI before ICP: 31.237077408236658
+Mean ADI after ICP: 61.523397116988136
+Mean RE before ICP: 15.575253498085374
+Mean RE after ICP: 31.15050886776037
+Mean TE before ICP: 31.277334817776694
+Mean TE after ICP: 61.56374408698403
+Mean Offset: 37.59704483500391
+====================
+Gaussian Mean: 39
+Gaussian Std Dev: 19.5
+ADDs before ICP: 0.12365591397849462
+ADDs after ICP: 0.005376344086021506
+Mean Point Cloud Distance before ICP: 32.487375487117816
+Mean Point Cloud Distance after ICP: 63.79811784089954
+Mean ADI before ICP: 32.44557326440297
+Mean ADI after ICP: 63.75637646461027
+Mean RE before ICP: 16.734171709416206
+Mean RE after ICP: 32.97292312241758
+Mean TE before ICP: 32.48737481227545
+Mean TE after ICP: 63.798116532623624
+Mean Offset: 39.37999960414322
+====================
+Gaussian Mean: 40
+Gaussian Std Dev: 20.0
+ADDs before ICP: 0.0967741935483871
+ADDs after ICP: 0.016129032258064516
+Mean Point Cloud Distance before ICP: 32.87286032452689
+Mean Point Cloud Distance after ICP: 64.53058051527316
+Mean ADI before ICP: 32.832253854638815
+Mean ADI after ICP: 64.48989521503731
+Mean RE before ICP: 17.2708463395731
+Mean RE after ICP: 34.54168809303929
+Mean TE before ICP: 32.872859513286514
+Mean TE after ICP: 64.53057893381718
+Mean Offset: 40.717524258142845
+====================
+Gaussian Mean: 41
+Gaussian Std Dev: 20.5
+ADDs before ICP: 0.08602150537634409
+ADDs after ICP: 0.005376344086021506
+Mean Point Cloud Distance before ICP: 32.955914948659725
+Mean Point Cloud Distance after ICP: 64.6613410796517
+Mean ADI before ICP: 32.91556844766434
+Mean ADI after ICP: 64.62105031807866
+Mean RE before ICP: 17.93446561471254
+Mean RE after ICP: 35.86893538772979
+Mean TE before ICP: 32.95591416064687
+Mean TE after ICP: 64.66133954296964
+Mean Offset: 40.18008243110749
+====================
+Gaussian Mean: 42
+Gaussian Std Dev: 21.0
+ADDs before ICP: 0.07526881720430108
+ADDs after ICP: 0.016129032258064516
+Mean Point Cloud Distance before ICP: 35.36884189045481
+Mean Point Cloud Distance after ICP: 69.54384379854594
+Mean ADI before ICP: 35.32813892591884
+Mean ADI after ICP: 69.50319032479673
+Mean RE before ICP: 18.46659029520712
+Mean RE after ICP: 36.470810375533276
+Mean TE before ICP: 35.36884109177622
+Mean TE after ICP: 69.54384224394144
+Mean Offset: 42.3686692330189
+====================
+Gaussian Mean: 43
+Gaussian Std Dev: 21.5
+ADDs before ICP: 0.05913978494623656
+ADDs after ICP: 0.021505376344086023
+Mean Point Cloud Distance before ICP: 33.74937502348405
+Mean Point Cloud Distance after ICP: 66.23076537034981
+Mean ADI before ICP: 33.70828762167811
+Mean ADI after ICP: 66.18967347487919
+Mean RE before ICP: 18.900240028848778
+Mean RE after ICP: 37.80047977139104
+Mean TE before ICP: 33.749374093621185
+Mean TE after ICP: 66.23076355956262
+Mean Offset: 43.41881014645962
+====================
