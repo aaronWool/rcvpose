@@ -71,6 +71,8 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
     bf_icp_te = []
     af_icp_te = []
 
+    test_o3d_icp_scores = []
+
     bf_icp_proj = []
     af_icp_proj = []
 
@@ -215,8 +217,10 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                     if add_error <= add_threshold[class_name]*1000:
                         bf_icp+=1
 
-                    trans_init = np.eye(4)
+                    # trans_init = np.eye(4)
                     
+                    trans_init = RT
+
                     threshold = add_error
 
                     sceneGT = o3d.geometry.PointCloud()
@@ -227,19 +231,26 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
 
                     sceneGT.paint_uniform_color(np.array([0, 0, 1]))
                     sceneEst.paint_uniform_color(np.array([1, 0, 0]))
+
+                    cad_model = o3d.geometry.PointCloud()
+                    cad_model.points = o3d.utility.Vector3dVector(xyz_load*1000)
+
                     
-                    criteria = o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000)
+                    criteria = o3d.pipelines.registration.ICPConvergenceCriteria()
                     reg_p2p = o3d.pipelines.registration.registration_icp(
-                        sceneGT, sceneEst,  threshold, trans_init,
+                        cad_model, sceneEst,  threshold, trans_init,
                         o3d.pipelines.registration.TransformationEstimationPointToPoint(),
                         criteria)
                     
-                    icp_RT = np.asarray(reg_p2p.transformation) 
+                    cad_model.transform(reg_p2p.transformation)
                     
-                    RT_est_icp = np.dot(icp_RT, RT)
+                    icp_RT = np.asarray(reg_p2p.transformation) 
 
-                    R_est_icp = RT_est_icp[0:3,0:3]
-                    t_est_icp = RT_est_icp[0:3,3]
+                    mean_dist = np.asarray(sceneGT.compute_point_cloud_distance(cad_model)).mean()
+                    
+                    
+                    R_est_icp = icp_RT[0:3,0:3]
+                    t_est_icp = icp_RT[0:3,3]
 
                     add_error_icp = add(R_est_icp, t_est_icp, R_gt, t_gt, xyz_load)
                     adi_error_icp = adi(R_est_icp, t_est_icp, R_gt, t_gt, xyz_load)
@@ -251,6 +262,7 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
                     af_icp_adi.append(adi_error_icp)
                     af_icp_re.append(re_error_icp)
                     af_icp_te.append(te_error_icp)
+                    test_o3d_icp_scores.append(mean_dist)
                     # af_icp_proj.append(proj_error_icp)
                                
 
@@ -380,6 +392,7 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
     print ('Mean RE after ICP: ', np.mean(af_icp_re), 'mm')
     print ('Mean TE before ICP: ', np.mean(bf_icp_te), 'mm')
     print ('Mean TE after ICP: ', np.mean(af_icp_te), 'mm')
+    print ('Open3d ICP Score: ', np.mean(test_o3d_icp_scores))
     print ('Mean Offset: ', np.mean(offsets))
     # print('AUC of ' + class_name + ' before ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)
     # print('AUC of ' + class_name + ' after ICP: ', metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1)
@@ -396,7 +409,7 @@ def estimate_6d_pose_lm(opts, mean_radius_mm, std_dev_mm):
         f.write('Mean RE after ICP: '+str(np.mean(af_icp_re))+'\n')
         f.write('Mean TE before ICP: '+str(np.mean(bf_icp_te))+'\n')
         f.write('Mean TE after ICP: '+str(np.mean(af_icp_te))+'\n')
-        f.write('Mean Offset: '+str(np.mean(offsets))+'\n')
+        f.write('Mean Keypoint Error: '+str(np.mean(offsets))+'\n')
         # f.write('AUC of ' + class_name + ' before ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[0]/general_counter)/0.1)+'\n')
         # f.write('AUC of ' + class_name + ' after ICP: '+str(metrics.auc(auc_threshold, class_auc_adds_count[1]/general_counter)/0.1)+'\n')
         f.write('='*20+'\n')
@@ -426,7 +439,7 @@ if __name__ == "__main__":
 
     opts = parser.parse_args()
 
-    output_dir = 'logs/keypoint_test/new_metrics1/'
+    output_dir = 'logs/keypoint_test/new_metrics2/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -510,6 +523,4 @@ if __name__ == "__main__":
         plt.savefig(output_dir + 'Mean_TE_vs_Mean_Radius.png')
         plt.close()
 
-
-        
         i+=1
